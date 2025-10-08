@@ -11,7 +11,7 @@ const axios = require('axios');
 const ffmpeg = require('fluent-ffmpeg');
 const { addWelcome, delWelcome, isWelcomeOn, addGoodbye, delGoodBye, isGoodByeOn, isSudo } = require('./lib/index');
 
-//const { autotypingCommand, isAutotypingEnabled, handleAutotypingForMessage, handleAutotypingForCommand, showTypingAfterCommand } = require('./daveplugins/autotyping');
+const { autotypingCommand, isAutotypingEnabled, handleAutotypingForMessage, handleAutotypingForCommand, showTypingAfterCommand } = require('./daveplugins/autotyping');
 const { autoreadCommand, isAutoreadEnabled, handleAutoread } = require('./daveplugins/autoread');
 
 // Command imports
@@ -830,10 +830,10 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 break;
             case userMessage === '.jid': await groupJidCommand(sock, chatId, message);
                 break;
-         //   case userMessage.startsWith('.autotyping'):
-            //    await autotypingCommand(sock, chatId, message);
-            //    commandExecuted = true;
-             //   break;
+           case userMessage.startsWith('.autotype'):
+               await autotypingCommand(sock, chatId, message);
+                commandExecuted = true;
+                break;
             case userMessage.startsWith('.autoread'):
                 await autoreadCommand(sock, chatId, message);
                 commandExecuted = true;
