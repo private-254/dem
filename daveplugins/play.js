@@ -5,10 +5,10 @@ async function playCommand(sock, chatId, message) {
     try {
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
         const searchQuery = text.split(' ').slice(1).join(' ').trim();
-
+        
         if (!searchQuery) {
             return await sock.sendMessage(chatId, { 
-                text: "What song do you want to download?"
+                text: "specify the song you want to download idiot😏!"
             });
         }
 
@@ -42,19 +42,20 @@ async function playCommand(sock, chatId, message) {
         const audioUrl = data.result.downloadUrl;
         const title = data.result.title;
 
-        // Send the audio
+        // ✅ Send as document instead of voice note
         await sock.sendMessage(chatId, {
-            audio: { url: audioUrl },
+            document: { url: audioUrl },
             mimetype: "audio/mpeg",
-            fileName: `${title}.mp3`
+            fileName: `${title}.mp3`,
+            caption: `🎵 *${title}*`
         }, { quoted: message });
 
     } catch (error) {
-        console.error('Error in song2 command:', error);
+        console.error('Error in play command:', error);
         await sock.sendMessage(chatId, { 
             text: "Download failed. Please try again later."
         });
     }
 }
 
-module.exports = playCommand; 
+module.exports = playCommand;
