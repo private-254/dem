@@ -1,3 +1,4 @@
+
 require('dotenv').config() // CRITICAL: Load .env variables first!
 
 // *******************************************************************
@@ -252,7 +253,7 @@ async function checkAndHandleSessionFormat() {
         if (!sessionId.trim().startsWith('dave~')) {
             log(chalk.red.bgBlack('================================================='), 'white');
             log(chalk.white.bgRed('❌ ERROR: Invalid SESSION_ID in .env'), 'white');
-            log(chalk.white.bgRed('The session ID MUST start with "DAVE-MD".'), 'white');
+            log(chalk.white.bgRed('The session ID MUST start with "dave~".'), 'white');
             log(chalk.white.bgRed('Cleaning .env and creating new one...'), 'white');
             log(chalk.red.bgBlack('================================================='), 'white');
 
@@ -371,32 +372,30 @@ Please enter this code in WhatsApp app:
 
 // --- Dedicated function to handle post-connection initialization and welcome message
 async function sendWelcomeMessage(dave) {
-    // Safety check: Only proceed if the welcome message hasn't been sent yet in this session.
-    if (global.isBotConnected) return; 
+    // Prevent sending multiple welcome messages in one session
+    if (global.isBotConnected) return;
 
     try {
-        if (!dave.user || global.isBotConnected) return;
+        if (!dave.user) return;
 
         global.isBotConnected = true;
         const pNumber = dave.user.id.split(':')[0] + '@s.whatsapp.net';
 
-        // Auto-follow channel immediately after connection (before welcome message)
-        await delay(1999); // Short delay for stability
-
+        // Auto-follow WhatsApp channel (with retry protection)
+        await delay(2000);
         try {
             await dave.newsletterFollow("120363400480173280@newsletter");
-            console.log(chalk.cyan(`✅ auto-followed your WhatsApp channel successfully!`));
-        } catch (e) {
-            console.log(chalk.red(`❌ failed to follow channel: ${e}`));
+            console.log(chalk.green("✅ Auto-followed your WhatsApp channel successfully!"));
+        } catch (err) {
+            console.log(chalk.red(`❌ Failed to auto-follow channel: ${err.message}`));
         }
 
-        // CRITICAL: Wait additional seconds for the connection to fully stabilize before welcome message
-        await delay(8000); // Total ~10 seconds delay
+        // Wait for connection stability before welcome message
+        await delay(8000);
 
-        // Send the welcome message
+        // Send welcome message to bot owner
         await dave.sendMessage(pNumber, {
-            text: 
-            `
+            text: `
 ┏➤ *𝙳𝙰𝚅𝙴-𝙼𝙳 CONNECTED* ➤
 ┃➤ *Bot:* ${global.botname}
 ┃➤ *Time:* ${new Date().toLocaleString()}
@@ -405,13 +404,15 @@ async function sendWelcomeMessage(dave) {
 ┗➤────────────➤
 `
         });
-        log('✅ Bot successfully connected to Whatsapp.', 'green');
 
-        // NEW: Reset the error counter on successful connection
-        deleteErrorCountFile();
+        log("✅ Bot successfully connected to WhatsApp.", "green");
+
+        // Reset error counter on successful connection
+        deleteErrorCountFile?.();
         global.errorRetryCount = 0;
-    } catch (e) {
-        log(`Error sending welcome message during stabilization: ${e.message}`, 'red', true);
+
+    } catch (err) {
+        log(`Error sending welcome message: ${err.message}`, "red", true);
         global.isBotConnected = false;
     }
 }
@@ -485,10 +486,8 @@ async function startdave() {
     });
 
     store.bind(dave.ev);
-    
-        // --- 🚨 MESSAGE LOGGER ---
+    // --- 🚨 MESSAGE LOGGER ---
     dave.ev.on('messages.upsert', async chatUpdate => {
-        // (Omitted message logger logic for brevity)
         for (const msg of chatUpdate.messages) {
               if (!msg.message) continue;
               let chatId = msg.key.remoteJid;
@@ -510,12 +509,12 @@ async function startdave() {
     });
 
     dave.ev.on('messages.reaction', async (reaction) => {
-    try {
-        await handleStatus(dave, reaction);
-    } catch (error) {
-        console.error('Error in messages.reaction handler:', error);
-    }
-});
+        try {
+            await handleStatus(dave, reaction);
+        } catch (error) {
+            console.error('Error in messages.reaction handler:', error);
+        }
+    });
 
     // --- ⚠️ CONNECTION UPDATE LISTENER (Enhanced Logic with 401/408 handler)
     dave.ev.on('connection.update', async (update) => {
@@ -541,30 +540,18 @@ async function startdave() {
 
                 // CRITICAL FIX: Use process.exit(1) to trigger a clean restart by the Daemon
                 process.exit(1); 
-
             } else {
-                // NEW: Handle the 408 Timeout Logic FIRST
-                const is408Handled = await handle408Error(statusCode);
-                if (is408Handled) {
-                    // If handle408Error decides to exit, it will already have called process.exit(1)
-                    return;
-                }
-
-                // This handles all other temporary errors (Stream, Connection, Timeout, etc.)
-                log(`Connection closed due to temporary issue (Status: ${statusCode}). Attempting reconnect...`, 'yellow');
-                // Re-start the whole bot process (this handles temporary errors/reconnects)
-                startdave(); 
+                // Handle 408 timeout errors for non-permanent disconnections
+                await handle408Error(statusCode);
             }
         } else if (connection === 'open') { 
-            console.log(chalk.magenta(`© DAVE CONSOLE`))
-            console.log(chalk.yellow(`🌿Connected to => ` + JSON.stringify(dave.user, null, 2)))
+            console.log(chalk.magenta(`© DAVE CONSOLE`));
+            console.log(chalk.yellow(`🌿 Connected to => ` + JSON.stringify(dave.user, null, 2)));
+
             log('DAVE-MD connected', 'blue');      
             log(`GITHUB: giftdee`, 'magenta');
 
-            // Handle auto-follow immediately after connection
-            await handleAutoFollow(dave);
-
-            // Send the welcome message (which includes the 10s stability delay and error reset)
+            // Send welcome message (includes auto-follow + delay + reset)
             await sendWelcomeMessage(dave);
         }
     });
@@ -718,10 +705,6 @@ function checkEnvStatus() {
 
 // --- Main login flow (DAVE MD) ---
 async function tylor() {
-
-    // 1. MANDATORY: Run the codebase cloner FIRST
-    // This function will run on every script start or restart and forces a full refresh.
-   // await downloadAndSetupCodebase();
 
     // *************************************************************
     // *** CRITICAL: REQUIRED FILES MUST BE LOADED AFTER CLONING ***
