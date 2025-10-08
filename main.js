@@ -11,9 +11,9 @@ const axios = require('axios');
 const ffmpeg = require('fluent-ffmpeg');
 const { addWelcome, delWelcome, isWelcomeOn, addGoodbye, delGoodBye, isGoodByeOn, isSudo } = require('./lib/index');
 
+const { autotypingCommand, isAutotypingEnabled, handleAutotypingForMessage, handleAutotypingForCommand, showTypingAfterCommand } = require('./daveplugins/autotyping');
 const { autoreadCommand, isAutoreadEnabled, handleAutoread } = require('./daveplugins/autoread');
 const getppCommand = require('./daveplugins/getpp');
-
 // Command imports
 const tagAllCommand = require('./daveplugins/tagall');
 const helpCommand = require('./daveplugins/help');
@@ -137,7 +137,8 @@ const channelInfo = {
     }
 };
 
-async function handleMessages(sock, messageUpdate, printLog) {
+
+  async function handleMessages(sock, messageUpdate, printLog) {
     try {
         const { messages, type } = messageUpdate;
         if (type !== 'notify') return;
@@ -257,13 +258,12 @@ async function handleMessages(sock, messageUpdate, printLog) {
             }
             return;
         }
-
         // List of admin commands
         const adminCommands = ['.mute', '.unmute', '.ban', '.unban', '.promote', '.demote', '.kick', '.tagall', '.tagnotadmin', '.hidetag', '.antilink', '.antitag', '.setgdesc', '.setgname', '.setgpp'];
         const isAdminCommand = adminCommands.some(cmd => userMessage.startsWith(cmd));
 
         // List of owner commands
-        const ownerCommands = ['.mode', '.autostatus', '.antidelete', '.cleartmp', '.setpp', '.clearsession', '.areact', '.autoreact', '.autoread', '.pmblocker'];
+        const ownerCommands = ['.mode', '.autostatus', '.antidelete', '.cleartmp', '.setpp', '.clearsession', '.areact', '.autoreact', '.autotyping', '.autoread', '.pmblocker'];
         const isOwnerCommand = ownerCommands.some(cmd => userMessage.startsWith(cmd));
 
         let isSenderAdmin = false;
@@ -321,7 +321,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 commandExecuted = true;
                 break;
             }
-case userMessage.startsWith('.kick'):
+            case userMessage.startsWith('.kick'):
                 const mentionedJidListKick = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
                 await kickCommand(sock, chatId, senderId, mentionedJidListKick, message);
                 break;
@@ -393,7 +393,7 @@ case userMessage.startsWith('.kick'):
                 }
 
                 const action = userMessage.split(' ')[1]?.toLowerCase();
-                // If no argument provided, show current status
+                                // If no argument provided, show current status
                 if (!action) {
                     const currentMode = data.isPublic ? 'public' : 'private';
                     await sock.sendMessage(chatId, {
@@ -698,6 +698,7 @@ case userMessage.startsWith('.kick'):
                     await sock.sendMessage(chatId, { text: 'This command can only be used in groups.', ...channelInfo }, { quoted: message });
                     return;
                 }
+
                 // Check if sender is admin or bot owner
                 const chatbotAdminStatus = await isAdmin(sock, chatId, senderId);
                 if (!chatbotAdminStatus.isSenderAdmin && !message.key.fromMe) {
@@ -758,7 +759,6 @@ case userMessage.startsWith('.kick'):
             case userMessage.startsWith('.tg') || userMessage.startsWith('.stickertelegram') || userMessage.startsWith('.tgsticker') || userMessage.startsWith('.telesticker'):
                 await stickerTelegramCommand(sock, chatId, message);
                 break;
-
             case userMessage === '.vv':
                 await viewOnceCommand(sock, chatId, message);
                 break;
@@ -912,6 +912,10 @@ case userMessage.startsWith('.kick'):
             case userMessage.startsWith('.imagine') || userMessage.startsWith('.flux') || userMessage.startsWith('.dalle'): await imagineCommand(sock, chatId, message);
                 break;
             case userMessage === '.jid': await groupJidCommand(sock, chatId, message);
+                break;
+            case userMessage.startsWith('.autotype'):
+                await autotypingCommand(sock, chatId, message);
+                commandExecuted = true;
                 break;
             case userMessage.startsWith('.autoread'):
                 await autoreadCommand(sock, chatId, message);
@@ -1196,5 +1200,16 @@ module.exports = {
         await handleStatusUpdate(sock, status);
     }
 };
+                        
 
-            
+
+
+                
+                
+                                  
+                
+        
+
+                                                    
+
+        
