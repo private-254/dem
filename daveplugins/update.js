@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const settings = require('../settings');
+const { rmSync } = require('fs'); // Added rmSync for file deletion
 
 function run(cmd) {
     return new Promise((resolve, reject) => {
@@ -39,6 +40,7 @@ async function updateViaGit() {
 function downloadFile(url, dest, visited = new Set()) {
     return new Promise((resolve, reject) => {
         try {
+            // Avoid infinite redirect loops
             if (visited.has(url) || visited.size > 5) {
                 return reject(new Error('Too many redirects'));
             }
@@ -48,10 +50,11 @@ function downloadFile(url, dest, visited = new Set()) {
             const client = useHttps ? require('https') : require('http');
             const req = client.get(url, {
                 headers: {
-                    'User-Agent': 'DAVE-MD-Updater/1.0',
+                    'User-Agent': 'KnightBot-Updater/1.0',
                     'Accept': '*/*'
                 }
             }, res => {
+                // Handle redirects
                 if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
                     const location = res.headers.location;
                     if (!location) return reject(new Error(`HTTP ${res.statusCode} without Location`));
@@ -82,11 +85,13 @@ function downloadFile(url, dest, visited = new Set()) {
 }
 
 async function extractZip(zipPath, outDir) {
+    // Try to use platform tools; no extra npm modules required
     if (process.platform === 'win32') {
         const cmd = `powershell -NoProfile -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${outDir.replace(/\\/g, '/')}' -Force"`;
         await run(cmd);
         return;
     }
+    // Linux/mac: try unzip, else 7z, else busybox unzip
     try {
         await run('command -v unzip');
         await run(`unzip -o '${zipPath}' -d '${outDir}'`);
@@ -122,8 +127,12 @@ function copyRecursive(src, dest, ignore = [], relative = '', outList = []) {
 }
 
 async function updateViaZip(sock, chatId, message, zipOverride) {
+  
     const zipUrl = (zipOverride || settings.updateZipUrl || process.env.UPDATE_ZIP_URL || '').trim();
-    if (!zipUrl) throw new Error('No ZIP URL configured. Set settings.updateZipUrl or UPDATE_ZIP_URL env.');
+    // const zipUrl = "https://github.com/vinpink2/june-private-repohide/archive/refs/heads/main.zip";
+    if (!zipUrl) {
+        throw new Error('No ZIP URL configured. Set settings.updateZipUrl or UPDATE_ZIP_URL env.');
+    }
     const tmpDir = path.join(process.cwd(), 'tmp');
     if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
     const zipPath = path.join(tmpDir, 'update.zip');
@@ -132,18 +141,20 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
     if (fs.existsSync(extractTo)) fs.rmSync(extractTo, { recursive: true, force: true });
     await extractZip(zipPath, extractTo);
 
+    // Find the top-level extracted folder (GitHub zips create REPO-branch folder)
     const [root] = fs.readdirSync(extractTo).map(n => path.join(extractTo, n));
     const srcRoot = fs.existsSync(root) && fs.lstatSync(root).isDirectory() ? root : extractTo;
 
+    // Copy over while preserving runtime dirs/files
     const ignore = ['node_modules', '.git', 'session', 'tmp', 'tmp/', 'temp', 'data', 'baileys_store.json'];
     const copied = [];
-
+    // Preserve ownerNumber from existing settings.js if present
     let preservedOwner = null;
     let preservedBotOwner = null;
     try {
         const currentSettings = require('../settings');
-        preservedOwner = currentSettings?.ownerNumber ? String(currentSettings.ownerNumber) : null;
-        preservedBotOwner = currentSettings?.botOwner ? String(currentSettings.botOwner) : null;
+        preservedOwner = currentSettings && currentSettings.ownerNumber ? String(currentSettings.ownerNumber) : null;
+        preservedBotOwner = currentSettings && currentSettings.botOwner ? String(currentSettings.botOwner) : null;
     } catch {}
     copyRecursive(srcRoot, process.cwd(), ignore, '', copied);
     if (preservedOwner) {
@@ -159,6 +170,7 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
             }
         } catch {}
     }
+    // Cleanup extracted directory
     try { fs.rmSync(extractTo, { recursive: true, force: true }); } catch {}
     try { fs.rmSync(zipPath, { force: true }); } catch {}
     return { copiedFiles: copied };
@@ -166,48 +178,96 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
 
 async function restartProcess(sock, chatId, message) {
     try {
-        await sock.sendMessage(chatId, { text: '✅ Update complete! Restarting…' }, { quoted: message });
+        // Send final confirmation message to the user
+        await sock.sendMessage(chatId, { text: '_𝙳𝙰𝚅𝙴-𝙼𝙳 raid Update complete! hold restarting..._' }, { quoted: message });
     } catch {}
+    
+    // 1. Gracefully close the Baileys socket
     try {
+        await sock.end(); 
+    } catch (e) {
+        console.error('Error during graceful Baileys shutdown:', e.message);
+    }
+    
+    // 🛑 2. CRITICAL STEP: DELETE VOLATILE SESSION FILES
+    // Delete files that track message state and history sync, as these are the source of 428 errors.
+    const sessionPath = path.join(process.cwd(), 'session');
+    
+    const filesToDelete = [
+        'app-state-sync-version.json',
+        'message-history.json',
+        'sender-key-memory.json',
+        'baileys_store_multi.json', // Included for comprehensive cleanup
+        'baileys_store.json' // Included if a non-multi store is used
+    ];
+
+    if (fs.existsSync(sessionPath)) {
+        console.log(`[RESTART] Clearing volatile session data in: ${sessionPath}`);
+        
+        filesToDelete.forEach(fileName => {
+            const filePath = path.join(sessionPath, fileName);
+            if (fs.existsSync(filePath)) {
+                try {
+                    rmSync(filePath, { force: true });
+                    console.log(`[RESTART] Deleted: ${fileName}`);
+                } catch (e) {
+                    console.error(`[RESTART] Failed to delete ${fileName}:`, e.message);
+                }
+            }
+        });
+    }
+
+    // 3. Trigger restart via PM2 or Process Exit
+    try {
+        // Preferred: PM2 (This is the original logic, keep it)
         await run('pm2 restart all');
         return;
     } catch {}
-    setTimeout(() => process.exit(0), 500);
+    
+    // Panels usually auto-restart when the process exits.
+    // Exit immediately now that cleanup is complete.
+    setTimeout(() => {
+        process.exit(0);
+    }, 0); 
 }
 
 async function updateCommand(sock, chatId, message, senderIsSudo, zipOverride) {
+    const commandText = message.message.extendedTextMessage?.text || message.message.conversation || '';
+    const isSimpleRestart = commandText.toLowerCase().includes('restart') && !commandText.toLowerCase().includes('update');
+
     if (!message.key.fromMe && !senderIsSudo) {
-        await sock.sendMessage(chatId, { text: 'Only bot owner or sudo can use .update' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Only bot owner or sudo can use this command' }, { quoted: message });
         return;
     }
+
     try {
-        await sock.sendMessage(chatId, { text: '🔄 Updating the bot, please wait…' }, { quoted: message });
-
-        if (await hasGitRepo()) {
-            const { oldRev, newRev, alreadyUpToDate } = await updateViaGit();
-            console.log(`[update] ${alreadyUpToDate ? 'Already up-to-date' : `Updated to ${newRev}`}`);
-            try {
-                await run('npm install --no-audit --no-fund');
-            } catch (e) {
-                console.log('[update] npm install failed:', e.message);
-            }
-        } else {
-            await updateViaZip(sock, chatId, message, zipOverride);
+        if (!isSimpleRestart) {
+             await sock.sendMessage(chatId, { text: '_Updating bot database. have chills viking…_' }, { quoted: message });
+             if (await hasGitRepo()) {
+                 const { oldRev, newRev, alreadyUpToDate, commits, files } = await updateViaGit();
+                 const summary = alreadyUpToDate ? `🙏Already up to date stop wasting my time: ${newRev}` : `✅ Updated to ${newRev}`;
+                 console.log('[update] summary generated');
+                 await run('npm install --no-audit --no-fund');
+             } else {
+                 const { copiedFiles } = await updateViaZip(sock, chatId, message, zipOverride);
+             }
         }
-
+        
         try {
-            delete require.cache[require.resolve('../settings')];
             const v = require('../settings').version || '';
-            await sock.sendMessage(chatId, { text: `✅ Update done (v${v}). Restarting…` }, { quoted: message });
+            await sock.sendMessage(chatId, { text: `_update in progress fate cannot be changed…_` }, { quoted: message });
         } catch {
-            await sock.sendMessage(chatId, { text: '✅ Restarted successfully\nType .ping to check latest version.' }, { quoted: message });
+            await sock.sendMessage(chatId, { text: '_Update successful good day_' }, { quoted: message });
         }
-
-        await restartProcess(sock, chatId, message);
-    } catch (err) {
+        
+        // This is where the actual restart logic is executed.
+        await restartProcess(sock, chatId, message); 
+    } catch 
+(err) {
         console.error('Update failed:', err);
-        await sock.sendMessage(chatId, { text: `❌ Update failed:\n${String(err.message || err)}` }, { quoted: message });
+        await sock.sendMessage(chatId, { text: `❌ Restart/Update failed:\n${String(err.message || err)}` }, { quoted: message });
     }
 }
 
 module.exports = updateCommand;
+                        
