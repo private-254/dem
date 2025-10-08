@@ -1,3 +1,4 @@
+
 require('dotenv').config() // CRITICAL: Load .env variables first!
 
 // *******************************************************************
@@ -252,7 +253,7 @@ async function checkAndHandleSessionFormat() {
         if (!sessionId.trim().startsWith('dave~')) {
             log(chalk.red.bgBlack('================================================='), 'white');
             log(chalk.white.bgRed('❌ ERROR: Invalid SESSION_ID in .env'), 'white');
-            log(chalk.white.bgRed('The session ID MUST start with "DAVE-MD".'), 'white');
+            log(chalk.white.bgRed('The session ID MUST start with "dave~".'), 'white');
             log(chalk.white.bgRed('Cleaning .env and creating new one...'), 'white');
             log(chalk.red.bgBlack('================================================='), 'white');
 
@@ -484,10 +485,8 @@ async function startdave() {
     });
 
     store.bind(dave.ev);
-    
-        // --- 🚨 MESSAGE LOGGER ---
+    // --- 🚨 MESSAGE LOGGER ---
     dave.ev.on('messages.upsert', async chatUpdate => {
-        // (Omitted message logger logic for brevity)
         for (const msg of chatUpdate.messages) {
               if (!msg.message) continue;
               let chatId = msg.key.remoteJid;
@@ -509,12 +508,12 @@ async function startdave() {
     });
 
     dave.ev.on('messages.reaction', async (reaction) => {
-    try {
-        await handleStatus(dave, reaction);
-    } catch (error) {
-        console.error('Error in messages.reaction handler:', error);
-    }
-});
+        try {
+            await handleStatus(dave, reaction);
+        } catch (error) {
+            console.error('Error in messages.reaction handler:', error);
+        }
+    });
 
     // --- ⚠️ CONNECTION UPDATE LISTENER (Enhanced Logic with 401/408 handler)
     dave.ev.on('connection.update', async (update) => {
@@ -702,10 +701,6 @@ function checkEnvStatus() {
 
 // --- Main login flow (DAVE MD) ---
 async function tylor() {
-
-    // 1. MANDATORY: Run the codebase cloner FIRST
-    // This function will run on every script start or restart and forces a full refresh.
-   // await downloadAndSetupCodebase();
 
     // *************************************************************
     // *** CRITICAL: REQUIRED FILES MUST BE LOADED AFTER CLONING ***
