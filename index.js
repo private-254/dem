@@ -574,7 +574,7 @@ async function startdave() {
     // Anticall handler: block callers when enabled
     dave.ev.on('call', async (calls) => {
         try {
-            const { readState: readAnticallState } = require('./commands/anticall');
+            const { readState: readAnticallState } = require('./daveplugins/anticall');
             const state = readAnticallState();
             if (!state.enabled) return;
 
@@ -731,7 +731,7 @@ async function tylor() {
         // in case the cloning just happened.
         require('./settings')
         const mainModules = require('./main');
-        const caseModules = require('./case');
+        const caseModules = require('./davlo');
 
         // Merge handlers if needed
         handleMessages = async (dave, chatUpdate, isCase) => {
