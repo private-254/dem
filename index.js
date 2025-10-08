@@ -415,8 +415,7 @@ async function sendWelcomeMessage(dave) {
         log(`Error sending welcome message: ${err.message}`, "red", true);
         global.isBotConnected = false;
     }
-}
-
+    }
 /**
  * NEW FUNCTION: Handles the logic for persistent 408 (timeout) errors.
  * @param {number} statusCode The disconnect status code.
@@ -540,14 +539,11 @@ async function startdave() {
 
                 // CRITICAL FIX: Use process.exit(1) to trigger a clean restart by the Daemon
                 process.exit(1); 
-            } else {
-                // Handle 408 timeout errors for non-permanent disconnections
-                await handle408Error(statusCode);
-            }
-        } else if (connection === 'open') { 
+
+            } else if (connection === 'open') { 
             console.log(chalk.magenta(`© DAVE CONSOLE`));
             console.log(chalk.yellow(`🌿 Connected to => ` + JSON.stringify(dave.user, null, 2)));
-
+            
             log('DAVE-MD connected', 'blue');      
             log(`GITHUB: giftdee`, 'magenta');
 
