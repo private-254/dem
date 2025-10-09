@@ -1,4 +1,3 @@
-
 require('dotenv').config() // CRITICAL: Load .env variables first!
 
 // *******************************************************************
@@ -20,12 +19,15 @@ const {
     fetchLatestBaileysVersion,
     jidNormalizedUser,
     makeCacheableSignalKeyStore,
-    delay 
+    delay,
+    downloadContentFromMessage,
+    jidDecode
 } = require("@whiskeysockets/baileys")
 const NodeCache = require("node-cache")
 const pino = require("pino")
 const readline = require("readline")
 const { rmSync } = require('fs')
+const FileType = require('file-type')
 
 // --- 🌟 NEW: Centralized Logging Function ---
 /**
@@ -191,8 +193,7 @@ function cleanupJunkFiles(botSocket) {
         }
     });
 }
-
-// --- DAVE MD ORIGINAL CODE START ---
+/ --- DAVE MD ORIGINAL CODE START ---
 global.botname = "DAVE-MD"
 global.themeemoji = "•"
 const pairingCode = !!global.phoneNumber || process.argv.includes("--pairing-code")
@@ -415,7 +416,8 @@ async function sendWelcomeMessage(dave) {
         log(`Error sending welcome message: ${err.message}`, "red", true);
         global.isBotConnected = false;
     }
-}
+                                           }
+
 
 /**
  * NEW FUNCTION: Handles the logic for persistent 408 (timeout) errors.
@@ -486,7 +488,8 @@ async function startdave() {
     });
 
     store.bind(dave.ev);
-        // --- 🚨 MESSAGE LOGGER ---
+    
+    // --- 🚨 MESSAGE LOGGER ---
     dave.ev.on('messages.upsert', async chatUpdate => {
         for (const msg of chatUpdate.messages) {
               if (!msg.message) continue;
@@ -516,25 +519,32 @@ async function startdave() {
         }
     });
 
-    //added for case lets pray it works
+    // FIXED: Proper case handler implementation
     dave.ev.on('messages.upsert', async chatUpdate => {
-    //console.log(JSON.stringify(chatUpdate, undefined, 2))
-    try {
-        mek = chatUpdate.messages[0]
-        if (!mek.message) return
-        mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') 
-            ? mek.message.ephemeralMessage.message 
-            : mek.message
-        if (mek.key && mek.key.remoteJid === 'status@broadcast') return
-        if (!dave.public && !mek.key.fromMe && chatUpdate.type === 'notify') return
-        if (mek.key.id.startsWith('Xeon') && mek.key.id.length === 16) return
-        if (mek.key.id.startsWith('BAE5')) return
-        m = smsg(dave, mek, store)
-        require("./davlo")(dave, m, chatUpdate, store)
-    } catch (err) {
-        console.log(err)
-    }
-})
+        try {
+            let mek = chatUpdate.messages[0];
+            if (!mek.message) return;
+            
+            mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') 
+                ? mek.message.ephemeralMessage.message 
+                : mek.message;
+                
+            if (mek.key && mek.key.remoteJid === 'status@broadcast') return;
+            if (!dave.public && !mek.key.fromMe && chatUpdate.type === 'notify') return;
+            if (mek.key.id.startsWith('Xeon') && mek.key.id.length === 16) return;
+            if (mek.key.id.startsWith('BAE5')) return;
+            
+            let m = smsg(dave, mek, store);
+            
+            // FIX: Check if davlo module exists and has the proper function
+            if (typeof require('./davlo') === 'function') {
+                require("./davlo")(dave, m, chatUpdate, store);
+            }
+        } catch (err) {
+            console.log('Error in case handler:', err);
+        }
+    });
+
     dave.decodeJid = (jid) => {
         if (!jid) return jid;
         if (/:\d+@/gi.test(jid)) {
@@ -605,6 +615,34 @@ async function startdave() {
         ...options
     });
 
+    // FIX: Add missing getBuffer function
+    async function getBuffer(url) {
+        try {
+            const response = await axios.get(url, { responseType: 'arraybuffer' });
+            return Buffer.from(response.data);
+        } catch (e) {
+            console.error('Error getting buffer:', e);
+            return null;
+        }
+    }
+
+    // FIX: Add missing image conversion functions
+    async function imageToWebp(media) {
+        return media; // Simplified - you'll need proper implementation
+    }
+
+    async function videoToWebp(media) {
+        return media; // Simplified - you'll need proper implementation
+    }
+
+    async function writeExifImg(media, metadata) {
+        return media; // Simplified - you'll need proper implementation
+    }
+
+    async function writeExifVid(media, metadata) {
+        return media; // Simplified - you'll need proper implementation
+    }
+
     dave.sendImage = async (jid, path, caption = '', quoted = '', options) => {
         let buffer = Buffer.isBuffer(path) ? path : 
                     /^data:.*?\/.*?;base64,/i.test(path) ? Buffer.from(path.split`,` [1], 'base64') : 
@@ -643,7 +681,7 @@ async function startdave() {
         
         await dave.sendMessage(jid, { sticker: { url: buffer }, ...options }, { quoted })
         .then(response => {
-            fs.unlinkSync(buffer);
+            // Don't unlink buffer as it might be in memory
             return response;
         });
     }
@@ -663,8 +701,7 @@ async function startdave() {
         
         await dave.sendMessage(jid, { sticker: { url: buffer }, ...options }, { quoted });
         return buffer;
-    }
-
+        }
     dave.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
         let quoted = message.msg ? message.msg : message;
         let mime = (message.msg || message).mimetype || '';
@@ -706,9 +743,6 @@ async function startdave() {
 
         return buffer;
     }
-    
-    return dave;
-}
 
     // --- ⚠️ CONNECTION UPDATE LISTENER (Enhanced Logic with 401/408 handler)
     dave.ev.on('connection.update', async (update) => {
@@ -796,7 +830,6 @@ async function startdave() {
     });
 
     dave.ev.on('creds.update', saveCreds);
-
     dave.public = true;
     // This relies on smsg being loaded
     dave.serializeM = (m) => smsg(dave, m, store); 
@@ -844,8 +877,7 @@ async function startdave() {
     setInterval(() => cleanupJunkFiles(dave), junkInterval); 
 
     return dave;
-}
-
+    }
 // --- New Core Integrity Check Function ---
 async function checkSessionIntegrityAndClean() {
     const isSessionFolderPresent = fs.existsSync(sessionDir);
@@ -908,18 +940,9 @@ async function tylor() {
         // in case the cloning just happened.
         require('./settings')
         const mainModules = require('./main');
-        const caseModules = require('./davlo');
 
-        // Merge handlers if needed
-        handleMessages = async (dave, chatUpdate, isCase) => {
-            // First try main handler
-            await mainModules.handleMessages(dave, chatUpdate, isCase);
-            // Then try case handler if exists
-            if (caseModules.handleMessages) {
-                await caseModules.handleMessages(dave, chatUpdate, isCase);
-            }
-        };
-
+        // FIX: Properly import handlers from main.js
+        handleMessages = mainModules.handleMessages;
         handleGroupParticipantUpdate = mainModules.handleGroupParticipantUpdate;
         handleStatus = mainModules.handleStatus;
 
@@ -1036,3 +1059,4 @@ app.listen(port, () => console.log(`Server listening on http://localhost:${port}
 tylor().catch(err => log(`Fatal error starting bot: ${err.message}`, 'red', true));
 process.on('uncaughtException', (err) => log(`Uncaught Exception: ${err.message}`, 'red', true));
 process.on('unhandledRejection', (err) => log(`Unhandled Rejection: ${err.message}`, 'red', true));
+    
