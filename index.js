@@ -193,7 +193,7 @@ function cleanupJunkFiles(botSocket) {
         }
     });
 }
-/ --- DAVE MD ORIGINAL CODE START ---
+// --- DAVE MD ORIGINAL CODE START ---
 global.botname = "DAVE-MD"
 global.themeemoji = "•"
 const pairingCode = !!global.phoneNumber || process.argv.includes("--pairing-code")
