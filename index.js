@@ -535,6 +535,180 @@ async function startdave() {
         console.log(err)
     }
 })
+    dave.decodeJid = (jid) => {
+        if (!jid) return jid;
+        if (/:\d+@/gi.test(jid)) {
+            let decode = jidDecode(jid) || {};
+            return decode.user && decode.server && decode.user + '@' + decode.server || jid;
+        } else return jid;
+    }
+
+    dave.ev.on('contacts.update', update => {
+        for (let contact of update) {
+            let id = dave.decodeJid(contact.id);
+            if (store && store.contacts) {
+                store.contacts[id] = {
+                    id,
+                    name: contact.notify
+                };
+            }
+        }
+    });
+
+    dave.getName = (jid, withoutContact = false) => {
+        let id = dave.decodeJid(jid);
+        withoutContact = dave.withoutContact || withoutContact;
+        let v;
+        
+        if (id.endsWith("@g.us")) {
+            return new Promise(async (resolve) => {
+                v = store.contacts[id] || {};
+                if (!(v.name || v.subject)) v = await dave.groupMetadata(id) || {};
+                resolve(v.name || v.subject || PhoneNumber('+' + id.replace('@s.whatsapp.net', '')).getNumber('international'));
+            });
+        } else {
+            v = id === '0@s.whatsapp.net' ? {
+                id,
+                name: 'WhatsApp'
+            } : id === dave.decodeJid(dave.user.id) ? dave.user : (store.contacts[id] || {});
+            
+            return (withoutContact ? '' : v.name) || v.subject || v.verifiedName || 
+                   PhoneNumber('+' + jid.replace('@s.whatsapp.net', '')).getNumber('international');
+        }
+    }
+
+    dave.sendContact = async (jid, kon, quoted = '', opts = {}) => {
+        let list = [];
+        for (let i of kon) {
+            list.push({
+                displayName: await dave.getName(i),
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${await dave.getName(i)}\nFN:${await dave.getName(i)}\nitem1.TEL;waid=${i.split('@')[0]}:${i.split('@')[0]}\nitem1.X-ABLabel:Mobile\nEND:VCARD`
+            });
+        }
+        dave.sendMessage(jid, { 
+            contacts: { 
+                displayName: `${list.length} Contact`, 
+                contacts: list 
+            }, 
+            ...opts 
+        }, { quoted });
+    }
+
+    dave.public = true;
+    dave.serializeM = (m) => smsg(dave, m, store);
+
+    dave.sendText = (jid, text, quoted = '', options) => dave.sendMessage(jid, {
+        text: text,
+        ...options
+    }, {
+        quoted,
+        ...options
+    });
+
+    dave.sendImage = async (jid, path, caption = '', quoted = '', options) => {
+        let buffer = Buffer.isBuffer(path) ? path : 
+                    /^data:.*?\/.*?;base64,/i.test(path) ? Buffer.from(path.split`,` [1], 'base64') : 
+                    /^https?:\/\//.test(path) ? await (await getBuffer(path)) : 
+                    fs.existsSync(path) ? fs.readFileSync(path) : Buffer.alloc(0);
+        
+        return await dave.sendMessage(jid, {
+            image: buffer,
+            caption: caption,
+            ...options
+        }, {
+            quoted
+        });
+    }
+
+    dave.sendTextWithMentions = async (jid, text, quoted, options = {}) => dave.sendMessage(jid, {
+        text: text,
+        mentions: [...text.matchAll(/@(\d{0,16})/g)].map(v => v[1] + '@s.whatsapp.net'),
+        ...options
+    }, {
+        quoted
+    });
+
+    dave.sendImageAsSticker = async (jid, path, quoted, options = {}) => {
+        let buff = Buffer.isBuffer(path) ? path : 
+                  /^data:.*?\/.*?;base64,/i.test(path) ? Buffer.from(path.split`,`[1], 'base64') : 
+                  /^https?:\/\//.test(path) ? await (await getBuffer(path)) : 
+                  fs.existsSync(path) ? fs.readFileSync(path) : Buffer.alloc(0);
+        
+        let buffer;
+        if (options && (options.packname || options.author)) {
+            buffer = await writeExifImg(buff, options);
+        } else {
+            buffer = await imageToWebp(buff);
+        }
+        
+        await dave.sendMessage(jid, { sticker: { url: buffer }, ...options }, { quoted })
+        .then(response => {
+            fs.unlinkSync(buffer);
+            return response;
+        });
+    }
+
+    dave.sendVideoAsSticker = async (jid, path, quoted, options = {}) => {
+        let buff = Buffer.isBuffer(path) ? path : 
+                  /^data:.*?\/.*?;base64,/i.test(path) ? Buffer.from(path.split`,`[1], 'base64') : 
+                  /^https?:\/\//.test(path) ? await (await getBuffer(path)) : 
+                  fs.existsSync(path) ? fs.readFileSync(path) : Buffer.alloc(0);
+        
+        let buffer;
+        if (options && (options.packname || options.author)) {
+            buffer = await writeExifVid(buff, options);
+        } else {
+            buffer = await videoToWebp(buff);
+        }
+        
+        await dave.sendMessage(jid, { sticker: { url: buffer }, ...options }, { quoted });
+        return buffer;
+    }
+
+    dave.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+        let quoted = message.msg ? message.msg : message;
+        let mime = (message.msg || message).mimetype || '';
+        let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+        
+        const stream = await downloadContentFromMessage(quoted, messageType);
+        let buffer = Buffer.from([]);
+        
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        
+        let type = await FileType.fromBuffer(buffer);
+        let trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
+        
+        // save to file
+        await fs.writeFileSync(trueFileName, buffer);
+        return trueFileName;
+    }
+
+    dave.sendPoll = (jid, name = '', values = [], selectableCount = 1) => { 
+        return dave.sendMessage(jid, { poll: { name, values, selectableCount }});
+    }
+
+    dave.parseMention = (text = '') => {
+        return [...text.matchAll(/@([0-9]{5,16}|0)/g)].map(v => v[1] + '@s.whatsapp.net');
+    }
+            
+    dave.downloadMediaMessage = async (message) => {
+        let mime = (message.msg || message).mimetype || '';
+        let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+        
+        const stream = await downloadContentFromMessage(message, messageType);
+        let buffer = Buffer.from([]);
+        
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+
+        return buffer;
+    }
+    
+    return dave;
+}
 
     // --- ⚠️ CONNECTION UPDATE LISTENER (Enhanced Logic with 401/408 handler)
     dave.ev.on('connection.update', async (update) => {
