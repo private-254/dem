@@ -1,5 +1,67 @@
-const { setAntitag, getAntitag, removeAntitag } = require('../lib/index');
+const fs = require('fs');
+const path = require('path');
 const isAdmin = require('../lib/isAdmin');
+
+const ANTITAG_STATE_FILE = path.join(__dirname, 'antitag_state.json');
+
+// Function to read antitag state
+function readAntitagState() {
+    try {
+        if (fs.existsSync(ANTITAG_STATE_FILE)) {
+            const data = fs.readFileSync(ANTITAG_STATE_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (error) {
+        console.error('Error reading antitag state:', error);
+    }
+    return { enabled: false, groups: {} };
+}
+
+// Function to save antitag state
+function saveAntitagState(state) {
+    try {
+        fs.writeFileSync(ANTITAG_STATE_FILE, JSON.stringify(state, null, 2));
+    } catch (error) {
+        console.error('Error saving antitag state:', error);
+    }
+}
+
+// Function to get antitag state
+function getAntitag(groupId) {
+    const state = readAntitagState();
+    if (groupId) {
+        return state.groups[groupId] || { enabled: false };
+    }
+    return state;
+}
+
+// Function to set antitag state
+function setAntitag(groupId, enabled, action = 'delete') {
+    const state = readAntitagState();
+    if (groupId) {
+        state.groups[groupId] = { 
+            enabled: enabled, 
+            action: action,
+            enabledAt: enabled ? new Date().toISOString() : null 
+        };
+    } else {
+        state.enabled = enabled;
+        state.action = action;
+    }
+    saveAntitagState(state);
+    return state.groups[groupId] || state;
+}
+
+// Function to remove antitag
+function removeAntitag(groupId) {
+    const state = readAntitagState();
+    if (groupId && state.groups[groupId]) {
+        delete state.groups[groupId];
+        saveAntitagState(state);
+        return true;
+    }
+    return false;
+}
 
 async function handleAntitagCommand(sock, chatId, userMessage, senderId, isSenderAdmin) {
     try {
@@ -20,20 +82,22 @@ async function handleAntitagCommand(sock, chatId, userMessage, senderId, isSende
 
         switch (action) {
             case 'on':
-                const existingConfig = await getAntitag(chatId, 'on');
+                const existingConfig = getAntitag(chatId);
                 if (existingConfig?.enabled) {
                     await sock.sendMessage(chatId, { text: '*_Antitag is already on_*' });
                     return;
                 }
-                const result = await setAntitag(chatId, 'on', 'delete');
+                const result = setAntitag(chatId, true, 'delete');
                 await sock.sendMessage(chatId, { 
                     text: result ? '*_Antitag has been turned ON_*' : '*_Failed to turn on Antitag_*' 
                 });
                 break;
 
             case 'off':
-                await removeAntitag(chatId, 'on');
-                await sock.sendMessage(chatId, { text: '*_Antitag has been turned OFF_*' });
+                const removed = removeAntitag(chatId);
+                await sock.sendMessage(chatId, { 
+                    text: removed ? '*_Antitag has been turned OFF_*' : '*_Antitag was not active_*' 
+                });
                 break;
 
             case 'set':
@@ -50,17 +114,16 @@ async function handleAntitagCommand(sock, chatId, userMessage, senderId, isSende
                     });
                     return;
                 }
-                const setResult = await setAntitag(chatId, 'on', setAction);
+                const setResult = setAntitag(chatId, true, setAction);
                 await sock.sendMessage(chatId, { 
                     text: setResult ? `*_Antitag action set to ${setAction}_*` : '*_Failed to set Antitag action_*' 
                 });
                 break;
 
             case 'get':
-                const status = await getAntitag(chatId, 'on');
-                const actionConfig = await getAntitag(chatId, 'on');
+                const status = getAntitag(chatId);
                 await sock.sendMessage(chatId, { 
-                    text: `*_Antitag Configuration:_*\nStatus: ${status ? 'ON' : 'OFF'}\nAction: ${actionConfig ? actionConfig.action : 'Not set'}` 
+                    text: `*_Antitag Configuration:_*\nStatus: ${status.enabled ? 'ON' : 'OFF'}\nAction: ${status.action || 'delete'}` 
                 });
                 break;
 
@@ -75,12 +138,11 @@ async function handleAntitagCommand(sock, chatId, userMessage, senderId, isSende
 
 async function handleTagDetection(sock, chatId, message, senderId) {
     try {
-        const antitagSetting = await getAntitag(chatId, 'on');
+        const antitagSetting = getAntitag(chatId);
         if (!antitagSetting || !antitagSetting.enabled) return;
 
         // Check if message contains mentions
         const mentions = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || 
-                        message.message?.conversation?.match(/@\d+/g) ||
                         [];
 
         // Check if it's a group message and has multiple mentions
@@ -110,8 +172,8 @@ async function handleTagDetection(sock, chatId, message, senderId) {
                     
                     // Send warning
                     await sock.sendMessage(chatId, {
-                        text: `⚠️ *Tagall Detected!*.`
-                    }, { quoted: message });
+                        text: `⚠️ *Tagall Detected!* Message has been deleted.`
+                    });
                     
                 } else if (action === 'kick') {
                     // Kick the user
@@ -130,7 +192,11 @@ async function handleTagDetection(sock, chatId, message, senderId) {
 }
 
 module.exports = {
+    readAntitagState,
+    saveAntitagState,
+    getAntitag,
+    setAntitag,
+    removeAntitag,
     handleAntitagCommand,
     handleTagDetection
 };
-
