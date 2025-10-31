@@ -1,5 +1,5 @@
 require('dotenv').config() // CRITICAL: Load .env variables first!
-
+const config = require('./config');
 // *******************************************************************
 // *** CRITICAL CHANGE: REQUIRED FILES (settings.js, main, etc.) ***
 // *** HAVE BEEN REMOVED FROM HERE AND MOVED BELOW THE CLONER RUN. ***
