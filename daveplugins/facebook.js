@@ -22,7 +22,7 @@ async function facebookCommand(sock, chatId, message) {
 
         // Send loading reaction
         await sock.sendMessage(chatId, {
-            react: { text: '🔄', key: message.key }
+            react: { text: '💯', key: message.key }
         });
 
         // Resolve share/short URLs to their final destination first
@@ -110,15 +110,19 @@ async function facebookCommand(sock, chatId, message) {
 
         // Check if file was downloaded successfully
         if (!fs.existsSync(tempFile) || fs.statSync(tempFile).size === 0) {
-            throw new Error('Failed to download video');
+            throw new Error('wtf 🤔I Failed to download video');
         }
 
         // Send the video
         await sock.sendMessage(chatId, {
             video: { url: tempFile },
             mimetype: "video/mp4",
-            caption: "_𝙳𝙰𝚅𝙴-𝙼𝙳 is on fire 🔥_"
+            caption: "_Downloaded by Dave-md🔥_"
         }, { quoted: message });
+
+        await sock.sendMessage(chatId, {
+            react: { text: '💯', key: message.key }
+        });
 
         // Clean up temp file
         try {
@@ -130,7 +134,7 @@ async function facebookCommand(sock, chatId, message) {
     } catch (error) {
         console.error('Error in Facebook command:', error);
         await sock.sendMessage(chatId, { 
-            text: "An error occurred. API might be down. Error: " + error.message
+            text: "oopssy 😂An error occurred. API might be down. Error: " + error.message
         }, { quoted: message });
     }
 }
