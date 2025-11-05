@@ -7,6 +7,7 @@ const webp = require('node-webpmux');
 const crypto = require('crypto');
 
 async function stickerCommand(sock, chatId, message) {
+const pushname= message.pushName || "Unknown User"
     // The message that will be quoted in the reply.
     const messageToQuote = message;
     
@@ -34,10 +35,10 @@ async function stickerCommand(sock, chatId, message) {
             text: 'Please reply to an image/video with .sticker, or send an image/video with .sticker as the caption.',
             contextInfo: {
                 forwardingScore: 999,
-                isForwarded: false,
+                isForwarded: true,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '@newsletter',
-                    newsletterName: '𝙳𝙰𝚅𝙴-𝙼𝙳',
+                    newsletterJid: '',
+                    newsletterName: ' MD',
                     serverMessageId: -1
                 }
             }
@@ -56,10 +57,10 @@ async function stickerCommand(sock, chatId, message) {
                 text: 'Failed to download media. Please try again.',
                 contextInfo: {
                     forwardingScore: 999,
-                    isForwarded: false,
+                    isForwarded: true,
                     forwardedNewsletterMessageInfo: {
-                        newsletterJid: '@newsletter',
-                        newsletterName: '𝙳𝙰𝚅𝙴-𝙼𝙳',
+                        newsletterJid: '',
+                        newsletterName: ' MD',
                         serverMessageId: -1
                     }
                 }
@@ -109,8 +110,8 @@ async function stickerCommand(sock, chatId, message) {
         // Create metadata
         const json = {
             'sticker-pack-id': crypto.randomBytes(32).toString('hex'),
-            'sticker-pack-name': settings.packname || '𝙳𝙰𝚅𝙴-𝙼𝙳',
-            'emojis': ['🤖']
+            'sticker-pack-name': settings.packname || `${pushname}`,
+            'emojis': ['🥹']
         };
 
         // Create exif buffer
@@ -139,15 +140,15 @@ async function stickerCommand(sock, chatId, message) {
         }
 
     } catch (error) {
-        console.error('Error in sticker command:', error);
+        //console.error('Error in sticker command:', error);
         await sock.sendMessage(chatId, { 
             text: 'Failed to create sticker! Try again later.',
             contextInfo: {
                 forwardingScore: 999,
-                isForwarded: false,
+                isForwarded: true,
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: '@newsletter',
-                    newsletterName: '𝙳𝙰𝚅𝙴-𝙼𝙳',
+                    newsletterName: ' MD',
                     serverMessageId: -1
                 }
             }
