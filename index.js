@@ -676,7 +676,7 @@ async function tylor() {
         handleStatus = mainModules.handleStatus;
 
         // Load case handler - handle different export styles
-        const caseModule = require('./case');
+        const caseModule = require('./dave');
         if (typeof caseModule === 'function') {
             handleCommand = caseModule;
         } else if (caseModule.handleCommand) {
@@ -694,7 +694,7 @@ async function tylor() {
         settings = require('./settings')
         setInterval(() => store.writeToFile(), settings.storeWriteInterval || 10000)
 
-        log("Core files (main.js + case.js) loaded successfully.", 'green');
+        log("Core files (main.js + dave.js) loaded successfully.", 'green');
     } catch (e) {
         log(`FATAL: Failed to load core files after cloning. Check cloned repo structure. ${e.message}`, 'red', true);
         process.exit(1);
