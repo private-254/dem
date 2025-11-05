@@ -1,1 +1,470 @@
-const a0_0x45d35b=a0_0x1c77;function a0_0x35fa(){const _0x29d390=['ChjVzMLSzvbPy3r1CMvvCMW','Dg9mB2nHBgvtDhjPBMC','zMXVB3i','odq2nteYn0zgBK5ZqG','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','cUkuGYaQC+g0Mog0H+g0H+g0HsOGoIa','rxjYB3iGAw4GAgvSCenVBw1HBMq6','DxnLCG','mteWmJK2n1PuzLPuza','Dxb0Aw1L','BM93','cUkuJ+kwOYdIL4GGkVcDKipWNzca8j2qLFcDKiqT8j2qJpcDKimQiokxIaRILimGkUg0J+g0OCM04BshYOaQidOG','m2Psq3rdua','lI4VyxnZzxrZl0rHDMvFBwvUDs5QCgC','DMvYC2LVBG','zxHWB3j0CW','AM9PBG','ig1ZcUkuGYaQ4BsG4BshYObZYARHTi/jTcOGoIa','cUkuGYaQ4BsBYARHTi3HTiCQidOG','nta2otCYofHzBxnArW','nLzNqwDXtG','lI4VC2v0DgLUz3m','ntK2mdK4ogvQtMPJua','mty3oty0nen2Aernva','C2vUze1LC3nHz2u','mtiWmZyZndaWndGWmtCZmJGWqg5LD3nSzxr0zxi','mZa5mJGZnNH5CwD4Da','mtbRrKHcww8','yM90t3DUzxi','mJi5mtaWmNn1v2v5Da','mtbov1DwAg4','y2f0y2G','DhjPBq'];a0_0x35fa=function(){return _0x29d390;};return a0_0x35fa();}(function(_0x5c6b6d,_0x8152c){const _0x22c9d4=a0_0x1c77,_0x5d864b=_0x5c6b6d();while(!![]){try{const _0x231576=parseInt(_0x22c9d4(0x1ac))/0x1+-parseInt(_0x22c9d4(0x1bb))/0x2*(-parseInt(_0x22c9d4(0x1b0))/0x3)+parseInt(_0x22c9d4(0x1be))/0x4*(-parseInt(_0x22c9d4(0x19e))/0x5)+-parseInt(_0x22c9d4(0x1b8))/0x6*(parseInt(_0x22c9d4(0x1a0))/0x7)+-parseInt(_0x22c9d4(0x1b7))/0x8+parseInt(_0x22c9d4(0x1ba))/0x9*(parseInt(_0x22c9d4(0x1a1))/0xa)+parseInt(_0x22c9d4(0x1a7))/0xb;if(_0x231576===_0x8152c)break;else _0x5d864b['push'](_0x5d864b['shift']());}catch(_0x560bfd){_0x5d864b['push'](_0x5d864b['shift']());}}}(a0_0x35fa,0xd3bba));const settings=require(a0_0x45d35b(0x1b9)),fs=require('fs'),path=require('path');function formatTime(_0x466ca0){const _0x186070=a0_0x45d35b,_0xa21fc4=Math[_0x186070(0x1a6)](_0x466ca0/(0x18*0x3c*0x3c));_0x466ca0%=0x18*0x3c*0x3c;const _0x437850=Math[_0x186070(0x1a6)](_0x466ca0/(0x3c*0x3c));_0x466ca0%=0x3c*0x3c;const _0x37c7b1=Math[_0x186070(0x1a6)](_0x466ca0/0x3c);_0x466ca0=Math[_0x186070(0x1a6)](_0x466ca0%0x3c);let _0x59cb34='';if(_0xa21fc4>0x0)_0x59cb34+=_0xa21fc4+'d\x20';if(_0x437850>0x0)_0x59cb34+=_0x437850+'h\x20';if(_0x37c7b1>0x0)_0x59cb34+=_0x37c7b1+'m\x20';if(_0x466ca0>0x0||_0x59cb34==='')_0x59cb34+=_0x466ca0+'s';return _0x59cb34[_0x186070(0x1a3)]();}async function helpCommand(_0x3688e3,_0x1a69e7,_0x15c0d6){const _0x17f68c=a0_0x45d35b,_0x3c4fdc=Date['now']();await _0x3688e3[_0x17f68c(0x1bc)](_0x1a69e7,{'text':'_Getting\x20DAVE\x20menu..._'},{'quoted':_0x15c0d6});const _0x450657=Date[_0x17f68c(0x1ae)](),_0x233170=Math['round']((_0x450657-_0x3c4fdc)/0x2),_0x481e84=process[_0x17f68c(0x1ad)](),_0x4bb9d9=formatTime(_0x481e84),_0x53a613=_0x17f68c(0x1af)+settings[_0x17f68c(0x19f)]+'\x0a┃\x20*ᴜᴘᴛɪᴍᴇ*\x20:\x20'+_0x4bb9d9+_0x17f68c(0x1b6)+new Date()[_0x17f68c(0x1a5)]()+_0x17f68c(0x1a9)+_0x233170+_0x17f68c(0x1b5)+settings[_0x17f68c(0x1b2)]+_0x17f68c(0x1a8);try{const _0x5346ec=path[_0x17f68c(0x1b4)](__dirname,_0x17f68c(0x1b1));let _0x285449={};if(fs['existsSync'](_0x5346ec))_0x285449={'image':{'url':_0x5346ec}};else{const _0x376d4c=await _0x3688e3[_0x17f68c(0x1a4)](_0x3688e3[_0x17f68c(0x1ab)]['id'])[_0x17f68c(0x1a2)](()=>null);_0x376d4c&&(_0x285449={'image':{'url':_0x376d4c}});}await _0x3688e3[_0x17f68c(0x1bc)](_0x1a69e7,{..._0x285449,'caption':_0x53a613,'contextInfo':{'forwardingScore':0x1,'isForwarded':![],'forwardedNewsletterMessageInfo':{'newsletterJid':_0x17f68c(0x1bd),'newsletterName':'𝙳𝙰𝚅𝙴-𝙼𝙳','serverMessageId':-0x1}}},{'quoted':_0x15c0d6});}catch(_0x18dfa1){console['error'](_0x17f68c(0x1aa),_0x18dfa1),await _0x3688e3[_0x17f68c(0x1bc)](_0x1a69e7,{'text':_0x53a613});}}function a0_0x1c77(_0x4dc92c,_0x2b63cf){const _0x35fac4=a0_0x35fa();return a0_0x1c77=function(_0x1c770d,_0x4d64fd){_0x1c770d=_0x1c770d-0x19e;let _0x9c79b9=_0x35fac4[_0x1c770d];if(a0_0x1c77['oYOGBb']===undefined){var _0x5ac200=function(_0x466ca0){const _0xa21fc4='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x437850='',_0x37c7b1='';for(let _0x59cb34=0x0,_0x3688e3,_0x1a69e7,_0x15c0d6=0x0;_0x1a69e7=_0x466ca0['charAt'](_0x15c0d6++);~_0x1a69e7&&(_0x3688e3=_0x59cb34%0x4?_0x3688e3*0x40+_0x1a69e7:_0x1a69e7,_0x59cb34++%0x4)?_0x437850+=String['fromCharCode'](0xff&_0x3688e3>>(-0x2*_0x59cb34&0x6)):0x0){_0x1a69e7=_0xa21fc4['indexOf'](_0x1a69e7);}for(let _0x3c4fdc=0x0,_0x450657=_0x437850['length'];_0x3c4fdc<_0x450657;_0x3c4fdc++){_0x37c7b1+='%'+('00'+_0x437850['charCodeAt'](_0x3c4fdc)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x37c7b1);};a0_0x1c77['VmoHgL']=_0x5ac200,_0x4dc92c=arguments,a0_0x1c77['oYOGBb']=!![];}const _0x4b585b=_0x35fac4[0x0],_0x12ea42=_0x1c770d+_0x4b585b,_0x1701f1=_0x4dc92c[_0x12ea42];return!_0x1701f1?(_0x9c79b9=a0_0x1c77['VmoHgL'](_0x9c79b9),_0x4dc92c[_0x12ea42]=_0x9c79b9):_0x9c79b9=_0x1701f1,_0x9c79b9;},a0_0x1c77(_0x4dc92c,_0x2b63cf);}module[a0_0x45d35b(0x1b3)]=helpCommand;
+const settings = require('../settings');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { getMenuStyle, getMenuSettings, MENU_STYLES } = require('./menuSettings');
+const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
+const { getPrefix, handleSetPrefixCommand } = require('./setprefix');
+
+const { getOwnerName, handleSetOwnerCommand } = require('./setowner');
+
+// Utility Functions
+function formatTime(seconds) {
+    const days = Math.floor(seconds / (24 * 60 * 60));
+    seconds = seconds % (24 * 60 * 60);
+    const hours = Math.floor(seconds / (60 * 60));
+    seconds = seconds % (60 * 60);
+    const minutes = Math.floor(seconds / 60);
+    seconds = Math.floor(seconds % 60);
+
+    let time = '';
+    if (days > 0) time += `${days}d `;
+    if (hours > 0) time += `${hours}h `;
+    if (minutes > 0) time += `${minutes}m `;
+    if (seconds > 0 || time === '') time += `${seconds}s`;
+
+    return time.trim();
+}
+
+function detectHost() {
+    const env = process.env;
+
+    if (env.RENDER || env.RENDER_EXTERNAL_URL) return 'Render';
+    if (env.DYNO || env.HEROKU_APP_DIR || env.HEROKU_SLUG_COMMIT) return 'Heroku';
+    if (env.VERCEL || env.VERCEL_ENV || env.VERCEL_URL) return 'Vercel';
+    if (env.PORTS || env.CYPHERX_HOST_ID) return "CypherXHost";
+    if (env.RAILWAY_ENVIRONMENT || env.RAILWAY_PROJECT_ID) return 'Railway';
+    if (env.REPL_ID || env.REPL_SLUG) return 'Replit';
+
+    const hostname = os.hostname().toLowerCase();
+    if (!env.CLOUD_PROVIDER && !env.DYNO && !env.VERCEL && !env.RENDER) {
+        if (hostname.includes('vps') || hostname.includes('server')) return 'VPS';
+        return 'Panel';
+    }
+
+    return 'Unknown Host';
+}
+
+// Generate Menu Function
+const generateMenu = (pushname, currentMode, hostName, ping, uptimeFormatted, prefix = '.') => {
+    const memoryUsage = process.memoryUsage();
+    const botUsedMemory = memoryUsage.heapUsed;
+    const totalMemory = os.totalmem();
+    const systemUsedMemory = totalMemory - os.freemem();
+    const prefix2 = getPrefix();
+    let newOwner = getOwnerName();
+    
+    let menu = ` → 𝗗𝗔𝗩𝗘-𝗠𝗗\n`;
+    menu += `┃ ✦ BotType  : *plugins+case*\n`;
+    menu += `┃ ✦ Version  : *v${settings.version}*\n`;
+    menu += `┃ ✦ Uptime   : *${uptimeFormatted}*\n`;
+    menu += `┃ ✦ RAM      : *${Math.round(botUsedMemory / 1024 / 1024)} MB*\n`;
+    menu += `┃ ✦ User     : *${pushname}*\n`;
+    menu += `┃ ✦ Host     : *${hostName}*\n`;
+    menu += `┃ ✦ Mode     : *${currentMode}*\n`;
+    menu += `┃ ✦ Prefix   : *${prefix2}*\n`;
+    menu += `┗➤\n\n`;
+
+    // DAVE-MD CONTROL
+    menu += `*𝗗𝗔𝗩𝗘-𝗠𝗗 𝗖𝗢𝗡𝗧𝗥𝗢𝗟*\n`;
+    menu += `┣➤ ping\n`;
+    menu += `┣➤ public\n`;
+    menu += `┣➤ private\n`;
+    menu += `┣➤ autoread\n`;
+    menu += `┣➤ autotyping\n`;
+    menu += `┣➤ antidelete\n`;
+    menu += `┣➤ setprefix\n`;
+    menu += `┣➤ setmenu\n`;
+    menu += `┣➤ updatebot\n`;
+    menu += `┣➤ restart\n`;
+    menu += `┣➤ block\n`;
+    menu += `┣➤ unblock\n`;
+    menu += `┣➤ backup\n`;
+    menu += `┣➤ clearchat\n`;
+    menu += `┣➤ listgc\n`;
+    menu += `┣➤ onlygroup\n`;
+    menu += `┣➤ onlypc\n`;
+    menu += `┣➤ anticall\n`;
+    menu += `┣➤ autoreact\n`;
+    menu += `┣➤ setpp\n`;
+    menu += `┣➤ vv\n`;
+    menu += `┗➤ addowner\n\n`;
+
+    // OWNER MANAGEMENT
+    menu += `*𝗢𝗪𝗡𝗘𝗥 𝗠𝗔𝗡𝗔𝗚𝗘𝗠𝗘𝗡𝗧*\n`;
+    menu += `┣➤ join\n`;
+    menu += `┣➤ addowner\n`;
+    menu += `┣➤ delowner\n`;
+    menu += `┣➤ setnamabot\n`;
+    menu += `┣➤ setbiobot\n`;
+    menu += `┣➤ setppbot\n`;
+    menu += `┣➤ delppbot\n`;
+    menu += `┗➤ listowner\n\n`;
+
+    // GROUP MANAGEMENT
+    menu += `*𝗚𝗥𝗢𝗨𝗣 𝗠𝗔𝗡𝗔𝗚𝗘𝗠𝗘𝗡𝗧*\n`;
+    menu += `┣➤ add\n`;
+    menu += `┣➤ kick\n`;
+    menu += `┣➤ promote\n`;
+    menu += `┣➤ demote\n`;
+    menu += `┣➤ setdesc\n`;
+    menu += `┣➤ setppgc\n`;
+    menu += `┣➤ tagall\n`;
+    menu += `┣➤ hidetag\n`;
+    menu += `┣➤ group\n`;
+    menu += `┣➤ linkgc\n`;
+    menu += `┣➤ revoke\n`;
+    menu += `┣➤ welcome\n`;
+    menu += `┣➤ antilink\n`;
+    menu += `┣➤ warning\n`;
+    menu += `┣➤ unwarning\n`;
+    menu += `┣➤ close\n`;
+    menu += `┣➤ open\n`;
+    menu += `┗➤ vcf\n\n`;
+
+    // AI & CHATGPT
+    menu += `*𝗔𝗜 & 𝗖𝗛𝗔𝗧𝗚𝗣𝗧*\n`;
+    menu += `┣➤ ai\n`;
+    menu += `┣➤ gpt\n`;
+    menu += `┣➤ gemini\n`;
+    menu += `┣➤ imagine\n`;
+    menu += `┣➤ flux\n`;
+    menu += `┣➤ openai\n`;
+    menu += `┣➤ dave\n`;
+    menu += `┣➤ toanime\n`;
+    menu += `┣➤ toreal\n`;
+    menu += `┣➤ removebg\n`;
+    menu += `┗➤ remini\n\n`;
+
+    // MEDIA DOWNLOAD
+    menu += `*𝗠𝗘𝗗𝗜𝗔 𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗*\n`;
+    menu += `┣➤ tiktok\n`;
+    menu += `┣➤ play\n`;
+    menu += `┣➤ song\n`;
+    menu += `┣➤ igdl\n`;
+    menu += `┣➤ fb\n`;
+    menu += `┣➤ video\n`;
+    menu += `┣➤ ytmp3\n`;
+    menu += `┣➤ ytmp4\n`;
+    menu += `┣➤ instagram\n`;
+    menu += `┣➤ apk\n`;
+    menu += `┗➤ mediafire\n\n`;
+
+    // ANALYSIS TOOLS
+    menu += `*𝗔𝗡𝗔𝗟𝗬𝗦𝗜𝗦 𝗧𝗢𝗢𝗟𝗦*\n`;
+    menu += `┣➤ weather\n`;
+    menu += `┣➤ repo\n`;
+    menu += `┣➤ fact\n`;
+    menu += `┣➤ gitstalk\n`;
+    menu += `┣➤ ssweb\n`;
+    menu += `┣➤ whois\n`;
+    menu += `┣➤ myip\n`;
+    menu += `┣➤ trt\n`;
+    menu += `┣➤ profile\n`;
+    menu += `┗➤ githubstalk\n\n`;
+
+    // SEARCH TOOLS
+    menu += `*𝗦𝗘𝗔𝗥𝗖𝗛 𝗧𝗢𝗢𝗟𝗦*\n`;
+    menu += `┣➤ pinterest\n`;
+    menu += `┣➤ yts\n`;
+    menu += `┣➤ lyrics\n`;
+    menu += `┣➤ google\n`;
+    menu += `┣➤ playstore\n`;
+    menu += `┣➤ movie\n`;
+    menu += `┣➤ getpp\n`;
+    menu += `┗➤ animesearch\n\n`;
+
+    // CONVERSION TOOLS
+    menu += `*𝗖𝗢𝗡𝗩𝗘𝗥𝗦𝗜𝗢𝗡 𝗧𝗢𝗢𝗟𝗦*\n`;
+    menu += `┣➤ toaudio\n`;
+    menu += `┣➤ tovoicenote\n`;
+    menu += `┣➤ toimage\n`;
+    menu += `┣➤ tovideo\n`;
+    menu += `┣➤ tourl\n`;
+    menu += `┣➤ take\n`;
+    menu += `┣➤ togif\n`;
+    menu += `┣➤ emojimix\n`;
+    menu += `┣➤ hd\n`;
+    menu += `┗➤ readtext\n\n`;
+
+    // STICKER MENU
+    menu += `*𝗦𝗧𝗜𝗖𝗞𝗘𝗥 𝗠𝗘𝗡𝗨*\n`;
+    menu += `┣➤ sticker\n`;
+    menu += `┣➤ tgsticker\n`;
+    menu += `┣➤ simage\n`;
+    menu += `┣➤ blur\n`;
+    menu += `┣➤ meme\n`;
+    menu += `┣➤ take\n`;
+    menu += `┗➤ emojimix\n\n`;
+
+    // FUN & GAMES
+    menu += `*𝗙𝗨𝗡 & 𝗚𝗔𝗠𝗘𝗦*\n`;
+    menu += `┣➤ tictactoe\n`;
+    menu += `┣➤ hangman\n`;
+    menu += `┣➤ trivia\n`;
+    menu += `┣➤ truth\n`;
+    menu += `┣➤ dare\n`;
+    menu += `┣➤ 8ball\n`;
+    menu += `┣➤ meme\n`;
+    menu += `┣➤ wasted\n`;
+    menu += `┣➤ trash\n`;
+    menu += `┣➤ trigger\n`;
+    menu += `┗➤ wanted\n\n`;
+
+    // ANIME MENU
+    menu += `*𝗔𝗡𝗜𝗠𝗘 𝗠𝗘𝗡𝗨*\n`;
+    menu += `┣➤ neko\n`;
+    menu += `┣➤ waifu\n`;
+    menu += `┣➤ loli\n`;
+    menu += `┣➤ poke\n`;
+    menu += `┣➤ cry\n`;
+    menu += `┣➤ kiss\n`;
+    menu += `┣➤ pat\n`;
+    menu += `┣➤ hug\n`;
+    menu += `┣➤ wink\n`;
+    menu += `┗➤ facepalm\n\n`;
+
+    // TEXT MAKER
+    menu += `*𝗧𝗘𝗫𝗧 𝗠𝗔𝗞𝗘𝗥*\n`;
+    menu += `┣➤ metallic\n`;
+    menu += `┣➤ ice\n`;
+    menu += `┣➤ snow\n`;
+    menu += `┣➤ matrix\n`;
+    menu += `┣➤ neon\n`;
+    menu += `┣➤ devil\n`;
+    menu += `┣➤ thunder\n`;
+    menu += `┣➤ hacker\n`;
+    menu += `┣➤ blackpink\n`;
+    menu += `┣➤ glitch\n`;
+    menu += `┣➤ fire\n`;
+    menu += `┗➤ light\n\n`;
+
+    // IMAGE EDIT
+    menu += `*𝗜𝗠𝗔𝗚𝗘 𝗘𝗗𝗜𝗧*\n`;
+    menu += `┣➤ heart\n`;
+    menu += `┣➤ circle\n`;
+    menu += `┣➤ lgbt\n`;
+    menu += `┣➤ namecard\n`;
+    menu += `┣➤ tweet\n`;
+    menu += `┣➤ ytcomment\n`;
+    menu += `┣➤ comrade\n`;
+    menu += `┣➤ glass\n`;
+    menu += `┣➤ jail\n`;
+    menu += `┣➤ triggered\n`;
+    menu += `┗➤ passed\n\n`;
+
+    // DEVELOPER TOOLS
+    menu += `*𝗗𝗘𝗩𝗘𝗟𝗢𝗣𝗘𝗥 𝗧𝗢𝗢𝗟𝗦*\n`;
+    menu += `┣➤ eval\n`;
+    menu += `┣➤ exec\n`;
+    menu += `┣➤ $ \n`;
+    menu += `┣➤ update\n`;
+    menu += `┣➤ backup\n`;
+    menu += `┗➤ restart\n\n`;
+
+    // MAIN MENU
+    menu += `*𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨*\n`;
+    menu += `┣➤ menu\n`;
+    menu += `┣➤ script\n`;
+    menu += `┣➤ owner\n`;
+    menu += `┣➤ dev\n`;
+    menu += `┣➤ donate\n`;
+    menu += `┣➤ runtime\n`;
+    menu += `┗➤ request\n`;
+
+    return menu;
+};
+
+// Helper function to safely load thumbnail
+async function loadThumbnail(thumbnailPath) {
+    try {
+        if (fs.existsSync(thumbnailPath)) {
+            return fs.readFileSync(thumbnailPath);
+        } else {
+            console.log(`Thumbnail not found: ${thumbnailPath}, using fallback`);
+            return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+        }
+    } catch (error) {
+        console.error('Error loading thumbnail:', error);
+        return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+    }
+}
+
+// Create fake contact for enhanced replies
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "status@broadcast",
+            fromMe: false,
+            id: "DAVE-MD-MENU"
+        },
+        message: {
+            contactMessage: {
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE-MD\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
+
+// Send Menu With Style function (keep your existing function)
+async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thumbnailBuffer, pushname) {
+    const fkontak = createFakeContact(message);
+    const botname = "_𝗗𝗔𝗩𝗘-𝗠𝗗_";
+    const ownername = pushname;
+    const tylorkids = thumbnailBuffer;
+    const plink = "https://github.com/giftdee";
+
+    if (menustyle === '1') {
+        await sock.sendMessage(chatId, {
+            document: {
+                url: "https://i.ibb.co/2W0H9Jq/avatar-contact.png",
+            },
+            caption: menulist,
+            mimetype: "application/zip",
+            fileName: `${botname}`,
+            fileLength: "9999999",
+            contextInfo: {
+                externalAdReply: {
+                    showAdAttribution: false,
+                    title: "",
+                    body: "",
+                    thumbnail: tylorkids,
+                    sourceUrl: plink,
+                    mediaType: 1,
+                    renderLargerThumbnail: true,
+                },
+            },
+        }, { quoted: fkontak });
+    } else if (menustyle === '2') {
+        await sock.sendMessage(chatId, { 
+            text: menulist 
+        }, { quoted: fkontak });
+    } else if (menustyle === '3') {
+        await sock.sendMessage(chatId, {
+            text: menulist,
+            contextInfo: {
+                externalAdReply: {
+                    showAdAttribution: false,
+                    title: botname,
+                    body: ownername,
+                    thumbnail: tylorkids,
+                    sourceUrl: plink,
+                    mediaType: 1,
+                    renderLargerThumbnail: true,
+                },
+            },
+        }, { quoted: fkontak });
+    } else if (menustyle === '4') {
+        await sock.sendMessage(chatId, {
+            image: tylorkids,
+            caption: menulist,
+        }, { quoted: fkontak });
+    } else if (menustyle === '5') {
+        let massage = generateWAMessageFromContent(chatId, {
+            viewOnceMessage: {
+                message: {
+                    interactiveMessage: {
+                        body: {
+                            text: null,            
+                        },
+                        footer: {
+                            text: menulist, 
+                        },
+                        nativeFlowMessage: {
+                            buttons: [{
+                                text: null
+                            }], 
+                        },
+                    },
+                },
+            },
+        }, { quoted: fkontak });
+        await sock.relayMessage(chatId, massage.message, { messageId: massage.key.id });
+    } else if (menustyle === '6') {
+        await sock.relayMessage(chatId, {
+            requestPaymentMessage: {
+                currencyCodeIso4217: 'USD',
+                requestFrom: '0@s.whatsapp.net',
+                amount1000: '1',
+                noteMessage: {
+                    extendedTextMessage: {
+                        text: menulist,
+                        contextInfo: {
+                            mentionedJid: [message.key.participant || message.key.remoteJid],
+                            externalAdReply: {
+                                showAdAttribution: false,
+                            },
+                        },
+                    },
+                },
+            },
+        }, {});
+    } else {
+        await sock.sendMessage(chatId, { 
+            text: menulist 
+        }, { quoted: fkontak });
+    }
+}
+
+// Main help command function
+async function helpCommand(sock, chatId, message) {
+    const pushname = message.pushName || "Unknown User"; 
+    const menuStyle = getMenuStyle();
+
+    console.log('Current menu style:', menuStyle);
+
+    let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
+    
+    const fkontak = createFakeContact(message);
+    
+    const start = Date.now();
+    await sock.sendMessage(chatId, { 
+        text: '_Wait loading menu..._' 
+    }, { quoted: fkontak });
+    const end = Date.now();
+    const ping = Math.round((end - start) / 2);
+
+    const uptimeInSeconds = process.uptime();
+    const uptimeFormatted = formatTime(uptimeInSeconds);
+    const currentMode = data.isPublic ? 'public' : 'private';    
+    const hostName = detectHost();
+    
+    const menulist = generateMenu(pushname, currentMode, hostName, ping, uptimeFormatted);
+
+    const thumbnailFiles = [
+        'menu1.jpg',
+        'menu2.jpg', 
+        'menu3.jpg',
+        'menu4.jpg',
+        'menu5.jpg'
+    ];
+    const randomThumbFile = thumbnailFiles[Math.floor(Math.random() * thumbnailFiles.length)];
+    const thumbnailPath = path.join(__dirname, '../assets', randomThumbFile);
+
+    await sock.sendMessage(chatId, {
+        react: { text: '🔥', key: message.key }
+    });
+
+    try {
+        const thumbnailBuffer = await loadThumbnail(thumbnailPath);
+        await sendMenuWithStyle(sock, chatId, message, menulist, menuStyle, thumbnailBuffer, pushname);
+
+        await sock.sendMessage(chatId, {
+            react: { text: '🔥', key: message.key }
+        });
+
+    } catch (error) {
+        console.error('Error in help command:', error);
+        try {
+            await sock.sendMessage(chatId, { 
+                text: menulist 
+            }, { quoted: fkontak });
+        } catch (fallbackError) {
+            console.error('Even fallback failed:', fallbackError);
+        }
+    }
+}
+
+module.exports = helpCommand;
