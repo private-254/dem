@@ -1,1 +1,76 @@
-function a0_0x3855(_0x82e5bb,_0x493e45){const _0x445ae5=a0_0x445a();return a0_0x3855=function(_0x385539,_0x3a57ca){_0x385539=_0x385539-0x1e1;let _0x809e4b=_0x445ae5[_0x385539];if(a0_0x3855['dHMmvi']===undefined){var _0x45ed16=function(_0x1e4a2b){const _0x505ad2='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0xdf463f='',_0x266484='';for(let _0x447dab=0x0,_0x1cdcc9,_0x1b19ff,_0x46f0e3=0x0;_0x1b19ff=_0x1e4a2b['charAt'](_0x46f0e3++);~_0x1b19ff&&(_0x1cdcc9=_0x447dab%0x4?_0x1cdcc9*0x40+_0x1b19ff:_0x1b19ff,_0x447dab++%0x4)?_0xdf463f+=String['fromCharCode'](0xff&_0x1cdcc9>>(-0x2*_0x447dab&0x6)):0x0){_0x1b19ff=_0x505ad2['indexOf'](_0x1b19ff);}for(let _0x1464d6=0x0,_0x1e54f6=_0xdf463f['length'];_0x1464d6<_0x1e54f6;_0x1464d6++){_0x266484+='%'+('00'+_0xdf463f['charCodeAt'](_0x1464d6)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x266484);};a0_0x3855['oYFCQv']=_0x45ed16,_0x82e5bb=arguments,a0_0x3855['dHMmvi']=!![];}const _0x633545=_0x445ae5[0x0],_0x1b88d5=_0x385539+_0x633545,_0x4975f3=_0x82e5bb[_0x1b88d5];return!_0x4975f3?(_0x809e4b=a0_0x3855['oYFCQv'](_0x809e4b),_0x82e5bb[_0x1b88d5]=_0x809e4b):_0x809e4b=_0x4975f3,_0x809e4b;},a0_0x3855(_0x82e5bb,_0x493e45);}const a0_0x467a94=a0_0x3855;(function(_0x161955,_0x26fb84){const _0x5924e7=a0_0x3855,_0x165e0e=_0x161955();while(!![]){try{const _0x4e2dcf=parseInt(_0x5924e7(0x1ff))/0x1*(-parseInt(_0x5924e7(0x1fd))/0x2)+-parseInt(_0x5924e7(0x1e3))/0x3+parseInt(_0x5924e7(0x1e9))/0x4+-parseInt(_0x5924e7(0x1f7))/0x5+-parseInt(_0x5924e7(0x1e8))/0x6*(-parseInt(_0x5924e7(0x1e5))/0x7)+parseInt(_0x5924e7(0x1e4))/0x8+parseInt(_0x5924e7(0x1ed))/0x9;if(_0x4e2dcf===_0x26fb84)break;else _0x165e0e['push'](_0x165e0e['shift']());}catch(_0x24d36c){_0x165e0e['push'](_0x165e0e['shift']());}}}(a0_0x445a,0x5e48a));function a0_0x445a(){const _0x222b67=['ANnVBG','8j+vS++4JYaQuMvWB3nPDg9YEsbvuKW6kIa','mtmWndK1nuLwshLeDG','otmZnZeYExrTs3D5','mta2otyYmwvkCeLnqq','ie1ccG','8j+vS++4JYaQv2f0y2HLCNm6kIa','nLz2yuDvyG','mJm4ndy4oeLYuK5kyq','C2L6zq','C2vUze1LC3nHz2u','lI4VyxnZzxrZl2rHDMvFCMvWB3mUANbN','mta3mduXotrpEuTsyK8','C3rHCMDHEMvYC19JB3vUDa','zxHWB3j0CW','Bw9Tzw50lxrPBwv6B25L','DxbKyxrLzf9HDa','8j+vS++4JYaQtgfZDcbvCgrHDgvKoIOG','8j+vS++4JYaQvgLWoIOGu2HVDYb5B3vYihn1ChbVCNqGyNKGzM9YA2LUzYbHBMqGC3rHCNjPBMCGDgHLihjLCg9ZAxrVCNKHcGO','D2f0y2HLCNnFy291BNq','BM9Kzs1MzxrJAa','x1bVD2vYzwqGyNKGrgf2zv8','mZm0nZe5mhvJDfDQra','Dg9gAxHLza','Ahr0Chm6lY9HCgKUz2L0AhvIlMnVBs9YzxbVCY9NAwz0zgvLl0rbvKuTtuq','8j+vS++4JYaQu3rHCNm6kIa','zM9YBwf0','8j+vS++4JYaQrM9YA3m6kIa','ndq0q3rXyvzw','reqVtu0VwvKGlsbisdPTBtPZCW','mJu0m1H4r0H1uG','8j+vS++4JYaQuMvWB3nPDg9YEsbtAxPLoIOG','Cgf0Aa','CMvHzezPBgvtEw5J','BMfTzq','8j+vS++4JYaQuMvWB3nPDg9YEsboyw1LoIOG'];a0_0x445a=function(){return _0x222b67;};return a0_0x445a();}const moment=require(a0_0x467a94(0x1f0)),fetch=require(a0_0x467a94(0x1f5)),fs=require('fs'),path=require(a0_0x467a94(0x201));async function githubCommand(_0x1e4a2b,_0x505ad2,_0xdf463f){const _0x4e5856=a0_0x467a94;try{const _0x266484=await fetch(_0x4e5856(0x1f9));if(!_0x266484['ok'])throw new Error('Failed\x20to\x20fetch\x20repository\x20data');const _0x447dab=await _0x266484[_0x4e5856(0x1e1)]();let _0x1cdcc9='🕳️\x20*𝙳𝙰𝚅𝙴-𝙼𝙳\x20REPOSITORY\x20STATUS*\x20🕳️\x0a\x0a';_0x1cdcc9+=_0x4e5856(0x204)+_0x447dab[_0x4e5856(0x203)]+'\x0a',_0x1cdcc9+=_0x4e5856(0x1e7)+_0x447dab[_0x4e5856(0x1f4)]+'\x0a',_0x1cdcc9+=_0x4e5856(0x200)+(_0x447dab[_0x4e5856(0x1ea)]/0x400)[_0x4e5856(0x1f8)](0x2)+_0x4e5856(0x1e6),_0x1cdcc9+=_0x4e5856(0x1f2)+moment(_0x447dab[_0x4e5856(0x1f1)])[_0x4e5856(0x1fb)](_0x4e5856(0x1fe))+'\x0a',_0x1cdcc9+=_0x4e5856(0x1e2)+_0x447dab['html_url']+'\x0a',_0x1cdcc9+=_0x4e5856(0x1fc)+_0x447dab['forks_count']+'\x0a',_0x1cdcc9+=_0x4e5856(0x1fa)+_0x447dab[_0x4e5856(0x1ee)]+'\x0a\x0a',_0x1cdcc9+=_0x4e5856(0x1f3),_0x1cdcc9+=_0x4e5856(0x1f6);const _0x1b19ff=path['join'](__dirname,_0x4e5856(0x1ec));if(fs['existsSync'](_0x1b19ff)){const _0x46f0e3=fs[_0x4e5856(0x202)](_0x1b19ff);await _0x1e4a2b[_0x4e5856(0x1eb)](_0x505ad2,{'image':_0x46f0e3,'caption':_0x1cdcc9},{'quoted':_0xdf463f});}else await _0x1e4a2b[_0x4e5856(0x1eb)](_0x505ad2,{'text':_0x1cdcc9},{'quoted':_0xdf463f});}catch(_0x1464d6){await _0x1e4a2b[_0x4e5856(0x1eb)](_0x505ad2,{'text':'🕳️\x20Unable\x20to\x20retrieve\x20repository\x20information\x20at\x20this\x20time.'},{'quoted':_0xdf463f});}}module[a0_0x467a94(0x1ef)]=githubCommand;
+const moment = require('moment-timezone');
+const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
+
+async function githubCommand(sock, chatId, message) {
+/*━━━━━━━━━━━━━━━━━━━━*/
+// fake kontak 
+/*━━━━━━━━━━━━━━━━━━━━*/
+   
+   function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "status@broadcast",
+            fromMe: false,
+            id: "DAVE-MD-MENU"
+        },
+        message: {
+            contactMessage: {
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE-MD\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
+
+  try {
+  
+  const fkontak = createFakeContact(message);
+    
+const pushname = message.pushName || "Unknown User";
+    const res = await fetch('https://api.github.com/repos/vinpink2/June-md');
+    if (!res.ok) throw new Error('Error fetching repository data');
+    const json = await res.json();
+
+    let txt = `DAVE-MD REPOSITORY INFO\n\n`;
+    txt += `Name: ${json.name}\n`;
+    txt += `Watchers: ${json.watchers_count}\n`;
+    txt += `Size: ${(json.size / 1024).toFixed(2)} MB\n`;
+    txt += `Last Updated: ${moment(json.updated_at).format('DD/MM/YY - HH:mm:ss')}\n`;
+    txt += `Repo: ${json.html_url}\n\n`;    
+    txt += `Forks: ${json.forks_count}\n`;
+    txt += `Stars: ${json.stargazers_count}\n`;
+    txt += `Description: ${json.description || 'None'}\n\n`;
+    txt += `@${pushname} Thank you for choosing DAVE-MD, Star and fork the repository`;
+
+    // Use the local asset image
+    const imgPath = path.join(__dirname, '../assets/repo.jpg');
+    const imgBuffer = fs.readFileSync(imgPath);
+
+    await sock.sendMessage(chatId, {
+                image: imgBuffer,
+                caption: txt,
+                contextInfo: {
+                    forwardingScore: 1,
+                    isForwarded: true,
+                    forwardedNewsletterMessageInfo: {
+                        newsletterJid: '@newsletter',
+                        newsletterName: 'DAVE-MD Official',
+                        serverMessageId: -1
+                    }
+                }
+            },{ quoted: fkontak });   
+      
+//arect sucess
+    await sock.sendMessage(chatId, {
+            react: { text: '🔥', key: message.key }
+        });
+    
+  } catch (error) {
+    await sock.sendMessage(chatId, { text: 'Error fetching repository information.' }, { quoted: message });
+  }
+}
+
+module.exports = githubCommand; 
