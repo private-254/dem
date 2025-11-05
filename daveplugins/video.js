@@ -50,12 +50,12 @@ async function videoCommand(sock, chatId, message) {
     try {
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
         const searchQuery = text.split(' ').slice(1).join(' ').trim();
-
-
+        
+        
         if (!searchQuery) {
             await sock.sendMessage(chatId, { text: 'What video do you want to download?' }, { quoted: message });
             await sock.sendMessage(chatId, {
-            react: { text: '🎥', key: message.key }
+            react: { text: '🔥', key: message.key }
         });
             return;
         }
@@ -86,13 +86,13 @@ async function videoCommand(sock, chatId, message) {
             if (thumb) {
                 await sock.sendMessage(chatId, {
                     image: { url: null },
-                    caption: `_searching video data..._`
+                    caption: `_you wait am searching for your vid..._`
                 }, { quoted: message });
 
-
+           
             }
         } catch (e) { console.error('[VIDEO] thumb error:', e?.message || e); }
-
+        
 
         // Validate YouTube URL
         let urls = videoUrl.match(/(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi);
@@ -105,13 +105,13 @@ async function videoCommand(sock, chatId, message) {
         let videoData;
         try {
         await sock.sendMessage(chatId, {
-            react: { text: '🎥', key: message.key }
+            react: { text: '🔥', key: message.key }
         });
             videoData = await getIzumiVideoByUrl(videoUrl);
         } catch (e1) {
             videoData = await getOkatsuVideoByUrl(videoUrl);
         }
-
+       
 
         // Send video directly using the download URL
         await sock.sendMessage(chatId, {
@@ -123,13 +123,13 @@ async function videoCommand(sock, chatId, message) {
 
         //react sucess
         await sock.sendMessage(chatId, {
-            react: { text: '🥹', key: message.key }
+            react: { text: '🔥', key: message.key }
         });
 
 
     } catch (error) {
         console.error('[VIDEO] Command Error:', error?.message || error);
-        await sock.sendMessage(chatId, { text: 'Download failed my G: ' + (error?.message || 'Unknown error') }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Download failed: ' + (error?.message || 'Unknown error') }, { quoted: message });
     }
 }
 
