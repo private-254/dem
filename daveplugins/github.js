@@ -14,7 +14,7 @@ async function githubCommand(sock, chatId, message) {
             participants: "0@s.whatsapp.net",
             remoteJid: "status@broadcast",
             fromMe: false,
-            id: "DAVE-MD-MENU"
+            id: "Dave-verified"
         },
         message: {
             contactMessage: {
