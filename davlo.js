@@ -223,7 +223,7 @@ module.exports = async (dave, m, chatUpdate, store) => {
                 const path = require('path');
 
                 // --- Users ---
-                const usersFile = path.join(__dirname, 'davelib', 'users.json');
+                const usersFile = path.join(__dirname, 'lib', 'users.json');
                 if (!fs.existsSync(usersFile)) fs.writeFileSync(usersFile, JSON.stringify([]));
                 const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
 
