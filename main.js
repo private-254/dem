@@ -14,10 +14,10 @@ const { jidDecode } = require('@whiskeysockets/baileys');
 const { isSudo } = require('./lib/index');
 const isAdmin = require('./lib/isAdmin');
 const { Antilink } = require('./lib/antilink');
-const { tictactoeCommand, handleTicTacToeMove } = require('./commands/tictactoe');
+const { tictactoeCommand, handleTicTacToeMove } = require('./daveplugins/tictactoe');
 
 /*━━━━━━━━━━━━━━━━━━━━*/
-// -----Command imports - Handlers-----
+// -----Daveplugin imports - Handlers-----
 /*━━━━━━━━━━━━━━━━━━━━*/
 const { 
    autotypingCommand,
@@ -25,51 +25,51 @@ const {
    handleAutotypingForMessage,
    handleAutotypingForCommand, 
    showTypingAfterCommand
-} = require('./commands/autotyping');
+} = require('./daveplugins/autotyping');
 
 const {
   getPrefix, 
   handleSetPrefixCommand 
-} = require('./commands/setprefix');
+} = require('./daveplugins/setprefix');
 
 
 const {
   getOwnerName, 
   handleSetOwnerCommand 
-} = require('./commands/setowner');
+} = require('./daveplugins/setowner');
 
 const {
  autoreadCommand,
  isAutoreadEnabled, 
  handleAutoread 
-} = require('./commands/autoread');
+} = require('./daveplugins/autoread');
 
 const { 
  incrementMessageCount, 
  topMembers 
-} = require('./commands/topmembers');
+} = require('./daveplugins/topmembers');
 
 const { 
  setGroupDescription, 
  setGroupName, 
  setGroupPhoto 
-} = require('./commands/groupmanage');
+} = require('./daveplugins/groupmanage');
 
 const { 
  handleAntilinkCommand, 
  handleLinkDetection 
-} = require('./commands/antilink');
+} = require('./daveplugins/antilink');
 
 const { 
  handleAntitagCommand, 
  handleTagDetection
-} = require('./commands/antitag');
+} = require('./daveplugins/antitag');
 
 const { 
  handleMentionDetection,
  mentionToggleCommand,
  setMentionCommand
-} = require('./commands/mention');
+} = require('./daveplugins/mention');
 
 const { 
  handleAntiBadwordCommand,
@@ -79,33 +79,33 @@ const {
 const { 
  handleChatbotCommand,
  handleChatbotResponse
-} = require('./commands/chatbot');
+} = require('./daveplugins/chatbot');
 
 const { 
   welcomeCommand,
   handleJoinEvent
-} = require('./commands/welcome');
+} = require('./daveplugins/welcome');
 
 const {
  goodbyeCommand,
  handleLeaveEvent
-} = require('./commands/goodbye');
+} = require('./daveplugins/goodbye');
 
 const {
  handleAntideleteCommand,
  handleMessageRevocation,
  storeMessage 
-} = require('./commands/antidelete');
+} = require('./daveplugins/antidelete');
 
 const {
  anticallCommand,
  readState: readAnticallState 
-} = require('./commands/anticall');
+} = require('./daveplugins/anticall');
 
 const {
  pmblockerCommand, 
  readState: readPmBlockerState 
-} = require('./commands/pmblocker');
+} = require('./daveplugins/pmblocker');
 
 const {
  addCommandReaction, 
@@ -115,119 +115,119 @@ const {
 const {
   autoStatusCommand, 
   handleStatusUpdate 
-} = require('./commands/autostatus');
+} = require('./daveplugins/autostatus');
 
 const {
  startHangman, 
  guessLetter 
-} = require('./commands/hangman');
+} = require('./daveplugins/hangman');
 
 const {
  startTrivia, 
  answerTrivia 
-} = require('./commands/trivia');
+} = require('./daveplugins/trivia');
 
 const {
  miscCommand, 
  handleHeart 
-} = require('./commands/misc');
+} = require('./daveplugins/misc');
 
 /*━━━━━━━━━━━━━━━━━━━━*/
-// -----Command imports-----
+// -----Daveplugin imports-----
 /*━━━━━━━━━━━━━━━━━━━━*/
-const getppCommand = require('./commands/getpp');
-const tagAllCommand = require('./commands/tagall');
-const helpCommand = require('./commands/help');
-const banCommand = require('./commands/ban');
-const { promoteCommand } = require('./commands/promote');
-const { demoteCommand } = require('./commands/demote');
-const muteCommand = require('./commands/mute');
-const unmuteCommand = require('./commands/unmute');
-const stickerCommand = require('./commands/sticker');
-const warnCommand = require('./commands/warn');
-const warningsCommand = require('./commands/warnings');
-const ttsCommand = require('./commands/tts');
-const ownerCommand = require('./commands/owner');
-const deleteCommand = require('./commands/delete');
-const memeCommand = require('./commands/meme');
-const tagCommand = require('./commands/tag');
-const tagNotAdminCommand = require('./commands/tagnotadmin');
-const hideTagCommand = require('./commands/hidetag');
-const jokeCommand = require('./commands/joke');
-const quoteCommand = require('./commands/quote');
-const factCommand = require('./commands/fact');
-const weatherCommand = require('./commands/weather');
-const newsCommand = require('./commands/news');
-const kickCommand = require('./commands/kick');
-const simageCommand = require('./commands/simage');
-const attpCommand = require('./commands/attp');
-const { complimentCommand } = require('./commands/compliment');
-const { insultCommand } = require('./commands/insult');
-const { eightBallCommand } = require('./commands/eightball');
-const { lyricsCommand } = require('./commands/lyrics');
-const { dareCommand } = require('./commands/dare');
-const { truthCommand } = require('./commands/truth');
-const { clearCommand } = require('./commands/clear');
-const pingCommand = require('./commands/ping');
-const aliveCommand = require('./commands/alive');
-const blurCommand = require('./commands/img-blur');
-const githubCommand = require('./commands/github');
-const antibadwordCommand = require('./commands/antibadword');
-const takeCommand = require('./commands/take');
-const { flirtCommand } = require('./commands/flirt');
-const characterCommand = require('./commands/character');
-const wastedCommand = require('./commands/wasted');
-const shipCommand = require('./commands/ship');
-const groupInfoCommand = require('./commands/groupinfo');
-const resetlinkCommand = require('./commands/resetlink');
-const staffCommand = require('./commands/staff');
-const unbanCommand = require('./commands/unban');
-const emojimixCommand = require('./commands/emojimix');
-const { handlePromotionEvent } = require('./commands/promote');
-const { handleDemotionEvent } = require('./commands/demote');
-const viewOnceCommand = require('./commands/viewonce');
-const clearSessionCommand = require('./commands/clearsession');
-const { simpCommand } = require('./commands/simp');
-const { stupidCommand } = require('./commands/stupid');
-const stickerTelegramCommand = require('./commands/stickertelegram');
-const textmakerCommand = require('./commands/textmaker');
-const clearTmpCommand = require('./commands/cleartmp');
-const setProfilePicture = require('./commands/setpp');
-const instagramCommand = require('./commands/instagram');
-const facebookCommand = require('./commands/facebook');
-const spotifyCommand = require('./commands/spotify');
-const playCommand = require('./commands/play');
-const tiktokCommand = require('./commands/tiktok');
-const songCommand = require('./commands/song');
-const aiCommand = require('./commands/ai');
-const urlCommand = require('./commands/url');
-const { handleTranslateCommand } = require('./commands/translate');
-const { handleSsCommand } = require('./commands/ss');
-const { goodnightCommand } = require('./commands/goodnight');
-const { shayariCommand } = require('./commands/shayari');
-const { rosedayCommand } = require('./commands/roseday');
-const imagineCommand = require('./commands/imagine');
-const videoCommand = require('./commands/video');
-const sudoCommand = require('./commands/sudo');
-const { animeCommand } = require('./commands/anime');
-const { piesCommand, piesAlias } = require('./commands/pies');
-const stickercropCommand = require('./commands/stickercrop');
-const updateCommand = require('./commands/update');
-const removebgCommand = require('./commands/removebg');
-const { reminiCommand } = require('./commands/remini');
-const { igsCommand } = require('./commands/igs');
-const settingsCommand = require('./commands/settings');
-const soraCommand = require('./commands/sora');
-const apkCommand = require('./commands/apk');
-const menuConfigCommand = require('./commands/menuConfig');
+const getppCommand = require('./daveplugins/getpp');
+const tagAllCommand = require('./daveplugins/tagall');
+const helpCommand = require('./daveplugins/help');
+const banCommand = require('./daveplugins/ban');
+const { promoteCommand } = require('./daveplugins/promote');
+const { demoteCommand } = require('./daveplugins/demote');
+const muteCommand = require('./daveplugins/mute');
+const unmuteCommand = require('./daveplugins/unmute');
+const stickerCommand = require('./daveplugins/sticker');
+const warnCommand = require('./daveplugins/warn');
+const warningsCommand = require('./daveplugins/warnings');
+const ttsCommand = require('./daveplugins/tts');
+const ownerCommand = require('./daveplugins/owner');
+const deleteCommand = require('./daveplugins/delete');
+const memeCommand = require('./daveplugins/meme');
+const tagCommand = require('./daveplugins/tag');
+const tagNotAdminCommand = require('./daveplugins/tagnotadmin');
+const hideTagCommand = require('./daveplugins/hidetag');
+const jokeCommand = require('./daveplugins/joke');
+const quoteCommand = require('./daveplugins/quote');
+const factCommand = require('./daveplugins/fact');
+const weatherCommand = require('./daveplugins/weather');
+const newsCommand = require('./daveplugins/news');
+const kickCommand = require('./daveplugins/kick');
+const simageCommand = require('./daveplugins/simage');
+const attpCommand = require('./daveplugins/attp');
+const { complimentCommand } = require('./daveplugins/compliment');
+const { insultCommand } = require('./daveplugins/insult');
+const { eightBallCommand } = require('./daveplugins/eightball');
+const { lyricsCommand } = require('./daveplugins/lyrics');
+const { dareCommand } = require('./daveplugins/dare');
+const { truthCommand } = require('./daveplugins/truth');
+const { clearCommand } = require('./daveplugins/clear');
+const pingCommand = require('./daveplugins/ping');
+const aliveCommand = require('./daveplugins/alive');
+const blurCommand = require('./daveplugins/img-blur');
+const githubCommand = require('./daveplugins/github');
+const antibadwordCommand = require('./daveplugins/antibadword');
+const takeCommand = require('./daveplugins/take');
+const { flirtCommand } = require('./daveplugins/flirt');
+const characterCommand = require('./daveplugins/character');
+const wastedCommand = require('./daveplugins/wasted');
+const shipCommand = require('./daveplugins/ship');
+const groupInfoCommand = require('./daveplugins/groupinfo');
+const resetlinkCommand = require('./daveplugins/resetlink');
+const staffCommand = require('./daveplugins/staff');
+const unbanCommand = require('./daveplugins/unban');
+const emojimixCommand = require('./daveplugins/emojimix');
+const { handlePromotionEvent } = require('./daveplugins/promote');
+const { handleDemotionEvent } = require('./daveplugins/demote');
+const viewOnceCommand = require('./daveplugins/viewonce');
+const clearSessionCommand = require('./daveplugins/clearsession');
+const { simpCommand } = require('./daveplugins/simp');
+const { stupidCommand } = require('./daveplugins/stupid');
+const stickerTelegramCommand = require('./daveplugins/stickertelegram');
+const textmakerCommand = require('./daveplugins/textmaker');
+const clearTmpCommand = require('./daveplugins/cleartmp');
+const setProfilePicture = require('./daveplugins/setpp');
+const instagramCommand = require('./daveplugins/instagram');
+const facebookCommand = require('./daveplugins/facebook');
+const spotifyCommand = require('./daveplugins/spotify');
+const playCommand = require('./daveplugins/play');
+const tiktokCommand = require('./daveplugins/tiktok');
+const songCommand = require('./daveplugins/song');
+const aiCommand = require('./daveplugins/ai');
+const urlCommand = require('./daveplugins/url');
+const { handleTranslateCommand } = require('./daveplugins/translate');
+const { handleSsCommand } = require('./daveplugins/ss');
+const { goodnightCommand } = require('./daveplugins/goodnight');
+const { shayariCommand } = require('./daveplugins/shayari');
+const { rosedayCommand } = require('./daveplugins/roseday');
+const imagineCommand = require('./daveplugins/imagine');
+const videoCommand = require('./daveplugins/video');
+const sudoCommand = require('./daveplugins/sudo');
+const { animeCommand } = require('./daveplugins/anime');
+const { piesCommand, piesAlias } = require('./daveplugins/pies');
+const stickercropCommand = require('./daveplugins/stickercrop');
+const updateCommand = require('./daveplugins/update');
+const removebgCommand = require('./daveplugins/removebg');
+const { reminiCommand } = require('./daveplugins/remini');
+const { igsCommand } = require('./daveplugins/igs');
+const settingsCommand = require('./daveplugins/settings');
+const soraCommand = require('./daveplugins/sora');
+const apkCommand = require('./daveplugins/apk');
+const menuConfigCommand = require('./daveplugins/menuConfig');
 
 /*━━━━━━━━━━━━━━━━━━━━*/
 // Global settings
 /*━━━━━━━━━━━━━━━━━━━━*/
-global.packname = settings?.packname || "JUNE MD";
-global.author = settings?.author || "Vinpink2";
-global.channelLink = "https://whatsapp.com/channel/0029Va90zAnIHphOuO8Msp3A";
-global.ytch = "Mr Unique Hacker";
+global.packname = settings?.packname || "Dave";
+global.author = settings?.author || "DAVE-MD";
+global.channelLink = "https://whatsapp.com/channel/0029VbApvFQ2Jl84lhONkc3k";
+global.ytch = "DAVE-MD";
 
 // Channel info for message context
 const channelInfo = {
@@ -235,13 +235,14 @@ const channelInfo = {
         forwardingScore: 1,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: '120363417542294659@newsletter',
-            newsletterName: 'cypherX space',
+            newsletterJid: '120363400480173280@newsletter',
+            newsletterName: 'DaveAi×venom updates',
             serverMessageId: -1
         }
     }
 };
 
+/*━━━━━━━━━━━━━━━━━━━━*/
 /*━━━━━━━━━━━━━━━━━━━━*/
 // Main Message Handler
 /*━━━━━━━━━━━━━━━━━━━━*/
