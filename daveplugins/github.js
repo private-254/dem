@@ -46,7 +46,7 @@ const pushname = message.pushName || "Unknown User";
     txt += `@${pushname} Thank you for choosing DAVE-MD, Star and fork the repository`;
 
     // Use the local asset image
-    const imgPath = path.join(__dirname, '../assets/repo.jpg');
+    const imgPath = path.join(__dirname, '../assets/dave-repos.jpg');
     const imgBuffer = fs.readFileSync(imgPath);
 
     await sock.sendMessage(chatId, {
