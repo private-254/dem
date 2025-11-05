@@ -1,60 +1,65 @@
-const yts = require('yt-search');
-const axios = require('axios');
-
 async function playCommand(sock, chatId, message) {
-    try {
-        const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
-        const searchQuery = text.split(' ').slice(1).join(' ').trim();
+    const fs = require("fs");
+    const axios = require('axios');
+    const yts = require('yt-search');
+    const path = require('path');
+    const fetch = require('node-fetch');
 
-        if (!searchQuery) {
-            return await sock.sendMessage(chatId, { 
-                text: "What song do you want to download?"
-            });
-        }
+                try { 
+    await sock.sendMessage(chatId, {
+            react: { text: '🎼', key: message.key }
+        });         
+                    
+  const tempDir = path.join(__dirname, "temp");
+                    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+                    
+      
+ 
+const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
+   const parts = text.split(' ');
+   const query = parts.slice(1).join(' ').trim();
 
-        // Search for the song
-        const { videos } = await yts(searchQuery);
-        if (!videos || videos.length === 0) {
-            return await sock.sendMessage(chatId, { 
-                text: "No songs found!"
-            });
-        }
+             
+  if (!query) return await sock.sendMessage(chatId, { text: '🎵 Provide a song name!\nExample: Not Like Us'},{ quoted: message});
 
-        // Send loading message
-        await sock.sendMessage(chatId, {
-            text: "_Please wait your download is in progress_"
-        });
+               
+                    if (query.length > 100) return await sock.sendMessage(chatId, { text: `whats all that paragraph for 🤷I can't waste my time reading that idiot 😤 keep it simple! Max 100 chars.`},{ quoted: message});
 
-        // Get the first video result
-        const video = videos[0];
-        const urlYt = video.url;
 
-        // Fetch audio data from API
-        const response = await axios.get(`https://apis-keith.vercel.app/download/dlmp3?url=${urlYt}`);
-        const data = response.data;
+   const searchResult = await (await yts(`${query} official`)).videos[0];
+                    if (!searchResult) return sock.sendMessage(chatId, { text: "😆Couldn't find that song bruh. Try another one!"},{ quoted: message });
 
-        if (!data || !data.status || !data.result || !data.result.downloadUrl) {
-            return await sock.sendMessage(chatId, { 
-                text: "Failed to fetch audio from the API. Please try again later."
-            });
-        }
+                    const video = searchResult;
+                    const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
+                    const response = await axios.get(apiUrl);
+                    const apiData = response.data;
 
-        const audioUrl = data.result.downloadUrl;
-        const title = data.result.title;
+                    if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) throw new Error("API failed to fetch track!");
 
-        // Send the audio
-        await sock.sendMessage(chatId, {
-            audio: { url: audioUrl },
-            mimetype: "audio/mpeg",
-            fileName: `${title}.mp3`
-        }, { quoted: message });
+                    const timestamp = Date.now();
+                    const fileName = `audio_${timestamp}.mp3`;
+                    const filePath = path.join(tempDir, fileName);
 
-    } catch (error) {
-        console.error('Error in song2 command:', error);
-        await sock.sendMessage(chatId, { 
-            text: "Download failed. Please try again later."
-        });
-    }
+                    // Download MP3
+                    const audioResponse = await axios({ method: "get", url: apiData.result.downloadUrl, responseType: "stream", timeout: 600000 });
+                    const writer = fs.createWriteStream(filePath);
+                    audioResponse.data.pipe(writer);
+                    await new Promise((resolve, reject) => { writer.on("finish", resolve); writer.on("error", reject); });
+
+                    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) throw new Error("Download failed or empty file!");
+
+                    await sock.sendMessage(chatId, { text:`🎶 Playing *${apiData.result.title || video.title}* 🎧` }, { quoted: message });
+                    await sock.sendMessage(chatId, { document: { url: filePath }, mimetype: "audio/mpeg", fileName: `${(apiData.result.title || video.title).substring(0, 100)}.mp3` }, { quoted: message });
+
+                    // Cleanup
+                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+                } catch (error) {
+                    console.error("Play command error:", error);
+                    return await sock.sendMessage(chatId, { text: `an unexpected Error: ${error.message}`},{quoted: message});
+                }
+            
 }
 
-module.exports = playCommand; 
+
+module.exports = playCommand;
