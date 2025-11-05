@@ -421,7 +421,7 @@ async function helpCommand(sock, chatId, message) {
     
     const start = Date.now();
     await sock.sendMessage(chatId, { 
-        text: '_Wait loading menu..._' 
+        text: '_Loading your menu jomba..._' 
     }, { quoted: fkontak });
     const end = Date.now();
     const ping = Math.round((end - start) / 2);
