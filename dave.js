@@ -1,6 +1,6 @@
 require('dotenv').config()
 const config = require('./config');
-
+const settings = require('./settings');
 const os = require('os');
 const fs = require('fs');
 const fg = require('api-dylux');
@@ -13,8 +13,6 @@ const crypto = require('crypto');
 const nou = require('node-os-utils');
 const moment = require('moment-timezone');
 const path = require('path');
-const didyoumean = require('didyoumean');
-const similarity = require('similarity');
 const speed = require('performance-now');
 const { Sticker } = require('wa-sticker-formatter');
 const yts = require('yt-search');
