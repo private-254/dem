@@ -1,6 +1,7 @@
+require('./settings')
 require('dotenv').config()
 const config = require('./config');
-
+const settings = require('./settings');
 const fs = require('fs')
 const chalk = require('chalk')
 const path = require('path')
