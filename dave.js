@@ -1,12 +1,23 @@
 require('dotenv').config()
 const config = require('./config');
 
+const os = require('os');
 const fs = require('fs');
+const fg = require('api-dylux');
+const fetch = require('node-fetch');
 const axios = require('axios');
+const { exec, execSync } = require("child_process");
+const chalk = require('chalk');
+const cheerio = require('cheerio');
+const crypto = require('crypto');
+const nou = require('node-os-utils');
+const moment = require('moment-timezone');
 const path = require('path');
-const crypto = require("crypto");
-const chalk = require("chalk");
-const moment = require("moment-timezone");
+const didyoumean = require('didyoumean');
+const similarity = require('similarity');
+const speed = require('performance-now');
+const { Sticker } = require('wa-sticker-formatter');
+const yts = require('yt-search');
 require("./settings");
 const { downloadContentFromMessage, proto, generateWAMessage, getContentType, prepareWAMessageMedia, generateWAMessageFromContent, GroupSettingChange, jidDecode, WAGroupMetadata, emitGroupParticipantsUpdate, emitGroupUpdate, generateMessageID, jidNormalizedUser, generateForwardMessageContent, WAGroupInviteMessageGroupMetadata, GroupMetadata, Headers, delay, WA_DEFAULT_EPHEMERAL, WADefault, getAggregateVotesInPollMessage, generateWAMessageContent, areJidsSameUser, useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, makeWaconnet, makeInMemoryStore, MediaType, WAMessageStatus, downloadAndSaveMediaMessage, AuthenticationState, initInMemoryKeyStore, MiscMessageGenerationOptions, useSingleFileAuthState, BufferJSON, WAMessageProto, MessageOptions, WAFlag, WANode, WAMetric, ChatModification, MessageTypeProto, WALocationMessage, ReconnectMode, WAContextInfo, ProxyAgent, waChatKey, MimetypeMap, MediaPathMap, WAContactMessage, WAContactsArrayMessage, WATextMessage, WAMessageContent, WAMessage, BaileysError, WA_MESSAGE_STATUS_TYPE, MediaConnInfo, URL_REGEX, WAUrlInfo, WAMediaUpload, mentionedJid, processTime, Browser, MessageType, Presence, WA_MESSAGE_STUB_TYPES, Mimetype, relayWAMessage, Browsers, DisconnectReason, WAconnet, getStream, WAProto, isBaileys, AnyMessageContent, templateMessage, InteractiveMessage, Header } = require("@whiskeysockets/baileys");
 // Import the same functions used in main.js for consistency
