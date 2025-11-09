@@ -10,7 +10,7 @@ const settings = {
   storeWriteInterval: 10000,
   description: "This is a bot for managing group commands and automating tasks.",
   version: "1.2.4",
-  updateZipUrl: "https://github.com/giftdee/DAVE-MD/archive/refs/heads/main.zip",
+  updateZipUrl: "https://github.com/private-254/Dem/archive/refs/heads/main.zip",
 };
 
 module.exports = settings;
