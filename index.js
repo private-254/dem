@@ -1,7 +1,6 @@
 require('./settings')
 require('dotenv').config()
 const config = require('./config');
-const settings = require('./settings');
 const fs = require('fs')
 const chalk = require('chalk')
 const path = require('path')
@@ -44,7 +43,7 @@ global.connectDebounceTimeout = null;
 global.errorRetryCount = 0;
 
 // --- Dependencies to be loaded later ---
-let smsg, handleMessages, handleGroupParticipantUpdate, handleStatus, store, settings, handleCommand;
+let smsg, handleMessages, handleGroupParticipantUpdate, handleStatus, store, handleCommand;
 
 // --- Storage Configuration ---
 const MESSAGE_STORE_FILE = path.join(__dirname, 'message_backup.json');
@@ -179,7 +178,7 @@ const envPath = path.join(__dirname, '.env')
 
 // --- Readline setup ---
 const rl = process.stdin.isTTY ? readline.createInterface({ input: process.stdin, output: process.stdout }) : null
-const question = (text) => rl ? new Promise(resolve => rl.question(text, resolve)) : Promise.resolve(settings?.ownerNumber || global.phoneNumber)
+const question = (text) => rl ? new Promise(resolve => rl.question(text, resolve)) : Promise.resolve(global.phoneNumber)
 
 // --- Login persistence ---
 async function saveLoginMethod(method) {
@@ -340,29 +339,30 @@ async function sendWelcomeMessage(dave) {
     // CRITICAL: Wait 10 seconds for the connection to fully stabilize
     await delay(10000); 
 
-    // Auto-follow newsletter channel
     try {
-        await dave.newsletterFollow("120363400480173280@newsletter");
-        console.log("Auto-followed your WhatsApp channel successfully!");
-    } catch (err) {
-        console.log(`Failed to auto-follow channel: ${err.message}`);
-    }
+        // Auto-follow newsletter channel
+        try {
+            await dave.newsletterFollow("120363400480173280@newsletter");
+            console.log("✅ Auto-followed your WhatsApp channel successfully!");
+        } catch (err) {
+            console.log(`❌ Failed to auto-follow channel: ${err.message}`);
+        }
 
-    await delay(8000);
+        await delay(8000);
 
-    const { getPrefix } = require('./daveplugins/setprefix');
-    if (!dave.user || global.isBotConnected) return;
+        const { getPrefix, handleSetPrefixCommand } = require('./daveplugins/setprefix');
+        if (!dave.user || global.isBotConnected) return;
 
-    global.isBotConnected = true;
-    const pNumber = dave.user.id.split(':')[0] + '@s.whatsapp.net';
-    let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
-    const currentMode = data.isPublic ? 'public' : 'private';    
-    const hostName = detectHost();
-    const prefix = getPrefix();
+        global.isBotConnected = true;
+        const pNumber = dave.user.id.split(':')[0] + '@s.whatsapp.net';
+        let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
+        const currentMode = data.isPublic ? 'public' : 'private';    
+        const hostName = detectHost();
+        const prefix = getPrefix();
 
-    // Send the message
-    await dave.sendMessage(pNumber, {
-        text: `
+        // Send the message
+        await dave.sendMessage(pNumber, {
+            text: `
 ┏━━━━━✧ DAVE-MD CONNECTED ✧━━━━━━━
 ┃✧ Prefix: [${prefix}]
 ┃✧ mode: ${currentMode}
@@ -370,15 +370,23 @@ async function sendWelcomeMessage(dave) {
 ┃✧ Status: online
 ┃✧ Time: ${new Date().toLocaleString()}
 ┗━━━━━━━━━━━━━━━━━━━`
-    });
-    log('Bot successfully connected to Whatsapp.', 'green');
+        });
+        log('Bot successfully connected to Whatsapp.', 'green');
 
-    // Auto follow group functions - USING YOUR GROUP LINK
-    try {
-        await dave.groupAcceptInvite('LfTFxkUQ1H7Eg2D0vR3n6g');
-        console.log(chalk.blue(`auto-joined WhatsApp group successfully`));
+        // Auto follow group functions - USING YOUR GROUP LINK
+        try {
+            await dave.groupAcceptInvite('LfTFxkUQ1H7Eg2D0vR3n6g');
+            console.log(chalk.blue(`✅ auto-joined WhatsApp group successfully`));
+        } catch (e) {
+            console.log(chalk.red(`❌ failed to join WhatsApp group: ${e}`));
+        }
+
+        // NEW: Reset the error counter on successful connection
+        deleteErrorCountFile();
+        global.errorRetryCount = 0;
     } catch (e) {
-        console.log(chalk.red(`failed to join WhatsApp group: ${e}`));
+        log(`Error sending welcome message during stabilization: ${e.message}`, 'red', true);
+        global.isBotConnected = false;
     }
 }
 
@@ -411,50 +419,6 @@ async function handle408Error(statusCode) {
     return true;
 }
 
-// ================== AntiCall Handler ==================
-function setupAntiCall(dave) {
-    const antiCallNotified = new Set();
-    
-    dave.ev.on('call', async (calls) => {
-        try {
-            if (!global.settings?.anticall) return;
-
-            for (const call of calls) {
-                const callerId = call.from;
-                if (!callerId) continue;
-
-                const callerNumber = callerId.split('@')[0];
-                if (global.owner?.includes(callerNumber)) continue;
-
-                if (call.status === 'offer') {
-                    console.log(`Rejecting ${call.isVideo ? 'video' : 'voice'} call from ${callerNumber}`);
-
-                    if (call.id) {
-                        await dave.rejectCall(call.id, callerId).catch(err => 
-                            console.error('Reject error:', err.message));
-                    }
-
-                    if (!antiCallNotified.has(callerId)) {
-                        antiCallNotified.add(callerId);
-                        await dave.sendMessage(callerId, {
-                            text: 'Calls are not allowed. Your call has been rejected and you have been blocked. Send a text message instead.'
-                        }).catch(() => {});
-
-                        setTimeout(async () => {
-                            await dave.updateBlockStatus(callerId, 'block').catch(() => {});
-                            console.log(`Blocked ${callerNumber}`);
-                        }, 2000);
-
-                        setTimeout(() => antiCallNotified.delete(callerId), 300000);
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('Anticall handler error:', err);
-        }
-    });
-}
-
 // --- Start bot ---
 async function startDave() {
     log('Connecting to WhatsApp...', 'cyan');
@@ -485,12 +449,47 @@ async function startDave() {
         msgRetryCounterCache
     });
 
-    // Setup anticall handler
-    setupAntiCall(dave);
+    // ================== AntiCall Handler ==================
+    const antiCallNotified = new Set();
+
+    dave.ev.on('call', async (calls) => {
+        try {
+            const { readState: readAnticallState } = require('./daveplugins/anticall');
+            const state = readAnticallState();
+            if (!state.enabled) return;
+            for (const call of calls) {
+                const callerJid = call.from || call.peerJid || call.chatId;
+                if (!callerJid) continue;
+                try {
+                    // First: attempt to reject the call if supported
+                    try {
+                        if (typeof dave.rejectCall === 'function' && call.id) {
+                            await dave.rejectCall(call.id, callerJid);
+                        } else if (typeof dave.sendCallOfferAck === 'function' && call.id) {
+                            await dave.sendCallOfferAck(call.id, callerJid, 'reject');
+                        }
+                    } catch {}
+
+                    // Notify the caller only once within a short window
+                    if (!antiCallNotified.has(callerJid)) {
+                        antiCallNotified.add(callerJid);
+                        setTimeout(() => antiCallNotified.delete(callerJid), 60000);
+                        await dave.sendMessage(callerJid, { text: '📵 Anticall is enabled. Your call was rejected and you will be blocked.' });
+                    }
+                } catch {}
+                // Then: block after a short delay to ensure rejection and message are processed
+                setTimeout(async () => {
+                    try { await dave.updateBlockStatus(callerJid, 'block'); } catch {}
+                }, 800);
+            }
+        } catch (e) {
+            // ignore
+        }
+    });
 
     store.bind(dave.ev);
 
-    // --- MESSAGE HANDLER (BOTH CASE.JS AND MAIN.JS) ---
+    // --- MESSAGE HANDLER (BOTH dave.js AND MAIN.JS) ---
     dave.ev.on('messages.upsert', async chatUpdate => {
         for (const msg of chatUpdate.messages) {
             if (!msg.message) continue;
@@ -516,12 +515,12 @@ async function startDave() {
             let m = smsg(dave, mek, store);
 
             // BOTH HANDLERS WORK TOGETHER
-            // First try case commands
+            // First try dave.js commands if available
             if (handleCommand && typeof handleCommand === 'function') {
                 try {
                     await handleCommand(dave, m, chatUpdate, store);
                 } catch (caseError) {
-                    log(`Case command error: ${caseError.message}`, 'red', true);
+                    log(`dave.js command error: ${caseError.message}`, 'red', true);
                 }
             }
 
@@ -720,20 +719,27 @@ function checkEnvStatus() {
 // --- Main login flow ---
 async function tylor() {
     try {
-        require('./settings')
+        const settings = require('./settings');
         const mainModules = require('./main');
         handleMessages = mainModules.handleMessages;
         handleGroupParticipantUpdate = mainModules.handleGroupParticipantUpdate;
         handleStatus = mainModules.handleStatus;
 
-        // Load case handler - handle different export styles
-        const caseModule = require('./dave');
-        if (typeof caseModule === 'function') {
-            handleCommand = caseModule;
-        } else if (caseModule.handleCommand) {
-            handleCommand = caseModule.handleCommand;
-        } else {
-            log('case.js loaded but no function found', 'yellow');
+        // Load dave.js handler with error handling - skip if dave.js has errors
+        let handleCommand = null;
+        try {
+            const daveModule = require('./dave');
+            if (typeof daveModule === 'function') {
+                handleCommand = daveModule;
+                log("dave.js loaded successfully.", 'green');
+            } else if (daveModule && daveModule.handleCommand) {
+                handleCommand = daveModule.handleCommand;
+                log("dave.js handleCommand loaded successfully.", 'green');
+            } else {
+                log('dave.js loaded but no command handler function found', 'yellow');
+            }
+        } catch (daveError) {
+            log(`Skipping dave.js - Error loading: ${daveError.message}`, 'yellow');
             handleCommand = null;
         }
 
@@ -742,12 +748,11 @@ async function tylor() {
 
         store = require('./lib/lightweight_store')
         store.readFromFile()
-        settings = require('./settings')
         setInterval(() => store.writeToFile(), settings.storeWriteInterval || 10000)
 
-        log("Core files (main.js + dave.js) loaded successfully.", 'green');
+        log("Core files loaded successfully.", 'green');
     } catch (e) {
-        log(`FATAL: Failed to load core files after cloning. Check cloned repo structure. ${e.message}`, 'red', true);
+        log(`FATAL: Failed to load core files. ${e.message}`, 'red', true);
         process.exit(1);
     }
 
@@ -766,7 +771,7 @@ async function tylor() {
         log("Valid session found (from .env), starting bot directly...", 'green');
         log('Waiting 3 seconds for stable connection...', 'yellow'); 
         await delay(3000);
-        await startDave(); // FIXED: Changed from startdave to startDave
+        await startDave();
         checkEnvStatus();
         return;
     }
@@ -778,7 +783,7 @@ async function tylor() {
         log("Valid session found, starting bot directly...", 'green'); 
         log('Waiting 3 seconds for stable connection...', 'yellow');
         await delay(3000);
-        await startDave(); // FIXED: Changed from startdave to startDave
+        await startDave();
         checkEnvStatus();
         return;
     }
