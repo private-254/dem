@@ -264,7 +264,7 @@ async function getLoginMethod() {
         let sessionId = await question(`Paste your Session ID here: `);
         sessionId = sessionId.trim();
         if (!sessionId.includes("DAVE-MD:~")) { 
-            log("Invalid Session ID format! Must contain 'dave~'.", 'red'); 
+            log("Invalid Session ID format! Must contain 'DAVE-MD:~'.", 'red'); 
             process.exit(1); 
         }
         global.SESSION_ID = sessionId;
@@ -281,7 +281,7 @@ async function downloadSessionData() {
     try {
         await fs.promises.mkdir(sessionDir, { recursive: true });
         if (!fs.existsSync(credsPath) && global.SESSION_ID) {
-            const base64Data = global.SESSION_ID.includes("DAVE-MD:~") ? global.SESSION_ID.split("dave~")[1] : global.SESSION_ID;
+            const base64Data = global.SESSION_ID.includes("DAVE-MD:~") ? global.SESSION_ID.split("DAVE-MD:~")[1] : global.SESSION_ID;
             const sessionData = Buffer.from(base64Data, 'base64');
             await fs.promises.writeFile(credsPath, sessionData);
             log(`Session successfully saved.`, 'green');
@@ -350,7 +350,7 @@ async function sendWelcomeMessage(dave) {
 
     await delay(8000);
 
-    const { getPrefix, handleSetPrefixCommand } = require('./daveplugins/setprefix');
+    const { getPrefix } = require('./daveplugins/setprefix');
     if (!dave.user || global.isBotConnected) return;
 
     global.isBotConnected = true;
@@ -411,6 +411,50 @@ async function handle408Error(statusCode) {
     return true;
 }
 
+// ================== AntiCall Handler ==================
+function setupAntiCall(dave) {
+    const antiCallNotified = new Set();
+    
+    dave.ev.on('call', async (calls) => {
+        try {
+            if (!global.settings?.anticall) return;
+
+            for (const call of calls) {
+                const callerId = call.from;
+                if (!callerId) continue;
+
+                const callerNumber = callerId.split('@')[0];
+                if (global.owner?.includes(callerNumber)) continue;
+
+                if (call.status === 'offer') {
+                    console.log(`Rejecting ${call.isVideo ? 'video' : 'voice'} call from ${callerNumber}`);
+
+                    if (call.id) {
+                        await dave.rejectCall(call.id, callerId).catch(err => 
+                            console.error('Reject error:', err.message));
+                    }
+
+                    if (!antiCallNotified.has(callerId)) {
+                        antiCallNotified.add(callerId);
+                        await dave.sendMessage(callerId, {
+                            text: 'Calls are not allowed. Your call has been rejected and you have been blocked. Send a text message instead.'
+                        }).catch(() => {});
+
+                        setTimeout(async () => {
+                            await dave.updateBlockStatus(callerId, 'block').catch(() => {});
+                            console.log(`Blocked ${callerNumber}`);
+                        }, 2000);
+
+                        setTimeout(() => antiCallNotified.delete(callerId), 300000);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Anticall handler error:', err);
+        }
+    });
+}
+
 // --- Start bot ---
 async function startDave() {
     log('Connecting to WhatsApp...', 'cyan');
@@ -421,7 +465,7 @@ async function startDave() {
     const { state, saveCreds } = await useMultiFileAuthState(`./session`);
     const msgRetryCounterCache = new NodeCache();
 
-    const Dave = makeWASocket({
+    const dave = makeWASocket({
         version,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false, 
@@ -441,6 +485,9 @@ async function startDave() {
         msgRetryCounterCache
     });
 
+    // Setup anticall handler
+    setupAntiCall(dave);
+
     store.bind(dave.ev);
 
     // --- MESSAGE HANDLER (BOTH CASE.JS AND MAIN.JS) ---
@@ -459,15 +506,15 @@ async function startDave() {
         const mek = chatUpdate.messages[0];
         if (!mek.message) return;
         mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message;
-        
+
         if (mek.key.remoteJid === 'status@broadcast') { 
             await handleStatus(dave, chatUpdate); 
             return; 
         }
-        
+
         try { 
             let m = smsg(dave, mek, store);
-            
+
             // BOTH HANDLERS WORK TOGETHER
             // First try case commands
             if (handleCommand && typeof handleCommand === 'function') {
@@ -477,7 +524,7 @@ async function startDave() {
                     log(`Case command error: ${caseError.message}`, 'red', true);
                 }
             }
-            
+
             // Then try main.js plugins handler
             await handleMessages(dave, chatUpdate, true);
         } catch(e) { 
@@ -719,7 +766,7 @@ async function tylor() {
         log("Valid session found (from .env), starting bot directly...", 'green');
         log('Waiting 3 seconds for stable connection...', 'yellow'); 
         await delay(3000);
-        await startdave();
+        await startDave(); // FIXED: Changed from startdave to startDave
         checkEnvStatus();
         return;
     }
@@ -731,7 +778,7 @@ async function tylor() {
         log("Valid session found, starting bot directly...", 'green'); 
         log('Waiting 3 seconds for stable connection...', 'yellow');
         await delay(3000);
-        await startdave();
+        await startDave(); // FIXED: Changed from startdave to startDave
         checkEnvStatus();
         return;
     }
