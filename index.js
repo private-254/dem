@@ -203,10 +203,10 @@ async function checkAndHandleSessionFormat() {
     const sessionId = process.env.SESSION_ID;
 
     if (sessionId && sessionId.trim() !== '') {
-        if (!sessionId.trim().startsWith('dave~')) {
+        if (!sessionId.trim().startsWith('DAVE-MD:~')) {
             log('=================================================', 'white');
             log('ERROR: Invalid SESSION_ID in .env', 'white');
-            log('The session ID MUST start with "dave~".', 'white');
+            log('The session ID MUST start with "DAVE-MD:~".', 'white');
             log('Cleaning .env and creating new one...', 'white');
             log('=================================================', 'white');
 
@@ -253,7 +253,7 @@ async function getLoginMethod() {
     choice = choice.trim();
 
     if (choice === '1') {
-        let phone = await question(`Enter your WhatsApp number (e.g., 6281376552730): `);
+        let phone = await question(`Enter your WhatsApp number (e.g., 254104260236): `);
         phone = phone.replace(/[^0-9]/g, '');
         const pn = require('awesome-phonenumber');
         if (!pn('+' + phone).isValid()) { log('Invalid phone number.', 'red'); return getLoginMethod(); }
@@ -263,7 +263,7 @@ async function getLoginMethod() {
     } else if (choice === '2') {
         let sessionId = await question(`Paste your Session ID here: `);
         sessionId = sessionId.trim();
-        if (!sessionId.includes("dave~")) { 
+        if (!sessionId.includes("DAVE-MD:~")) { 
             log("Invalid Session ID format! Must contain 'dave~'.", 'red'); 
             process.exit(1); 
         }
@@ -281,7 +281,7 @@ async function downloadSessionData() {
     try {
         await fs.promises.mkdir(sessionDir, { recursive: true });
         if (!fs.existsSync(credsPath) && global.SESSION_ID) {
-            const base64Data = global.SESSION_ID.includes("dave~") ? global.SESSION_ID.split("dave~")[1] : global.SESSION_ID;
+            const base64Data = global.SESSION_ID.includes("DAVE-MD:~") ? global.SESSION_ID.split("dave~")[1] : global.SESSION_ID;
             const sessionData = Buffer.from(base64Data, 'base64');
             await fs.promises.writeFile(credsPath, sessionData);
             log(`Session successfully saved.`, 'green');
@@ -412,7 +412,7 @@ async function handle408Error(statusCode) {
 }
 
 // --- Start bot ---
-async function startdave() {
+async function startDave() {
     log('Connecting to WhatsApp...', 'cyan');
     const { version } = await fetchLatestBaileysVersion();
 
@@ -421,7 +421,7 @@ async function startdave() {
     const { state, saveCreds } = await useMultiFileAuthState(`./session`);
     const msgRetryCounterCache = new NodeCache();
 
-    const dave = makeWASocket({
+    const Dave = makeWASocket({
         version,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false, 
@@ -710,7 +710,7 @@ async function tylor() {
 
     const envSessionID = process.env.SESSION_ID?.trim();
 
-    if (envSessionID && envSessionID.startsWith('dave')) { 
+    if (envSessionID && envSessionID.startsWith('DAVE-MD')) { 
         log("PRIORITY MODE: Found new/updated SESSION_ID in .env/environment variables.", 'magenta');
         clearSessionFiles(); 
         global.SESSION_ID = envSessionID;
@@ -741,9 +741,9 @@ async function tylor() {
 
     if (loginMethod === 'session') {
         await downloadSessionData();
-        dave = await startdave(); 
+        dave = await startDave(); 
     } else if (loginMethod === 'number') {
-        dave = await startdave();
+        dave = await startDave();
         await requestPairingCode(dave); 
     } else {
         log("Failed to get valid login method. Exiting.", 'red');
