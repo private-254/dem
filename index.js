@@ -728,12 +728,12 @@ async function tylor() {
         // Load dave.js handler with error handling - skip if dave.js has errors
         let handleCommand = null;
         try {
-            const daveModule = require('./dave');
-            if (typeof daveModule === 'function') {
-                handleCommand = daveModule;
+            const caseModule = require('./dave');
+            if (typeof caseModule === 'function') {
+                handleCommand = caseModule;
                 log("dave.js loaded successfully.", 'green');
-            } else if (daveModule && daveModule.handleCommand) {
-                handleCommand = daveModule.handleCommand;
+            } else if (caseModule && caseModule.handleCommand) {
+                handleCommand = caseModule.handleCommand;
                 log("dave.js handleCommand loaded successfully.", 'green');
             } else {
                 log('dave.js loaded but no command handler function found', 'yellow');
