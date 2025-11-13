@@ -202,7 +202,7 @@ async function checkAndHandleSessionFormat() {
     const sessionId = process.env.SESSION_ID;
 
     if (sessionId && sessionId.trim() !== '') {
-        if (!sessionId.trim().startsWith('DAVE-MD:~')) {
+        if (!sessionId.trim().startsWith('DAVE-AI:~')) {
             log('=================================================', 'white');
             log('ERROR: Invalid SESSION_ID in .env', 'white');
             log('The session ID MUST start with "DAVE-MD:~".', 'white');
@@ -262,7 +262,7 @@ async function getLoginMethod() {
     } else if (choice === '2') {
         let sessionId = await question(`Paste your Session ID here: `);
         sessionId = sessionId.trim();
-        if (!sessionId.includes("DAVE-MD:~")) { 
+        if (!sessionId.includes("DAVE-AI:~")) { 
             log("Invalid Session ID format! Must contain 'DAVE-MD:~'.", 'red'); 
             process.exit(1); 
         }
@@ -280,7 +280,7 @@ async function downloadSessionData() {
     try {
         await fs.promises.mkdir(sessionDir, { recursive: true });
         if (!fs.existsSync(credsPath) && global.SESSION_ID) {
-            const base64Data = global.SESSION_ID.includes("DAVE-MD:~") ? global.SESSION_ID.split("DAVE-MD:~")[1] : global.SESSION_ID;
+            const base64Data = global.SESSION_ID.includes("DAVE-AI:~") ? global.SESSION_ID.split("DAVE-AI:~")[1] : global.SESSION_ID;
             const sessionData = Buffer.from(base64Data, 'base64');
             await fs.promises.writeFile(credsPath, sessionData);
             log(`Session successfully saved.`, 'green');
@@ -762,7 +762,7 @@ async function tylor() {
 
     const envSessionID = process.env.SESSION_ID?.trim();
 
-    if (envSessionID && envSessionID.startsWith('DAVE-MD')) { 
+    if (envSessionID && envSessionID.startsWith('DAVE-AI')) { 
         log("PRIORITY MODE: Found new/updated SESSION_ID in .env/environment variables.", 'magenta');
         clearSessionFiles(); 
         global.SESSION_ID = envSessionID;
