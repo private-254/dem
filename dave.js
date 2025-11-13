@@ -92,93 +92,48 @@ module.exports = async (dave, m, chatUpdate, store) => {
         // Helper Functions - PRESERVING YOUR STYLES
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-        // Your dkontak reply style
-        async function reply(teks) {
-            const nedd = {
-                contextInfo: {
-                    forwardingScore: 999,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterName: global.channelname,
-                        newsletterJid: global.idchannel,
-                    },
-                    externalAdReply: {
-                        showAdAttribution: true,
-                        title: global.botname,
-                        body: global.ownername,
-                        previewType: "VIDEO",
-                        thumbnailUrl: global.thumbown, 
-                        sourceUrl: global.linkyt,  
-                    },
-                },
-                text: teks,
-            };
-            return dave.sendMessage(m.chat, nedd, {quoted: fkontak});
-        }
+        // =============== HELPERS ===============
+function formatUptime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return `${h}h ${m}m ${s}s`;
+}
 
-        // Your channel reply style
-        const replygw2 = async (teks) => {
-            return dave.sendMessage(m.chat, {text: teks, mentions: [m.sender]}, {quoted: qchannel})
+// Your fkontak style
+const fkontak = {
+    key: {
+        fromMe: false,
+        participant: "13135550002@s.whatsapp.net",
+        remoteJid: "status@broadcast"
+    },
+    message: {
+        orderMessage: {
+            orderId: "2009",
+            thumbnail: "https://url.bwmxmd.online/Adams.poh4tuhs.jpg",
+            itemCount: "2010",
+            status: "INQUIRY",
+            surface: "CATALOG",
+            message: `DAVE MD`,
+            token: "AR6xBKbXZn0Xwmu76Ksyd7rnxI+Rx87HfinVlW4lwXa6JA=="
         }
+    },
+    contextInfo: {
+        mentionedJid: ["120363369514105242@s.whatsapp.net"],
+        forwardingScore: 999,
+        isForwarded: true,
+    }
+}
 
-        // Your fkontak style
-        const fkontak = {
-            key: {
-                fromMe: false,
-                participant: "13135550002@s.whatsapp.net",
-                remoteJid: "status@broadcast"
-            },
-            message: {
-                orderMessage: {
-                    orderId: "2009",
-                    thumbnail: "https://url.bwmxmd.online/Adams.poh4tuhs.jpg",
-                    itemCount: "2010",
-                    status: "INQUIRY",
-                    surface: "CATALOG",
-                    message: `DAVE MD`,
-                    token: "AR6xBKbXZn0Xwmu76Ksyd7rnxI+Rx87HfinVlW4lwXa6JA=="
-                }
-            },
-            contextInfo: {
-                mentionedJid: ["120363369514105242@s.whatsapp.net"],
-                forwardingScore: 999,
-                isForwarded: true,
-            }
-        }
+// Main reply function using fkontak
+async function reply(teks) {
+    return dave.sendMessage(m.chat, { text: teks }, { quoted: fkontak });
+}
 
-        // Your qchannel style
-        const qchannel = {
-            key: {
-                participant: `0@s.whatsapp.net`,
-                ...(botNumber ? {
-                    remoteJid: `status@broadcast`
-                } : {})
-            },
-            message: {
-                'contactMessage': {
-                    'displayName': `By DAVE MD`,
-                    'vcard': `BEGIN:VCARD\nVERSION:3.0\nN:XL;ttname,;;;\nFN:ttname\nitem1.TEL;waid=6289506368777:+6289506368777\nitem1.X-ABLabel:Ponsel\nEND:VCARD`,
-                    sendEphemeral: true
-                }
-            }
-        }
-
-        const reaction = async (jidss, emoji) => {
-            dave.sendMessage(jidss, { react: { text: emoji, key: m.key }})
-        }
-
-        // Your example function style
-        var example = (teks) => {
-            return {
-                image: { url: "https://url.bwmxmd.online/Adams.poh4tuhs.jpg" },
-                caption: `_Example Command :_\n${prefix + command} ${teks}`,
-                footer: global.footer,
-                buttons: [
-                    { buttonId: `${prefix + command} ${teks}`, buttonText: { displayText: "Example" }, type: 1 }
-                ],
-                headerType: 4
-            };
-        };
+// React to message
+const reaction = async (emoji) => {
+    return dave.sendMessage(m.chat, { react: { text: emoji, key: m.key } });
+}
 
         // Platform detection function for scan command
         function detectPlatform() {
