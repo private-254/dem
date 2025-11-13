@@ -92,7 +92,11 @@ module.exports = async (dave, m, chatUpdate, store) => {
         // Helper Functions - PRESERVING YOUR STYLES
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-        // =============== HELPERS ===============
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+// Helper Functions - PRESERVING YOUR STYLES
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+// =============== HELPERS ===============
 function formatUptime(seconds) {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -100,40 +104,34 @@ function formatUptime(seconds) {
     return `${h}h ${m}m ${s}s`;
 }
 
-// Your fkontak style
-const fkontak = {
-    key: {
-        fromMe: false,
-        participant: "13135550002@s.whatsapp.net",
-        remoteJid: "status@broadcast"
-    },
-    message: {
-        orderMessage: {
-            orderId: "2009",
-            thumbnail: "https://url.bwmxmd.online/Adams.poh4tuhs.jpg",
-            itemCount: "2010",
-            status: "INQUIRY",
-            surface: "CATALOG",
-            message: `DAVE MD`,
-            token: "AR6xBKbXZn0Xwmu76Ksyd7rnxI+Rx87HfinVlW4lwXa6JA=="
-        }
-    },
-    contextInfo: {
-        mentionedJid: ["120363369514105242@s.whatsapp.net"],
-        forwardingScore: 999,
-        isForwarded: true,
-    }
+// Create fake contact for enhanced replies (potential blue badge)
+function createFakeContact() {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "status@broadcast",
+            fromMe: false,
+            id: "DAVE-MD-MENU"
+        },
+        message: {
+            contactMessage: {
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE MD\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
 }
 
-// Main reply function using fkontak
+// Main reply function using contact message (potential blue badge)
 async function reply(teks) {
-    return dave.sendMessage(m.chat, { text: teks }, { quoted: fkontak });
+    return dave.sendMessage(m.chat, { text: teks }, { quoted: createFakeContact() });
 }
 
 // React to message
 const reaction = async (emoji) => {
     return dave.sendMessage(m.chat, { react: { text: emoji, key: m.key } });
 }
+
 
         // Platform detection function for scan command
         function detectPlatform() {
