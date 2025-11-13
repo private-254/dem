@@ -420,10 +420,12 @@ async function handle408Error(statusCode) {
 }
 
 // --- Start bot ---
+// --- Start bot (JUNE MD) ---
 async function startDave() {
     log('Connecting to WhatsApp...', 'cyan');
     const { version } = await fetchLatestBaileysVersion();
 
+    // Ensure session directory exists before Baileys attempts to use it
     await fs.promises.mkdir(sessionDir, { recursive: true });
 
     const { state, saveCreds } = await useMultiFileAuthState(`./session`);
@@ -443,11 +445,14 @@ async function startDave() {
         syncFullHistory: true,
         getMessage: async (key) => {
             let jid = jidNormalizedUser(key.remoteJid);
+            // This now uses the globally available 'store' which is loaded inside tylor()
             let msg = await store.loadMessage(jid, key.id); 
             return msg?.message || "";
         },
         msgRetryCounterCache
     });
+
+    store.bind(dave.ev);
 
     // ================== AntiCall Handler ==================
     const antiCallNotified = new Set();
