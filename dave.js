@@ -68,25 +68,41 @@ module.exports = async (dave, m, chatUpdate, store) => {
 
         // Use same owner/group checks as main.js
         const botNumber = await dave.decodeJid(dave.user.id);
-        const isOwner = [botNumber, ...global.owner].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender);
-        const senderIsSudo = await isSudo(sender);
-        
-        const command = body.slice(1).trim().split(/ +/).shift().toLowerCase();
-        const args = body.trim().split(/ +/).slice(1);
-        const pushname = m.pushName || "No Name";
-        const text = q = args.join(" ");
+const isOwner = [botNumber, ...global.owner].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender);
+const senderIsSudo = await isSudo(sender);
 
-        // Group metadata - same as main.js
-        const groupMetadata = isGroup ? await dave.groupMetadata(m.chat).catch((e) => {}) : "";
-        const participants = isGroup ? await groupMetadata.participants : "";
-        const groupAdmins = isGroup ? await participants.filter((v) => v.admin !== null).map((v) => v.id) : "";
-        const isGroupAdmins = isGroup ? groupAdmins.includes(m.sender) : false;
+const command = body.slice(1).trim().split(/ +/).shift().toLowerCase();
+const args = body.trim().split(/ +/).slice(1);
+const pushname = m.pushName || "No Name";
+const text = q = args.join(" ");
 
-        // Time
-        const time = moment.tz("Africa/Nairobi").format("HH:mm:ss");
+// Group metadata - FIXED
+const groupMetadata = isGroup ? await dave.groupMetadata(m.chat).catch((e) => {
+    console.error('Error fetching group metadata:', e);
+    return { subject: 'Unknown Group', participants: [] };
+}) : { subject: 'Private Chat', participants: [] };
+const participants = groupMetadata.participants || [];
+const groupAdmins = isGroup ? participants.filter((v) => v.admin !== null).map((v) => v.id) : [];
+const isGroupAdmins = isGroup ? groupAdmins.includes(m.sender) : false;
 
-        // Console log - same style as main.js
-        console.log(chalk.black(chalk.bgWhite(!command ? '[ MESSAGE ]' : '[ COMMAND ]')), chalk.black(chalk.bgGreen(new Date)), chalk.black(chalk.bgBlue(budy || m.mtype)) + '\n' + chalk.magenta('=> From'), chalk.green(pushname), chalk.yellow(m.sender) + '\n' + chalk.blueBright('=> In'), chalk.green(m.isGroup ? pushname : 'Private Chat', m.chat))
+// Get group name properly
+const groupName = groupMetadata.subject;
+
+// Time
+const time = moment.tz("Africa/Nairobi").format("HH:mm:ss");
+
+// Console log - FIXED group name display
+console.log(
+    chalk.black(chalk.bgWhite(!command ? '[ MESSAGE ]' : '[ COMMAND ]')), 
+    chalk.black(chalk.bgGreen(new Date)), 
+    chalk.black(chalk.bgBlue(budy || m.mtype)) + '\n' + 
+    chalk.magenta('=> From'), 
+    chalk.green(pushname), 
+    chalk.yellow(m.sender) + '\n' + 
+    chalk.blueBright('=> In'), 
+    chalk.green(groupName), 
+    chalk.yellow(m.chat)
+);
 
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
         // Helper Functions - PRESERVING YOUR STYLES
