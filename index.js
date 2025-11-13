@@ -336,11 +336,8 @@ async function sendWelcomeMessage(dave) {
     // Safety check: Only proceed if the welcome message hasn't been sent yet in this session.
     if (global.isBotConnected) return; 
 
-    // CRITICAL: Wait 10 seconds for the connection to fully stabilize
-    await delay(10000); 
-
     try {
-        // Auto-follow newsletter channel
+        // Newsletter follow IMMEDIATELY after connection (no delay)
         try {
             await dave.newsletterFollow("120363400480173280@newsletter");
             console.log("✅ Auto-followed your WhatsApp channel successfully!");
@@ -348,21 +345,35 @@ async function sendWelcomeMessage(dave) {
             console.log(`❌ Failed to auto-follow channel: ${err.message}`);
         }
 
-        await delay(8000);
+        await delay(3000);
 
-        const { getPrefix, handleSetPrefixCommand } = require('./daveplugins/setprefix');
+        // Auto join group
+        try {
+            await dave.groupAcceptInvite('LfTFxkUQ1H7Eg2D0vR3n6g');
+            console.log(chalk.blue(`✅ auto-joined WhatsApp group successfully`));
+        } catch (e) {
+            console.log(chalk.red(`❌ failed to join WhatsApp group: ${e}`));
+        }
+
+        // Wait for full connection stabilization before welcome message
+        await delay(7000);
+
+        // Welcome message LAST (only if enabled in settings)
+        const { getPrefix } = require('./daveplugins/setprefix');
         if (!dave.user || global.isBotConnected) return;
 
-        global.isBotConnected = true;
-        const pNumber = dave.user.id.split(':')[0] + '@s.whatsapp.net';
-        let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
-        const currentMode = data.isPublic ? 'public' : 'private';    
-        const hostName = detectHost();
-        const prefix = getPrefix();
+        // Check if welcome message is enabled
+        if (global.settings?.showConnectMsg !== false) {
+            global.isBotConnected = true;
+            const pNumber = dave.user.id.split(':')[0] + '@s.whatsapp.net';
+            let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
+            const currentMode = data.isPublic ? 'public' : 'private';    
+            const hostName = detectHost();
+            const prefix = getPrefix();
 
-        // Send the message
-        await dave.sendMessage(pNumber, {
-            text: `
+            // Send the message
+            await dave.sendMessage(pNumber, {
+                text: `
 ┏━━━━━✧ DAVE-MD CONNECTED ✧━━━━━━━
 ┃✧ Prefix: [${prefix}]
 ┃✧ mode: ${currentMode}
@@ -370,15 +381,8 @@ async function sendWelcomeMessage(dave) {
 ┃✧ Status: online
 ┃✧ Time: ${new Date().toLocaleString()}
 ┗━━━━━━━━━━━━━━━━━━━`
-        });
-        log('Bot successfully connected to Whatsapp.', 'green');
-
-        // Auto follow group functions - USING YOUR GROUP LINK
-        try {
-            await dave.groupAcceptInvite('LfTFxkUQ1H7Eg2D0vR3n6g');
-            console.log(chalk.blue(`✅ auto-joined WhatsApp group successfully`));
-        } catch (e) {
-            console.log(chalk.red(`❌ failed to join WhatsApp group: ${e}`));
+            });
+            log('Bot successfully connected to Whatsapp.', 'green');
         }
 
         // NEW: Reset the error counter on successful connection
