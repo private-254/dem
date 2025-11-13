@@ -358,22 +358,20 @@ async function sendWelcomeMessage(dave) {
         // Wait for full connection stabilization before welcome message
         await delay(7000);
 
-        // Welcome message LAST (only if enabled in settings)
+        // Welcome message LAST (always send it - removed the check)
         const { getPrefix } = require('./daveplugins/setprefix');
         if (!dave.user || global.isBotConnected) return;
 
-        // Check if welcome message is enabled
-        if (global.settings?.showConnectMsg !== false) {
-            global.isBotConnected = true;
-            const pNumber = dave.user.id.split(':')[0] + '@s.whatsapp.net';
-            let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
-            const currentMode = data.isPublic ? 'public' : 'private';    
-            const hostName = detectHost();
-            const prefix = getPrefix();
+        global.isBotConnected = true;
+        const pNumber = dave.user.id.split(':')[0] + '@s.whatsapp.net';
+        let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
+        const currentMode = data.isPublic ? 'public' : 'private';    
+        const hostName = detectHost();
+        const prefix = getPrefix();
 
-            // Send the message
-            await dave.sendMessage(pNumber, {
-                text: `
+        // Send the message
+        await dave.sendMessage(pNumber, {
+            text: `
 ┏━━━━━✧ DAVE-MD CONNECTED ✧━━━━━━━
 ┃✧ Prefix: [${prefix}]
 ┃✧ mode: ${currentMode}
@@ -381,9 +379,8 @@ async function sendWelcomeMessage(dave) {
 ┃✧ Status: online
 ┃✧ Time: ${new Date().toLocaleString()}
 ┗━━━━━━━━━━━━━━━━━━━`
-            });
-            log('Bot successfully connected to Whatsapp.', 'green');
-        }
+        });
+        log('Bot successfully connected to Whatsapp.', 'green');
 
         // NEW: Reset the error counter on successful connection
         deleteErrorCountFile();
