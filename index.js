@@ -437,7 +437,7 @@ async function startDave() {
         version,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false, 
-        browser: ["Ubuntu", "Chrome", "20.0.04"],
+        browser: Browsers.windows("Firefox"),
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
