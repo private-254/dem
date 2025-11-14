@@ -15,6 +15,7 @@ const {
     jidNormalizedUser,
     makeCacheableSignalKeyStore,
     delay,
+    Browsers,
     downloadContentFromMessage,
     jidDecode
 } = require("@whiskeysockets/baileys")
