@@ -50,13 +50,15 @@ async function videoCommand(sock, chatId, message) {
     try {
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
         const searchQuery = text.split(' ').slice(1).join(' ').trim();
-        
-        
+
+
         if (!searchQuery) {
-            await sock.sendMessage(chatId, { text: 'What video do you want to download?' }, { quoted: message });
+            await sock.sendMessage(chatId, { 
+                text: '🎬 *DAVE-MD Video Downloader*\n\nPlease specify the video you want to download!\n\nExample: *.video song name*' 
+            }, { quoted: message });
             await sock.sendMessage(chatId, {
-            react: { text: '🎥', key: message.key }
-        });
+                react: { text: '🎥', key: message.key }
+            });
             return;
         }
 
@@ -70,7 +72,9 @@ async function videoCommand(sock, chatId, message) {
             // Search YouTube for the video
             const { videos } = await yts(searchQuery);
             if (!videos || videos.length === 0) {
-                await sock.sendMessage(chatId, { text: 'No videos found!' }, { quoted: message });
+                await sock.sendMessage(chatId, { 
+                    text: '❌ *DAVE-MD Search Failed*\n\nNo videos found for your search query!' 
+                }, { quoted: message });
                 return;
             }
             videoUrl = videos[0].url;
@@ -85,52 +89,54 @@ async function videoCommand(sock, chatId, message) {
             const captionTitle = videoTitle || searchQuery;
             if (thumb) {
                 await sock.sendMessage(chatId, {
-                    image: { url: null },
-                    caption: `_🏂searching video data..._`
+                    image: { url: thumb },
+                    caption: `🔍 *DAVE-MD Video Processor*\n\nSearching video: *${captionTitle}*\n\n🔄 Processing request...`
                 }, { quoted: message });
-
-           
             }
         } catch (e) { console.error('[VIDEO] thumb error:', e?.message || e); }
-        
+
 
         // Validate YouTube URL
         let urls = videoUrl.match(/(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi);
         if (!urls) {
-            await sock.sendMessage(chatId, { text: 'This is not a valid YouTube link!' }, { quoted: message });
+            await sock.sendMessage(chatId, { 
+                text: '❌ *Invalid URL*\n\nPlease provide a valid YouTube link!\n\nExample: https://youtu.be/...' 
+            }, { quoted: message });
             return;
         }
 
         // Get video: try Izumi first, then Okatsu fallback
         let videoData;
         try {
-        await sock.sendMessage(chatId, {
-            react: { text: '🎥', key: message.key }
-        });
+            await sock.sendMessage(chatId, {
+                react: { text: '🎥', key: message.key }
+            });
             videoData = await getIzumiVideoByUrl(videoUrl);
         } catch (e1) {
             videoData = await getOkatsuVideoByUrl(videoUrl);
         }
-       
+
 
         // Send video directly using the download URL
         await sock.sendMessage(chatId, {
             video: { url: videoData.download },
             mimetype: 'video/mp4',
             fileName: `${videoData.title || videoTitle || 'video'}.mp4`,
-            caption: `${videoData.title || videoTitle || 'Video'}\n\n⬇️DOWNLOAD BY JUNE X\n\n> 📌By Humans, For Humans!`
+            caption: `📹 *${videoData.title || videoTitle || 'Video'}*\n\n⬇️ Downloaded via *DAVE-MD*\n\n🤖 *Your Personal Assistant*\n\n> 💾 Ready to watch offline!`
         }, { quoted: message });
 
-        //react sucess
+        // React success
         await sock.sendMessage(chatId, {
-            react: { text: '☑️', key: message.key }
+            react: { text: '✅', key: message.key }
         });
 
 
     } catch (error) {
         console.error('[VIDEO] Command Error:', error?.message || error);
-        await sock.sendMessage(chatId, { text: 'Download failed: ' + (error?.message || 'Unknown error') }, { quoted: message });
+        await sock.sendMessage(chatId, { 
+            text: `❌ *DAVE-MD Download Failed*\n\nError: ${error?.message || 'Unknown error'}\n\nPlease try again or use a different video!` 
+        }, { quoted: message });
     }
 }
 
-module.exports = videoCommand; 
+module.exports = videoCommand;
