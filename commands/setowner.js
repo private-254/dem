@@ -119,7 +119,7 @@ async function handleSetOwnerCommand(sock, chatId, senderId, message, userMessag
     if (!input) {
         const current = getOwnerName();
         await sock.sendMessage(chatId, { 
-            text: `👑 Current Owner Name: *${current}*\n\nUsage: ${currentPrefix}setowner <new_name>\nExample: ${currentPrefix}setowner Supreme\nExample: ${currentPrefix}setowner john doe\n\nTo reset: ${currentPrefix}setowner reset`
+            text: `👑 Current Owner Name: *${current}*\n\nUsage: ${currentPrefix}setowner <new_name>\nExample: ${currentPrefix}setowner Dave\nExample: ${currentPrefix}setowner john doe\n\nTo reset: ${currentPrefix}setowner reset`
         }, { quoted: fake });
         return;
     }

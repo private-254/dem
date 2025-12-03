@@ -1,4 +1,4 @@
-/*by supreme*/
+/*by Dave*/
 
 const os = require('os');
 const settings = require('../settings.js');

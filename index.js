@@ -1,7 +1,7 @@
 /**
  * ᴅᴀᴠᴇ-ᴍᴅ Bot - A WhatsApp Bot
  * Tennor-modz 
- * © 2025 supreme
+ * © 2025 Dave
  * * NOTE: This is the combined codebase. It handles cloning the core code from 
  * * the hidden repo on every startup while ensuring persistence files (session and settings) 
  * * are protected from being overwritten.
