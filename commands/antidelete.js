@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
@@ -31,6 +30,27 @@ initializeSystem();
 function initializeSystem() {
     ensureTempDir();
     startCleanupInterval();
+}
+
+// Create fake contact for enhanced replies
+function createFakeContact(message) {
+    const sender = message.key.participant || message.key.remoteJid;
+    const number = sender.split('@')[0];
+    
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "status@broadcast",
+            fromMe: false,
+            id: "VENOM-XMD"
+        },
+        message: {
+            contactMessage: {
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:XL;Bot;;;\nFN:VENOM-XMD\nitem1.TEL;waid=${number}:${number}\nitem1.X-ABLabel:Phone\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
 }
 
 // Ensure tmp dir exists
@@ -73,7 +93,7 @@ async function cleanTempFolder() {
     try {
         const config = loadAntideleteConfig();
         const sizeMB = await getFolderSizeInMB(TEMP_MEDIA_DIR);
-        
+
         if (sizeMB > config.maxStorageMB) {
             const files = await readdir(TEMP_MEDIA_DIR);
             let deletedCount = 0;
@@ -88,8 +108,8 @@ async function cleanTempFolder() {
                     console.error(`Error deleting file ${file}:`, err);
                 }
             }
-            
-            console.log(`🧹 Cleaned temp folder: ${deletedCount} files removed`);
+
+            console.log(`Cleaned temp folder: ${deletedCount} files removed`);
             return deletedCount;
         }
         return 0;
@@ -130,7 +150,7 @@ function startCleanupInterval() {
     if (cleanupInterval) {
         clearInterval(cleanupInterval);
     }
-    
+
     cleanupInterval = setInterval(() => {
         cleanTempFolder().catch(console.error);
     }, config.cleanupInterval * 60 * 1000);
@@ -150,110 +170,105 @@ async function isAuthorized(message) {
 // Enhanced command handler with multiple modes
 async function handleAntideleteCommand(sock, chatId, message, match) {
     if (!await isAuthorized(message)) {
+        const fake = createFakeContact(message);
         return sock.sendMessage(chatId, { 
-            text: '*🚫 Only the bot owner can use this command.*' 
-        }, { quoted: message });
+            text: 'Only the bot owner can use this command.' 
+        }, { quoted: fake });
     }
 
     const config = loadAntideleteConfig();
+    const fake = createFakeContact(message);
 
     if (!match) {
-        return showStatus(sock, chatId, message, config);
+        return showStatus(sock, chatId, fake, config);
     }
 
     const command = match.toLowerCase().trim();
-    return processCommand(sock, chatId, message, command, config);
+    return processCommand(sock, chatId, fake, command, config);
 }
 
-async function showStatus(sock, chatId, message, config) {
-    const statusEmoji = config.enabled ? '✅' : '❌';
-    const modeEmoji = {
-        private: '🔒',
-        chat: '💬',
-        both: '🔔'
-    }[config.mode] || '❓';
-    
+async function showStatus(sock, chatId, fake, config) {
     const sizeMB = await getFolderSizeInMB(TEMP_MEDIA_DIR);
-    
-    let text = `*🛡️ ANTIDELETE SYSTEM*\n\n`;
-    text += `*Status:* ${statusEmoji} ${config.enabled ? 'ENABLED' : 'DISABLED'}\n`;
-    text += `*Mode:* ${modeEmoji} ${config.mode.toUpperCase()}\n`;
-    text += `*🗃️ Storage:* ${sizeMB.toFixed(2)}MB / ${config.maxStorageMB}MB\n`;
-    text += `*📨 Messages Tracked:* ${messageStore.size}\n`;
-    text += `*🚫 Excluded Chats:* ${config.excludedChats.length}\n\n`;
-    
-    text += `*📋 COMMANDS:*\n`;
-    text += `• *antidelete on/off* - Toggle system\n`;
-    text += `• *antidelete private* - Notify only bot owner\n`;
-    text += `• *antidelete chat* - Notify in same chat\n`;
-    text += `• *antidelete both* - Notify both owner and chat\n`;
-    text += `• *antidelete exclude* - Exclude current chat\n`;
-    text += `• *antidelete include* - Include current chat\n`;
-    text += `• *antidelete clean* - Clean temp files\n`;
-    text += `• *antidelete stats* - Show statistics\n`;
 
-    return sock.sendMessage(chatId, { text }, { quoted: message });
+    let text = `ANTIDELETE SYSTEM\n\n`;
+    text += `Status: ${config.enabled ? 'ENABLED' : 'DISABLED'}\n`;
+    text += `Mode: ${config.mode.toUpperCase()}\n`;
+    text += `Storage: ${sizeMB.toFixed(2)}MB / ${config.maxStorageMB}MB\n`;
+    text += `Messages Tracked: ${messageStore.size}\n`;
+    text += `Excluded Chats: ${config.excludedChats.length}\n\n`;
+
+    text += `COMMANDS:\n`;
+    text += `• antidelete on/off - Toggle system\n`;
+    text += `• antidelete private - Notify only bot owner\n`;
+    text += `• antidelete chat - Notify in same chat\n`;
+    text += `• antidelete both - Notify both owner and chat\n`;
+    text += `• antidelete exclude - Exclude current chat\n`;
+    text += `• antidelete include - Include current chat\n`;
+    text += `• antidelete clean - Clean temp files\n`;
+    text += `• antidelete stats - Show statistics`;
+
+    return sock.sendMessage(chatId, { text }, { quoted: fake });
 }
 
-async function processCommand(sock, chatId, message, command, config) {
+async function processCommand(sock, chatId, fake, command, config) {
     let responseText = '';
 
     switch (command) {
         case 'on':
             config.enabled = true;
-            responseText = '✅ *Antidelete system ENABLED*';
+            responseText = 'Antidelete system ENABLED';
             break;
-            
+
         case 'off':
             config.enabled = false;
-            responseText = '❌ *Antidelete system DISABLED*';
+            responseText = 'Antidelete system DISABLED';
             break;
-            
+
         case 'private':
             config.mode = 'private';
-            responseText = '🔒 *Mode set to PRIVATE* - Notifications will be sent to bot owner only';
+            responseText = 'Mode set to PRIVATE - Notifications will be sent to bot owner only';
             break;
-            
+
         case 'chat':
             config.mode = 'chat';
-            responseText = '💬 *Mode set to CHAT* - Notifications will be sent in the same chat';
+            responseText = 'Mode set to CHAT - Notifications will be sent in the same chat';
             break;
-            
+
         case 'both':
             config.mode = 'both';
-            responseText = '🔔 *Mode set to BOTH* - Notifications will be sent to both owner and chat';
+            responseText = 'Mode set to BOTH - Notifications will be sent to both owner and chat';
             break;
-            
+
         case 'exclude':
             if (!config.excludedChats.includes(chatId)) {
                 config.excludedChats.push(chatId);
-                responseText = '🚫 *Chat added to exclusion list*';
+                responseText = 'Chat added to exclusion list';
             } else {
-                responseText = 'ℹ️ *Chat is already excluded*';
+                responseText = 'Chat is already excluded';
             }
             break;
-            
+
         case 'include':
             config.excludedChats = config.excludedChats.filter(id => id !== chatId);
-            responseText = '✅ *Chat removed from exclusion list*';
+            responseText = 'Chat removed from exclusion list';
             break;
-            
+
         case 'clean':
             const deletedCount = await cleanTempFolder();
-            responseText = `🧹 *Temporary files cleaned* (${deletedCount} files removed)`;
+            responseText = `Temporary files cleaned (${deletedCount} files removed)`;
             break;
-            
+
         case 'stats':
             const sizeMB = await getFolderSizeInMB(TEMP_MEDIA_DIR);
-            responseText = `*📊 SYSTEM STATISTICS*\n\n` +
-                          `*Messages in memory:* ${messageStore.size}\n` +
-                          `*Storage used:* ${sizeMB.toFixed(2)}MB\n` +
-                          `*Excluded chats:* ${config.excludedChats.length}\n` +
-                          `*Uptime:* ${Math.floor(process.uptime() / 60)} minutes`;
+            responseText = `SYSTEM STATISTICS\n\n` +
+                          `Messages in memory: ${messageStore.size}\n` +
+                          `Storage used: ${sizeMB.toFixed(2)}MB\n` +
+                          `Excluded chats: ${config.excludedChats.length}\n` +
+                          `Uptime: ${Math.floor(process.uptime() / 60)} minutes`;
             break;
-            
+
         default:
-            responseText = '❌ *Invalid command. Use* `.antidelete` *to see all options.*';
+            responseText = 'Invalid command. Use antidelete to see all options.';
     }
 
     if (responseText && !responseText.includes('Invalid')) {
@@ -261,18 +276,18 @@ async function processCommand(sock, chatId, message, command, config) {
         if (saved) {
             startCleanupInterval();
         } else {
-            responseText += '\n\n⚠️ *Warning: Config could not be saved*';
+            responseText += '\n\nWarning: Config could not be saved';
         }
     }
 
-    return sock.sendMessage(chatId, { text: responseText }, { quoted: message });
+    return sock.sendMessage(chatId, { text: responseText }, { quoted: fake });
 }
 
 // Enhanced message storage with better media handling
 async function storeMessage(sock, message) {
     try {
         await ensureTempDir();
-        
+
         const config = loadAntideleteConfig();
         if (!config.enabled) return;
 
@@ -309,10 +324,10 @@ async function storeMessage(sock, message) {
 
         // Extract content and media
         await extractMessageContent(message, storedMessage, config);
-        
+
         if (storedMessage.content || storedMessage.mediaType) {
             messageStore.set(messageId, storedMessage);
-            
+
             // Handle view-once immediately
             if (storedMessage.isViewOnce && storedMessage.mediaPath) {
                 await handleViewOnceForward(sock, config, storedMessage);
@@ -328,7 +343,7 @@ async function extractMessageContent(message, storedMessage, config) {
     try {
         const viewOnceContainer = message.message?.viewOnceMessageV2?.message || 
                                message.message?.viewOnceMessage?.message;
-        
+
         if (viewOnceContainer && config.antiViewOnce) {
             await handleViewOnceMessage(viewOnceContainer, storedMessage);
             return;
@@ -435,11 +450,11 @@ async function downloadMedia(message, type, fileName) {
     try {
         const stream = await downloadContentFromMessage(message, type);
         let buffer = Buffer.from([]);
-        
+
         for await (const chunk of stream) {
             buffer = Buffer.concat([buffer, chunk]);
         }
-        
+
         const filePath = path.join(TEMP_MEDIA_DIR, fileName);
         await writeFile(filePath, buffer);
         return filePath;
@@ -456,12 +471,12 @@ async function handleViewOnceForward(sock, config, storedMessage) {
 
         const senderName = storedMessage.sender.split('@')[0];
         const mediaOptions = {
-            caption: `*🔒 Anti-ViewOnce ${storedMessage.mediaType.toUpperCase()}*\nFrom: @${senderName}\nChat: ${storedMessage.chatId}`,
+            caption: `Anti-ViewOnce ${storedMessage.mediaType.toUpperCase()}\nFrom: @${senderName}\nChat: ${storedMessage.chatId}`,
             mentions: [storedMessage.sender]
         };
 
         const targets = getNotificationTargets(sock, storedMessage.chatId, config);
-        
+
         for (const target of targets) {
             try {
                 if (storedMessage.mediaType === 'image') {
@@ -496,15 +511,15 @@ async function handleViewOnceForward(sock, config, storedMessage) {
 function getNotificationTargets(sock, chatId, config) {
     const targets = [];
     const ownerNumber = sock.user.id.split(':')[0] + '@s.whatsapp.net';
-    
+
     if (config.mode === 'private' || config.mode === 'both') {
         targets.push(ownerNumber);
     }
-    
+
     if ((config.mode === 'chat' || config.mode === 'both') && chatId !== ownerNumber) {
         targets.push(chatId);
     }
-    
+
     return targets;
 }
 
@@ -536,7 +551,7 @@ async function handleMessageRevocation(sock, revocationMessage) {
         if (targets.length === 0) return;
 
         await sendDeletionNotification(sock, original, deletedBy, targets);
-        
+
         // Cleanup
         cleanupStoredMessage(messageId, original);
 
@@ -547,7 +562,7 @@ async function handleMessageRevocation(sock, revocationMessage) {
 
 function cleanupStoredMessage(messageId, original) {
     messageStore.delete(messageId);
-    
+
     if (original.mediaPath && fs.existsSync(original.mediaPath)) {
         unlink(original.mediaPath).catch(err => {
             console.error('Media cleanup error:', err);
@@ -560,7 +575,7 @@ async function sendDeletionNotification(sock, original, deletedBy, targets) {
     try {
         const senderName = original.sender.split('@')[0];
         const deleterName = deletedBy.split('@')[0];
-        
+
         let groupName = '';
         if (original.group) {
             try {
@@ -581,22 +596,22 @@ async function sendDeletionNotification(sock, original, deletedBy, targets) {
             year: 'numeric'
         });
 
-        let text = `*🗑️ ANTIDELETE REPORT 🗑️*\n\n` +
-            `*🗑️ Deleted By:* @${deleterName}\n` +
-            `*👤 Sender:* @${senderName}\n` +
-            `*📱 Number:* ${original.sender}\n` +
-            `*🕒 Time:* ${time}\n`;
+        let text = `ANTIDELETE REPORT\n\n` +
+            `Deleted By: @${deleterName}\n` +
+            `Sender: @${senderName}\n` +
+            `Number: ${original.sender}\n` +
+            `Time: ${time}\n`;
 
         if (groupName) {
-            text += `*👥 Group:* ${groupName}\n`;
+            text += `Group: ${groupName}\n`;
         }
 
         if (original.isViewOnce) {
-            text += `*🔒 Type:* View Once ${original.mediaType?.toUpperCase() || 'Media'}\n`;
+            text += `Type: View Once ${original.mediaType?.toUpperCase() || 'Media'}\n`;
         }
 
         if (original.content) {
-            text += `\n*💬 Deleted Message:*\n${original.content}`;
+            text += `\nDeleted Message:\n${original.content}`;
         }
 
         const textMessage = {
@@ -627,7 +642,7 @@ async function sendDeletionNotification(sock, original, deletedBy, targets) {
 async function sendMediaNotification(sock, original, targets) {
     const senderName = original.sender.split('@')[0];
     const mediaOptions = {
-        caption: `*Deleted ${original.mediaType}*${original.isViewOnce ? ' (View Once)' : ''}\nFrom: @${senderName}`,
+        caption: `Deleted ${original.mediaType}${original.isViewOnce ? ' (View Once)' : ''}\nFrom: @${senderName}`,
         mentions: [original.sender]
     };
 
