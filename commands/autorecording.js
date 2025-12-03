@@ -22,7 +22,7 @@ async function autorecordingCommand(sock, chatId, message) {
     try {
         if (!message.key.fromMe) {
             await sock.sendMessage(chatId, {
-                text: '❌ This command is only available for the owner!'
+                text: '_This command is only available for the owner!_'
             });
             return;
         }
