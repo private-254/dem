@@ -21,11 +21,11 @@ async function viewonceCommand(sock, chatId, message) {
             { 
                 image: buffer, 
                 fileName: 'media.jpg', 
-                caption: quotedImage.caption || '📸 View-once image retrieved!' 
+                caption: '_View-once image retrieved via DAVE-MD_' 
             }, 
             { quoted: message }
         );
-        await sock.sendMessage(chatId, { react: { text: '✅', key: message.key } });
+        await sock.sendMessage(chatId, { react: { text: '⭐', key: message.key } });
 
     } else if (quotedVideo && quotedVideo.viewOnce) {
         const buffer = await downloadBuffer(quotedVideo, 'video');
@@ -34,11 +34,11 @@ async function viewonceCommand(sock, chatId, message) {
             { 
                 video: buffer, 
                 fileName: 'media.mp4', 
-                caption: quotedVideo.caption || '🎥 View-once video retrieved!' 
+                caption: '_🎥 View-once video retrieved via DAVE-MD_' 
             }, 
             { quoted: message }
         );
-        await sock.sendMessage(chatId, { react: { text: '✅', key: message.key } });
+        await sock.sendMessage(chatId, { react: { text: '⭐', key: message.key } });
 
     } else if (quotedAudio && quotedAudio.viewOnce) {
         const buffer = await downloadBuffer(quotedAudio, 'audio');
@@ -48,15 +48,17 @@ async function viewonceCommand(sock, chatId, message) {
                 audio: buffer, 
                 fileName: 'media.mp3', 
                 mimetype: quotedAudio.mimetype || 'audio/mp4', 
-                caption: '🎵 View-once audio retrieved!' 
+                caption: '_🎵 View-once audio retrieved via DAVE-MD_' 
             }, 
             { quoted: message }
         );
-        await sock.sendMessage(chatId, { react: { text: '✅', key: message.key } });
+        await sock.sendMessage(chatId, { react: { text: '⭐', key: message.key } });
 
     } else {
-        await sock.sendMessage(chatId, { text: '❌ Please reply to a view-once image, video, or audio.' }, { quoted: message });
-        await sock.sendMessage(chatId, { react: { text: '❌', key: message.key } });
+        await sock.sendMessage(chatId, { 
+            text: '_Please reply to a view-once image, video, or audio._' 
+        }, { quoted: message });
+        await sock.sendMessage(chatId, { react: { text: '🤷', key: message.key } });
     }
 }
 
