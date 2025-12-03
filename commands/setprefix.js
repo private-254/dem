@@ -104,7 +104,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
     // Only bot owner can change prefix
     if (!message.key.fromMe) {
         await sock.sendMessage(chatId, { 
-            text: '❌ Only bot owner can change the prefix!',
+            text: 'command reserved for owner!',
             contextInfo: {
                 forwardingScore: 1,
                 isForwarded: false,
@@ -123,7 +123,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
         const current = getRawPrefix();
         const displayPrefix = current === NO_PREFIX ? 'None (prefixless)' : current;
         await sock.sendMessage(chatId, { 
-            text: `👑 Current prefix: *${displayPrefix}*\n\nUsage: ${current === NO_PREFIX ? 'command' : current + 'setprefix'} <new_prefix|none>\nExamples:\n• ${current === NO_PREFIX ? 'setprefix' : current + 'setprefix'} !\n• ${current === NO_PREFIX ? 'setprefix' : current + 'setprefix'} none (for prefixless mode)\n• ${current === NO_PREFIX ? 'setprefix' : current + 'setprefix'} reset`,
+            text: `Current prefix: *${displayPrefix}*\n\nUsage: ${current === NO_PREFIX ? 'command' : current + 'setprefix'} <new_prefix|none>\nExamples:\n• ${current === NO_PREFIX ? 'setprefix' : current + 'setprefix'} !\n• ${current === NO_PREFIX ? 'setprefix' : current + 'setprefix'} none (for prefixless mode)\n• ${current === NO_PREFIX ? 'setprefix' : current + 'setprefix'} reset`,
             contextInfo: {
                 forwardingScore: 1,
                 isForwarded: false,
@@ -143,7 +143,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
         if (success) {
             const defaultPrefix = getPrefix();
             await sock.sendMessage(chatId, { 
-                text: `✅ Prefix reset to default: *${defaultPrefix}*`,
+                text: `Your Prefix was reset to default: *${defaultPrefix}*`,
                 contextInfo: {
                     forwardingScore: 1,
                     isForwarded: false,
@@ -156,7 +156,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
             },{quoted: message});
         } else {
             await sock.sendMessage(chatId, { 
-                text: '❌ Failed to reset prefix!',
+                text: 'Failed to reset prefix!',
                 contextInfo: {
                     forwardingScore: 1,
                     isForwarded: false,
@@ -176,7 +176,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
         const success = setPrefix('');
         if (success) {
             await sock.sendMessage(chatId, { 
-                text: '👑 Bot is now running in *PREFIXLESS MODE*!',
+                text: 'Your Bot is now running in *PREFIXLESS MODE*!',
                 contextInfo: {
                     forwardingScore: 1,
                     isForwarded: false,
@@ -189,7 +189,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
             },{quoted: message});
         } else {
             await sock.sendMessage(chatId, { 
-                text: '❌ Failed to set prefixless mode!',
+                text: 'Failed to set prefixless mode!',
                 contextInfo: {
                     forwardingScore: 1,
                     isForwarded: false,
@@ -207,7 +207,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
     // Set new prefix
     if (newPrefix.length > 3) {
         await sock.sendMessage(chatId, { 
-            text: '❌ Prefix must be 1-3 characters long! Use "none" for prefixless mode.',
+            text: 'Prefix must be 1-3 characters long! Use "none" for prefixless mode.',
             contextInfo: {
                 forwardingScore: 1,
                 isForwarded: false,
@@ -224,7 +224,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
     const success = setPrefix(newPrefix);
     if (success) {
         await sock.sendMessage(chatId, { 
-            text: `✅ Prefix successfully set to: *${newPrefix}*`,
+            text: `Your Prefix was successfully set to: *${newPrefix}*`,
             contextInfo: {
                 forwardingScore: 1,
                 isForwarded: false,
@@ -237,7 +237,7 @@ async function handleSetPrefixCommand(sock, chatId, senderId, message, userMessa
         },{quoted: message});
     } else {
         await sock.sendMessage(chatId, { 
-            text: '❌ Failed to set prefix!',
+            text: 'Failed to set prefix!',
             contextInfo: {
                 forwardingScore: 1,
                 isForwarded: false,
