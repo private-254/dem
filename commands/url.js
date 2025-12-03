@@ -66,14 +66,16 @@ async function extractQuotedMedia(message) {
 async function urlCommand(sock, chatId, message) {
     try {
         // React to message
-        await sock.sendMessage(chatId, { react: { text: '🔺', key: message.key } });
+        await sock.sendMessage(chatId, { react: { text: '🔗', key: message.key } });
 
         let media = await extractMedia(message) || await extractQuotedMedia(message);
 
         if (!media) {
             return sock.sendMessage(
                 chatId,
-                { text: 'Send or reply to a media (image, video, audio, sticker, document) to get a URL.' },
+                { 
+                    text: '📤 *DAVE-MD Upload Service*\n\nPlease send or reply to a media file (image, video, audio, sticker, document) to get a permanent URL.' 
+                },
                 { quoted: message }
             );
         }
@@ -105,19 +107,38 @@ async function urlCommand(sock, chatId, message) {
         }
 
         if (!url) {
-            return sock.sendMessage(chatId, { text: 'Failed to upload media.' }, { quoted: message });
+            return sock.sendMessage(
+                chatId, 
+                { 
+                    text: '❌ *DAVE-MD Upload Failed*\n\nUnable to process your media file. Please try again with a different file.' 
+                }, 
+                { quoted: message }
+            );
         }
 
         // Success response
         await sock.sendMessage(
             chatId,
-            { text: `${url}` },
+            { 
+                text: `🔗 *DAVE-MD Media URL*\n\n${url}\n\n📁 *File Type:* ${media.ext.toUpperCase()}\n\n✅ Your media has been uploaded successfully!` 
+            },
             { quoted: message }
         );
 
+        // Success reaction
+        await sock.sendMessage(chatId, { 
+            react: { text: '✅', key: message.key } 
+        });
+
     } catch (error) {
         console.error('[URL] error:', error?.message || error);
-        await sock.sendMessage(chatId, { text: 'Failed to convert media to URL.' }, { quoted: message });
+        await sock.sendMessage(
+            chatId, 
+            { 
+                text: `❌ *DAVE-MD Service Error*\n\nFailed to convert media to URL.\n\nError: ${error?.message || 'Unknown error'}` 
+            }, 
+            { quoted: message }
+        );
     }
 }
 
