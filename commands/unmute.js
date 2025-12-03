@@ -15,7 +15,7 @@ async function unmuteCommand(sock, chatId) {
 
         // Send confirmation message
         await sock.sendMessage(chatId, { 
-            text: `✅ ${groupName} has been unmuted. Members can now chat freely!` 
+            text: `🔊 *Group Unmuted*\n\n• *${groupName}* is now active!\n• Members can chat freely\n• Messages are no longer restricted\n\n🤖 *Powered by DAVE-MD*` 
         });
 
         // Return success status
@@ -26,7 +26,7 @@ async function unmuteCommand(sock, chatId) {
 
         // Send error message to group
         await sock.sendMessage(chatId, { 
-            text: `⚠️ Failed to unmute the group. Please try again later.` 
+            text: `❌ *Unmute Failed*\n\nUnable to update group settings.\n\n_Error: ${error.message || 'Unknown error'}_\n\nPlease try again or check permissions.` 
         });
 
         // Return failure status
