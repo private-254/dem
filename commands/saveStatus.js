@@ -4,16 +4,16 @@ const { downloadMediaMessage } = require('@whiskeysockets/baileys'); // or 'bail
 
 async function saveStatusCommand(sock, chatId, message) {
     try {
-        // 🔒 Owner-only check
+        
         if (!message.key.fromMe) {
-            return sock.sendMessage(chatId, { text: '😡 Command only for the owner.' }, { quoted: message });
+            return sock.sendMessage(chatId, { text: 'Command reserved only for the owner.' }, { quoted: message });
         }
 
         const quotedInfo = message.message?.extendedTextMessage?.contextInfo;
         const quotedMsg = quotedInfo?.quotedMessage;
 
         if (!quotedMsg) {
-            await sock.sendMessage(chatId, { text: '⚠️ Please reply to a status update to save it.' }, { quoted: message });
+            await sock.sendMessage(chatId, { text: '_Please reply to a status update to save it._' }, { quoted: message });
             return sock.sendMessage(chatId, { react: { text: '📑', key: message.key } });
         }
 
@@ -23,7 +23,7 @@ async function saveStatusCommand(sock, chatId, message) {
         if (quotedMsg.extendedTextMessage?.text) {
             const text = quotedMsg.extendedTextMessage.text;
             console.log('📝 Detected text status:', text);
-            await sock.sendMessage(chatId, { text: `📑 saved successfully!` }, { quoted: message });
+            await sock.sendMessage(chatId, { text: `Status saved successfully!` }, { quoted: message });
             return sock.sendMessage(chatId, { react: { text: '☑️', key: message.key } });
         }
 
@@ -47,7 +47,7 @@ async function saveStatusCommand(sock, chatId, message) {
 
         // ⏳ Reaction: downloading
         await sock.sendMessage(chatId, { react: { text: '⏳', key: message.key } });
-        await sock.sendMessage(chatId, { text: '📥 Downloading status Update...' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: '_Downloading status Update..._' }, { quoted: message });
 
         // 📥 Download media
         const buffer = await downloadMediaMessage(
@@ -76,11 +76,11 @@ async function saveStatusCommand(sock, chatId, message) {
         }, { quoted: message });
 
         // 🎯 Final reaction: success
-        await sock.sendMessage(chatId, { react: { text: '✅', key: message.key } });
+        await sock.sendMessage(chatId, { react: { text: '🪄', key: message.key } });
 
     } catch (error) {
         console.error('⚠️ Error in saveStatusCommand:', error);
-        await sock.sendMessage(chatId, { text: `🉐 Failed to save status. Error: ${error?.stack || error}` }, { quoted: message });
+        await sock.sendMessage(chatId, { text: `Failed to save status. Error: ${error?.stack || error}` }, { quoted: message });
         await sock.sendMessage(chatId, { react: { text: '❌', key: message.key } });
     }
 }
