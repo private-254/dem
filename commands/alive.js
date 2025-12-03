@@ -3,21 +3,27 @@ const path = require('path');
 const settings = require("../settings");
 const os = require("os");
 
+// Store bot start time
+const botStartTime = Date.now();
+
+// Platform detection function
 const detectPlatform = () => {
-  if (process.env.DYNO) return "☁️ Heroku";
-  if (process.env.RENDER) return "⚡ Render";
-  if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "📱 Termux";
-  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "🌀 CypherX Platform";
-  if (process.env.P_SERVER_UUID) return "🖥️ Panel";
-  if (process.env.LXC) return "📦 Linux Container (LXC)";
-  
+  if (process.env.DYNO) return "Heroku";
+  if (process.env.RENDER) return "Render";
+  if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "Termux";
+  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "CypherX Platform";
+  if (process.env.P_SERVER_UUID) return "Panel";
+  if (process.env.LXC) return "Linux Container (LXC)";
+
   switch (os.platform()) {
-    case "win32": return "🪟 Windows";
-    case "darwin": return "🍎 macOS";
-    case "linux": return "🐧 Linux";
-    default: return "❓ Unknown";
+    case "win32": return "Windows";
+    case "darwin": return "macOS";
+    case "linux": return "Linux";
+    default: return "Unknown";
   }
 };
+
+// Format uptime function
 function formatUptime(uptime) {
     const seconds = Math.floor(uptime / 1000);
     const days = Math.floor(seconds / (24 * 60 * 60));
@@ -34,67 +40,38 @@ function formatUptime(uptime) {
     return parts.join(', ');
 }
 
-// Store bot start time
-const botStartTime = Date.now();
-
 async function aliveCommand(sock, chatId, message) {
     try {
         const uptime = Date.now() - botStartTime;
         const formattedUptime = formatUptime(uptime);
         const hostName = detectPlatform();
-        
-        const message1 = `ℹ️ *BOT STATUS* 
-⏰ *UPTIME:* ${formattedUptime}
-🎲 *PLATFORM:* ${hostName}
-🔄 *VERSION:* ${settings.version || 'undefined !'}
-📱 *POWERED BY:* ${settings.botName || 'WhatsApp Bot'}
 
-🔵 Use *menu* to see all available commands`;
-
-        // Create fake contact for enhanced replies
-function createFakeContact(message) {
-    return {
-        key: {
-            participants: "0@s.whatsapp.net",
-            remoteJid: "status@broadcast",
-            fromMe: false,
-            id: "ᴅᴀᴠᴇ-ᴍᴅ"
-        },
-        message: {
-            contactMessage: {
-                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:JUNE X\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
-            }
-        },
-        participant: "0@s.whatsapp.net"
-    };
-}
-
- const fake = createFakeContact(message);
-// Use the local asset image
+        const message1 = `╔═══════════════════════\n` +
+                        `║      DAVE-MD STATUS\n` +
+                        `╠═══════════════════════\n` +
+                        `║ UPTIME: ${formattedUptime}\n` +
+                        `║ PLATFORM: ${hostName}\n` +
+                        `║ VERSION: ${settings.version || '2.0.0'}\n` +
+                        `║ DEVELOPER: Dave\n` +
+                        `║ WEBSITE: davexsite-sable.vercel.app\n` +
+                        `╚═══════════════════════`;
         
-const fs = require('fs');
-const path = require('path');
+        // Read menu1 image
+        const imgPath = path.join(__dirname, '../assets/menu1.jpg');
+        const imgBuffer = fs.readFileSync(imgPath);
         
-    const imgPath = path.join(__dirname, '../assets/menu3.jpg');
-    const imgBuffer2 = fs.readFileSync(imgPath);
-        
+        // Send message with image
         await sock.sendMessage(chatId, {
-            text: message1,
-            contextInfo: {
-                externalAdReply: {
-                    showAdAttribution: false,
-                    title: "ᴅᴀᴠᴇ-ᴍᴅ",
-                    body: "© 2025",
-                    thumbnail: imgBuffer2,
-                    sourceUrl: "https://github.com/gifteddevsmd",
-                    mediaType: 1,
-                    renderLargerThumbnail: true,
-                },
-            },
-        }, { quoted: fake }); 
-        
+            image: imgBuffer,
+            caption: message1
+        }, { quoted: message });
+
     } catch (error) {
-        console.error('Error in alive command:', error);        
+        console.error('Error in alive command:', error);
+        // Fallback simple message
+        await sock.sendMessage(chatId, { 
+            text: 'DAVE-MD is alive and running!\n\nVisit: https://davexsite-sable.vercel.app/' 
+        }, { quoted: message });
     }
 }
 
