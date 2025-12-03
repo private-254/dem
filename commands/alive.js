@@ -83,10 +83,10 @@ const path = require('path');
             contextInfo: {
                 externalAdReply: {
                     showAdAttribution: false,
-                    title: "ᴅᴀᴠᴇ-ᴍᴅ BOT",
+                    title: "ᴅᴀᴠᴇ-ᴍᴅ",
                     body: "© 2025",
                     thumbnail: imgBuffer2,
-                    sourceUrl: "https://github.com/vinpink2",
+                    sourceUrl: "https://github.com/gifteddevsmd",
                     mediaType: 1,
                     renderLargerThumbnail: true,
                 },

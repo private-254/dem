@@ -1,5 +1,5 @@
 /**
- * ᴅᴀᴠᴇ-ᴍᴅ Bot - A WhatsApp Bot
+ * ᴅᴀᴠᴇ-ᴍᴅ - A WhatsApp Bot
  * Tennor-modz 
  * © 2025 Dave
  * * NOTE: This is the combined codebase. It handles cloning the core code from 

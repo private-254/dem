@@ -234,7 +234,7 @@ async function facebookCommand(sock, chatId, message) {
         // Try URL method first
         try {
             console.log('🚀 Attempting URL method...');
-            const caption = `📌 *BY ᴅᴀᴠᴇ-ᴍᴅ BOT*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n> 📌By Humans, For Humans !`;
+            const caption = `📌 *BY ᴅᴀᴠᴇ-ᴍᴅ*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n> 📌By Humans, For Humans !`;
             
             await sock.sendMessage(chatId, {
                 video: { url: fbvid },
@@ -310,7 +310,7 @@ async function facebookCommand(sock, chatId, message) {
                 console.log(`✅ Download completed: ${(stats.size / (1024 * 1024)).toFixed(2)} MB`);
 
                 // Send the video
-                const caption = `📌 *BY ᴅᴀᴠᴇ-ᴍᴅ BOT*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n> 📌By Humans, For Humans`;
+                const caption = `📌 *BY ᴅᴀᴠᴇ-ᴍᴅ*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n> 📌By Humans, For Humans`;
                 
                 await sock.sendMessage(chatId, {
                     video: fs.readFileSync(tempFile),

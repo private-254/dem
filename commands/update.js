@@ -226,7 +226,7 @@ async function updateCommand(sock, chatId, message, zipOverride) {
     
     try {
         // Send initial message and store it for editing
-        statusMessage = await sock.sendMessage(chatId, { text: '🔄 Updating the *ᴅᴀᴠᴇ-ᴍᴅ BOT*, please wait…' }, { quoted: message });
+        statusMessage = await sock.sendMessage(chatId, { text: '🔄 Updating the *ᴅᴀᴠᴇ-ᴍᴅ*, please wait…' }, { quoted: message });
         
         if (await hasGitRepo()) {
             // Update status message

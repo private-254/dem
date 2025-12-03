@@ -196,10 +196,10 @@ function createFakeContact(message) {
 // YOUR EXACT MENU STYLE FUNCTION WITH FIXED tylorkids AND fkontak FOR ALL STYLES
 async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thumbnailBuffer, pushname) {
     const fkontak = createFakeContact(message);
-    const botname = "ᴅᴀᴠᴇ-ᴍᴅ BOT";
+    const botname = "ᴅᴀᴠᴇ-ᴍᴅ";
     const ownername = pushname;
     const tylorkids = thumbnailBuffer; // Fixed: using thumbnails from assets
-    const plink = "https://github.com/vinpink2";
+    const plink = "https://github.com/gifteddevsmd";
 
     if (menustyle === '1') {
         await sock.sendMessage(chatId, {
