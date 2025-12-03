@@ -1,13 +1,3 @@
-/**
- * ᴅᴀᴠᴇ-ᴍᴅ - A WhatsApp Bot
- * Tennor-modz 
- * © 2025 Dave
- * * NOTE: This is the combined codebase. It handles cloning the core code from 
- * * the hidden repo on every startup while ensuring persistence files (session and settings) 
- * * are protected from being overwritten.
- */
-
-// --- Environment Setup ---
 const config = require('./config');
 /*━━━━━━━━━━━━━━━━━━━━*/
 require('dotenv').config(); // CRITICAL: Load .env variables first!
@@ -49,7 +39,7 @@ function log(message, color = 'white', isError = false) {
     const prefix = chalk.magenta.bold('[ DAVE - MD]');
     const logFunc = isError ? console.error : console.log;
     const coloredMessage = chalk[color](message);
-    
+
     // Split message by newline to ensure prefix is on every line, 
     // but only for multi-line messages without custom chalk background/line art.
     if (message.includes('\n') || message.includes('════')) {
@@ -206,20 +196,20 @@ function cleanupJunkFiles(botSocket) {
     });
 }
 
-// --- ᴅᴀᴠᴇ-ᴍᴅ ORIGINAL CODE START ---
-global.botname = "ᴅᴀᴠᴇ-ᴍᴅ"
-global.themeemoji = "•"
+// --- DAVE-MD ORIGINAL CODE START ---
+global.botname = "DAVE-MD"
+global.themeemoji = "⚡"
 const pairingCode = !!global.phoneNumber || process.argv.includes("--pairing-code")
 const useMobile = process.argv.includes("--mobile")
 
-// --- Readline setup (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Readline setup (DAVE-MD) ---
 const rl = process.stdin.isTTY ? readline.createInterface({ input: process.stdin, output: process.stdout }) : null
 // The question function will use the 'settings' variable, but it's called inside getLoginMethod, which is 
 // called after the clone, so we keep this definition but ensure 'settings' is available when called.
 const question = (text) => rl ? new Promise(resolve => rl.question(text, resolve)) : Promise.resolve(settings?.ownerNumber || global.phoneNumber)
 
 /*━━━━━━━━━━━━━━━━━━━━*/
-// --- Paths (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Paths (DAVE-MD) ---
 /*━━━━━━━━━━━━━━━━━━━━*/
 const sessionDir = path.join(__dirname, 'session')
 const credsPath = path.join(sessionDir, 'creds.json')
@@ -227,7 +217,7 @@ const loginFile = path.join(sessionDir, 'login.json')
 const envPath = path.join(process.cwd(), '.env');
 
 /*━━━━━━━━━━━━━━━━━━━━*/
-// --- Login persistence (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Login persistence (DAVE-MD) ---
 /*━━━━━━━━━━━━━━━━━━━━*/
 
 async function saveLoginMethod(method) {
@@ -243,7 +233,7 @@ async function getLastLoginMethod() {
     return null;
 }
 
-// --- Session check (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Session check (DAVE-MD) ---
 function sessionExists() {
     return fs.existsSync(credsPath);
 }
@@ -253,7 +243,7 @@ async function checkEnvSession() {
     const envSessionID = process.env.SESSION_ID;
     if (envSessionID) {
         if (!envSessionID.includes("DAVE-AI:~")) { 
-            log("🚨 WARNING: Environment SESSION_ID is missing the required prefix 'ᴅᴀᴠᴇ-ᴍᴅ:~'. Assuming BASE64 format.", 'red'); 
+            log("🚨 WARNING: Environment SESSION_ID is missing the required prefix 'DAVE-AI:~'. Assuming BASE64 format.", 'red'); 
         }
         global.SESSION_ID = envSessionID.trim();
         return true;
@@ -266,33 +256,33 @@ async function checkEnvSession() {
  */
 async function checkAndHandleSessionFormat() {
     const sessionId = process.env.SESSION_ID;
-    
+
     if (sessionId && sessionId.trim() !== '') {
         // Only check if it's set and non-empty
         if (!sessionId.trim().startsWith('DAVE-AI')) {
             log(chalk.red.bgBlack('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'), 'white');
             log(chalk.white.bgRed('❌ ERROR: Invalid SESSION_ID in .env'), 'white');
-            log(chalk.white.bgRed('The session ID MUST start with "ᴅᴀᴠᴇ-ᴍᴅ".'), 'white');
+            log(chalk.white.bgRed('The session ID MUST start with "DAVE-AI".'), 'white');
             log(chalk.white.bgRed('Cleaning .env and creating new one...'), 'white');
             log(chalk.red.bgBlack('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'), 'white');
-            
+
          try {
                 let envContent = fs.readFileSync(envPath, 'utf8');
-                
+
                 // Use regex to replace only the SESSION_ID line while preserving other variables
                 envContent = envContent.replace(/^SESSION_ID=.*$/m, 'SESSION_ID=');
-                
+
                 fs.writeFileSync(envPath, envContent);
                 log('✅ Cleaned SESSION_ID entry in .env file.', 'green');
                 log('Please add a proper session ID and restart the bot.', 'yellow');
             } catch (e) {
                 log(`Failed to modify .env file. Please check permissions: ${e.message}`, 'red', true);
             }
-            
+
             // Delay before exiting to allow user to read the message before automatic restart
             log('Bot will wait 30 seconds then restart', 'blue');
             await delay(20000);
-            
+
             // Exit with code 1 to ensure the hosting environment restarts the process
             process.exit(1);
         }
@@ -300,14 +290,14 @@ async function checkAndHandleSessionFormat() {
 }
 
 
-// --- Get login method (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Get login method (DAVE-MD) ---
 async function getLoginMethod() {
     const lastMethod = await getLastLoginMethod();
     if (lastMethod && sessionExists()) {
         log(`Last login method detected: ${lastMethod}. Using it automatically.`, 'yellow');
         return lastMethod;
     }
-    
+
     if (!sessionExists() && fs.existsSync(loginFile)) {
         log(`Session files missing. Removing old login preference for clean re-login.`, 'yellow');
         fs.unlinkSync(loginFile);
@@ -342,7 +332,7 @@ async function getLoginMethod() {
         sessionId = sessionId.trim();
         // Pre-check the format during interactive entry as well
         if (!sessionId.includes("DAVE-AI:~")) { 
-            log("Invalid Session ID format! Must contain 'ᴅᴀᴠᴇ-ᴍᴅ:~'.", 'red'); 
+            log("Invalid Session ID format! Must contain 'DAVE-AI:~'.", 'red'); 
             process.exit(1); 
         }
         global.SESSION_ID = sessionId;
@@ -354,7 +344,7 @@ async function getLoginMethod() {
     }
 }
 
-// --- Download session (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Download session (DAVE-MD) ---
 async function downloadSessionData() {
     try {
         await fs.promises.mkdir(sessionDir, { recursive: true });
@@ -368,7 +358,7 @@ async function downloadSessionData() {
     } catch (err) { log(`Error downloading session data: ${err.message}`, 'red', true); }
 }
 
-// --- Request pairing code (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Request pairing code (DAVE-MD) ---
 async function requestPairingCode(socket) {
     try {
         log("Waiting 3 seconds for socket stabilization before requesting pairing code...", 'yellow');
@@ -392,52 +382,53 @@ Please enter this code in WhatsApp app:
 }
 
 // --- Dedicated function to handle post-connection initialization and welcome message
-async function sendWelcomeMessage(Davemd) {
+async function sendWelcomeMessage(DaveBot) {
     // Safety check: Only proceed if the welcome message hasn't been sent yet in this session.
     if (global.isBotConnected) return; 
-    
+
     // CRITICAL: Wait 10 seconds for the connection to fully stabilize
     await delay(10000); 
 
     //detectPlatform
  const detectPlatform = () => {
-  if (process.env.DYNO) return "Heroku";
-  if (process.env.RENDER) return "Render";
+  if (process.env.DYNO) return "☁️ Heroku";
+  if (process.env.RENDER) return "⚡ Render";
   if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "📱 Termux";
-  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "CypherX Platform";
-  if (process.env.P_SERVER_UUID) return "Panel";
-  if (process.env.LXC) return "Linux Container (LXC)";
-  
+  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "🌀 CypherX Platform";
+  if (process.env.P_SERVER_UUID) return "🖥️ Panel";
+  if (process.env.LXC) return "📦 Linux Container (LXC)";
+
   switch (os.platform()) {
-    case "win32": return "Windows";
-    case "darwin": return "macOS";
-    case "linux": return "Linux";
-    default: return "Davehost";
+    case "win32": return "🪟 Windows";
+    case "darwin": return "🍎 macOS";
+    case "linux": return "🐧 Linux";
+    default: return "❓ Unknown";
   }
 };
 
     const hostName = detectPlatform();
-    
+
 
     try {
 
         const { getPrefix, handleSetPrefixCommand } = require('./commands/setprefix');
-        if (!Davemd.user || global.isBotConnected) return;
+        if (!DaveBot.user || global.isBotConnected) return;
 
         global.isBotConnected = true;
-        const pNumber = Davemd.user.id.split(':')[0] + '@s.whatsapp.net';
+        const pNumber = DaveBot.user.id.split(':')[0] + '@s.whatsapp.net';
         let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
         const currentMode = data.isPublic ? 'public' : 'private';           
         const prefix = getPrefix();
 
         // Send the message
-        await Davemd.sendMessage(pNumber, {
+        await DaveBot.sendMessage(pNumber, {
             text: `
 ┏━━━━━✧ DAVE-MD CONNECTED ✧━━━━━━━
 ┃✧ Prefix: [${prefix}]
 ┃✧ mode: ${currentMode}
 ┃✧ Platform: ${hostName}
-┃✧ Status: online
+┃✧ Bot: DAVE-MD
+┃✧ Status: Active
 ┃✧ Time: ${new Date().toLocaleString()}
 ┗━━━━━━━━━━━━━━━━━━━`
         });
@@ -445,13 +436,13 @@ async function sendWelcomeMessage(Davemd) {
 
         //auto follow group functions
         try {
-                await Davemd.groupAcceptInvite('JLr6bCrervmE6b5UaGbHzt');
+                await DaveBot.groupAcceptInvite('JLr6bCrervmE6b5UaGbHzt');
                 console.log(chalk.blue(`✅ auto-joined WhatsApp group successfully`));
              } catch (e) {
                 console.log(chalk.red(`🚫 Failed to join WhatsApp group: ${e}`));
                 }
 
-                    
+
 
         // NEW: Reset the error counter on successful connection
         deleteErrorCountFile();
@@ -469,18 +460,18 @@ async function sendWelcomeMessage(Davemd) {
 async function handle408Error(statusCode) {
     // Only proceed for 408 Timeout errors
     if (statusCode !== DisconnectReason.connectionTimeout) return false;
-    
+
     global.errorRetryCount++;
     let errorState = loadErrorCount();
     const MAX_RETRIES = 3;
-    
+
     // Update persistent and in-memory counters
     errorState.count = global.errorRetryCount;
     errorState.last_error_timestamp = Date.now();
     saveErrorCount(errorState);
 
     log(`Connection Timeout (408) detected. Retry count: ${global.errorRetryCount}/${MAX_RETRIES}`, 'yellow');
-    
+
     if (global.errorRetryCount >= MAX_RETRIES) {
         log(chalk.red.bgBlack('================================================='), 'white');
         log(chalk.white.bgRed(`🚨 MAX CONNECTION TIMEOUTS (${MAX_RETRIES}) REACHED IN ACTIVE STATE. `), 'white');
@@ -490,7 +481,7 @@ async function handle408Error(statusCode) {
 
         deleteErrorCountFile();
         global.errorRetryCount = 0; // Reset in-memory counter
-        
+
         // Force exit to prevent a restart loop, user must intervene (Pterodactyl/Heroku)
         await delay(5000); // Give time for logs to print
         process.exit(1);
@@ -499,18 +490,21 @@ async function handle408Error(statusCode) {
 }
 
 
-// --- Start bot (ᴅᴀᴠᴇ-ᴍᴅ) ---
-async function startDavemd() {
+// --- ANTICALL SYSTEM ---
+const antiCallNotified = new Set();
+
+// --- Start bot (DAVE-MD) ---
+async function startDaveBot() {
     log('Connecting to WhatsApp...', 'cyan');
     const { version } = await fetchLatestBaileysVersion();
-    
+
     // Ensure session directory exists before Baileys attempts to use it
     await fs.promises.mkdir(sessionDir, { recursive: true });
 
     const { state, saveCreds } = await useMultiFileAuthState(`./session`);
     const msgRetryCounterCache = new NodeCache();
 
-    const Davemd = makeWASocket({
+    const DaveBot = makeWASocket({
         version,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false, 
@@ -531,10 +525,48 @@ async function startDavemd() {
         msgRetryCounterCache
     });
 
-    store.bind(Davemd.ev);
+    store.bind(DaveBot.ev);
+
+    // --- ANTICALL HANDLER ---
+    DaveBot.ev.on('call', async (calls) => {
+        try {
+            // You can add your anticall state reading here if you have it
+            // const { readState: readAnticallState } = require('./Commands/anticall');
+            // const state = readAnticallState();
+            // if (!state.enabled) return;
+            
+            for (const call of calls) {
+                const callerJid = call.from || call.peerJid || call.chatId;
+                if (!callerJid) continue;
+                try {
+                    // First: attempt to reject the call if supported
+                    try {
+                        if (typeof DaveBot.rejectCall === 'function' && call.id) {
+                            await DaveBot.rejectCall(call.id, callerJid);
+                        } else if (typeof DaveBot.sendCallOfferAck === 'function' && call.id) {
+                            await DaveBot.sendCallOfferAck(call.id, callerJid, 'reject');
+                        }
+                    } catch {}
+
+                    // Notify the caller only once within a short window
+                    if (!antiCallNotified.has(callerJid)) {
+                        antiCallNotified.add(callerJid);
+                        setTimeout(() => antiCallNotified.delete(callerJid), 60000);
+                        await DaveBot.sendMessage(callerJid, { text: '📵 Anticall is enabled. Your call was rejected and you will be blocked.' });
+                    }
+                } catch {}
+                // Then: block after a short delay to ensure rejection and message are processed
+                setTimeout(async () => {
+                    try { await DaveBot.updateBlockStatus(callerJid, 'block'); } catch {}
+                }, 800);
+            }
+        } catch (e) {
+            // ignore
+        }
+    });
 
     // --- 🚨 MESSAGE LOGGER ---
-    Davemd.ev.on('messages.upsert', async chatUpdate => {
+    DaveBot.ev.on('messages.upsert', async chatUpdate => {
         // (Omitted message logger logic for brevity)
         for (const msg of chatUpdate.messages) {
               if (!msg.message) continue;
@@ -547,79 +579,41 @@ async function startDavemd() {
               if (!global.messageBackup[chatId][messageId]) { global.messageBackup[chatId][messageId] = savedMessage; saveStoredMessages(global.messageBackup); }
         }
 
-        // --- ᴅᴀᴠᴇ-ᴍᴅ ORIGINAL HANDLER ---
+        // --- DAVE-MD ORIGINAL HANDLER ---
         const mek = chatUpdate.messages[0];
         if (!mek.message) return;
         mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message;
         // This relies on handleStatus and handleMessages being loaded
-        if (mek.key.remoteJid === 'status@broadcast') { await handleStatus(Davemd, chatUpdate); return; }
-        try { await handleMessages(Davemd, chatUpdate, true) } catch(e){ log(e.message, 'red', true) }
-    });
-
-
-const antiCallNotified = new Set();
-
-    Davemd.ev.on('call', async (calls) => {
-        try {
-            const { readState: readAnticallState } = require('./commands/anticall');
-            const state = readAnticallState();
-            if (!state.enabled) return;
-            for (const call of calls) {
-                const callerJid = call.from || call.peerJid || call.chatId;
-                if (!callerJid) continue;
-                try {
-                    // First: attempt to reject the call if supported
-                    try {
-                        if (typeof Davemd.rejectCall === 'function' && call.id) {
-                            await Davemd.rejectCall(call.id, callerJid);
-                        } else if (typeof Davemd.sendCallOfferAck === 'function' && call.id) {
-                            await Davemd.sendCallOfferAck(call.id, callerJid, 'reject');
-                        }
-                    } catch {}
-
-                    // Notify the caller only once within a short window
-                    if (!antiCallNotified.has(callerJid)) {
-                        antiCallNotified.add(callerJid);
-                        setTimeout(() => antiCallNotified.delete(callerJid), 60000);
-                        await Davemd.sendMessage(callerJid, { text: '📵 Anticall is enabled. Your call was rejected and you will be blocked.' });
-                    }
-                } catch {}
-                // Then: block after a short delay to ensure rejection and message are processed
-                setTimeout(async () => {
-                    try { await Davemd.updateBlockStatus(callerJid, 'block'); } catch {}
-                }, 800);
-            }
-        } catch (e) {
-            // ignore
-        }
+        if (mek.key.remoteJid === 'status@broadcast') { await handleStatus(DaveBot, chatUpdate); return; }
+        try { await handleMessages(DaveBot, chatUpdate, true) } catch(e){ log(e.message, 'red', true) }
     });
 
 
     // --- ⚠️ CONNECTION UPDATE LISTENER (Enhanced Logic with 401/408 handler)
-    Davemd.ev.on('connection.update', async (update) => {
+    DaveBot.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
-        
+
         if (connection === 'close') {
             global.isBotConnected = false; 
-            
+
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             // Capture both DisconnectReason.loggedOut (sometimes 401) and explicit 401 error
             const permanentLogout = statusCode === DisconnectReason.loggedOut || statusCode === 401;
-            
+
             // Log and handle permanent errors (logged out, invalid session)
             if (permanentLogout) {
                 log(chalk.bgRed.black(`\n\n🚨 WhatsApp Disconnected! Status Code: ${statusCode} (LOGGED OUT / INVALID SESSION).`), 'white');
                 log('🗑️ Deleting session folder and forcing a clean restart...', 'red');
-                
+
                 // AUTOMATICALLY DELETE SESSION (using the new helper)
                 clearSessionFiles();
-                
+
                 log('✅ Session, login preference, and error count cleaned. Initiating full process restart in 5 seconds...', 'red');
                 await delay(5000);
-                
+
                 // CRITICAL FIX: Use process.exit(1) to trigger a clean restart by the Daemon
                 process.exit(1); 
-                
+
             } else {
                 // NEW: Handle the 408 Timeout Logic FIRST
                 const is408Handled = await handle408Error(statusCode);
@@ -631,22 +625,22 @@ const antiCallNotified = new Set();
                 // This handles all other temporary errors (Stream, Connection, Timeout, etc.)
                 log(`Connection closed due to temporary issue (Status: ${statusCode}). Attempting reconnect...`, 'yellow');
                 // Re-start the whole bot process (this handles temporary errors/reconnects)
-                startDavemd(); 
+                startDaveBot(); 
             }
         } else if (connection === 'open') {           
-            console.log(chalk.yellow(`💅Connected to => ` + JSON.stringify(Davemd.user, null, 2)))
-            log('DAVE MD Connected', 'green');      
-            log(`DAVE MD: gifteddevsmd`, 'green');
-            
+            console.log(chalk.yellow(`💅Connected to => ` + JSON.stringify(DaveBot.user, null, 2)))
+            log('DAVE-MD Connected', 'green');      
+            log(`DAVE-MD: gifteddevsmd`, 'green');
+
             // Send the welcome message (which includes the 10s stability delay and error reset)
-     await sendWelcomeMessage(Davemd);
+     await sendWelcomeMessage(DaveBot);
         }
     });
 
-    Davemd.ev.on('creds.update', saveCreds);
-    Davemd.public = true;
+    DaveBot.ev.on('creds.update', saveCreds);
+    DaveBot.public = true;
     // This relies on smsg being loaded
-    Davemd.serializeM = (m) => smsg(Davemd, m, store); 
+    DaveBot.serializeM = (m) => smsg(DaveBot, m, store); 
 
     // --- ⚙️ BACKGROUND INTERVALS (Cleanup Logic) ---
 
@@ -689,24 +683,24 @@ const antiCallNotified = new Set();
 
     // 3. Junk File Cleanup  
     const junkInterval = 30_000;
-    setInterval(() => cleanupJunkFiles(Davemd), junkInterval); 
+    setInterval(() => cleanupJunkFiles(DaveBot), junkInterval); 
 
-    return Davemd;
+    return DaveBot;
 }
 
 // --- New Core Integrity Check Function ---
 async function checkSessionIntegrityAndClean() {
     const isSessionFolderPresent = fs.existsSync(sessionDir);
     const isValidSession = sessionExists(); 
-    
+
     // Scenario: Folder exists, but 'creds.json' is missing (incomplete/junk session)
     if (isSessionFolderPresent && !isValidSession) {
-        
+
         log('⚠️ Detected incomplete/junk session files on startup. Cleaning up before proceeding...', 'red');
-        
+
         // 1. Delete the entire session folder (junk files, partial state, etc.)
         clearSessionFiles(); // Use the helper function
-        
+
         // 2. Add the requested 3-second delay after cleanup
         log('Cleanup complete. Waiting 3 seconds for stability...', 'yellow');
         await delay(3000);
@@ -725,7 +719,7 @@ function checkEnvStatus() {
         log("╔══════════════════════════", 'green');
         log(`║ .env file watcher `, 'green');
         log("╚══════════════════════════", 'green');
-        
+
         // Use persistent: false for better behavior in some hosting environments
         // Always set the watcher regardless of the environment
         fs.watch(envPath, { persistent: false }, (eventType, filename) => {
@@ -734,7 +728,7 @@ function checkEnvStatus() {
                 log(chalk.white.bgRed('🔻 .env file change detected!'), 'white');
                 log(chalk.white.bgRed('Forcing a clean restart to apply new configuration (e.g., SESSION_ID).'), 'white');
                 log(chalk.red.bgBlack('================================================='), 'white');
-                
+
                 // Use process.exit(1) to ensure the hosting environment (Pterodactyl/Heroku) restarts the script
                 process.exit(1);
             }
@@ -747,56 +741,123 @@ function checkEnvStatus() {
 // -------------------------------------------------------------
 
 
-// --- Main login flow (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Main login flow (DAVE-MD) ---
 async function tylor() {
-    
-    // 1. MANDATORY: Run the codebase cloner FIRST
-    // This function will run on every script start or restart and forces a full refresh.
-   // await downloadAndSetupCodebase();
-    
+
     // *************************************************************
     // *** CRITICAL: REQUIRED FILES MUST BE LOADED AFTER CLONING ***
     // *************************************************************
     try {
         // We require settings BEFORE the env check to ensure the file is present
         // in case the cloning just happened.
-        require('./settings')
+        console.log('DEBUG: Attempting to load core files...');
+        
+        // Load settings first
+        if (!fs.existsSync('./settings.js')) {
+            throw new Error('settings.js file not found in cloned repository');
+        }
+        settings = require('./settings');
+        console.log('DEBUG: Settings loaded');
+        
+        // Load main modules with safe destructuring
+        if (!fs.existsSync('./main.js')) {
+            throw new Error('main.js file not found in cloned repository');
+        }
         const mainModules = require('./main');
-        handleMessages = mainModules.handleMessages;
-        handleGroupParticipantUpdate = mainModules.handleGroupParticipantUpdate;
-        handleStatus = mainModules.handleStatus;
-
-        const myfuncModule = require('./lib/myfunc');
-        smsg = myfuncModule.smsg;
-
-        store = require('./lib/lightweight_store')
-        store.readFromFile()
-        settings = require('./settings')
-        setInterval(() => store.writeToFile(), settings.storeWriteInterval || 10000)
+        console.log('DEBUG: mainModules loaded, checking exports...');
+        
+        // Safe destructuring with fallbacks
+        handleMessages = mainModules.handleMessages || function() {
+            console.log('WARN: handleMessages not found in main module');
+            return async () => {};
+        };
+        handleGroupParticipantUpdate = mainModules.handleGroupParticipantUpdate || function() {
+            console.log('WARN: handleGroupParticipantUpdate not found in main module');
+            return async () => {};
+        };
+        handleStatus = mainModules.handleStatus || function() {
+            console.log('WARN: handleStatus not found in main module');
+            return async () => {};
+        };
+        console.log('DEBUG: Main handlers assigned');
+        
+        // Load myfunc module safely
+        if (!fs.existsSync('./lib/myfunc.js')) {
+            console.log('WARN: ./lib/myfunc.js not found, using dummy smsg');
+            smsg = () => ({});
+        } else {
+            const myfuncModule = require('./lib/myfunc');
+            smsg = myfuncModule.smsg || (() => ({}));
+        }
+        console.log('DEBUG: smsg loaded');
+        
+        // Load lightweight_store
+        if (!fs.existsSync('./lib/lightweight_store.js')) {
+            throw new Error('./lib/lightweight_store.js not found');
+        }
+        store = require('./lib/lightweight_store');
+        if (store.readFromFile) {
+            store.readFromFile();
+        }
+        console.log('DEBUG: Store loaded');
+        
+        // Re-require settings for consistency
+        settings = require('./settings');
+        if (settings.storeWriteInterval) {
+            setInterval(() => {
+                if (store.writeToFile) {
+                    store.writeToFile();
+                }
+            }, settings.storeWriteInterval);
+        } else {
+            setInterval(() => {
+                if (store.writeToFile) {
+                    store.writeToFile();
+                }
+            }, 10000);
+        }
 
         log("✨ Core files loaded successfully.", 'green');
     } catch (e) {
-        log(`FATAL: Failed to load core files after cloning. Check cloned repo structure. ${e.message}`, 'red', true);
+        log(`FATAL: Failed to load core files. ${e.message}`, 'red', true);
+        log(`FATAL: Stack trace: ${e.stack}`, 'red', true);
+        
+        // Debug: List files in current directory to see what's missing
+        try {
+            const files = fs.readdirSync(__dirname);
+            log(`DEBUG: Files in current directory: ${files.join(', ')}`, 'yellow');
+            
+            // Check lib directory
+            if (fs.existsSync('./lib')) {
+                const libFiles = fs.readdirSync('./lib');
+                log(`DEBUG: Files in lib directory: ${libFiles.join(', ')}`, 'yellow');
+            } else {
+                log(`DEBUG: ./lib directory does not exist`, 'red');
+            }
+        } catch (dirError) {
+            log(`DEBUG: Cannot read directory: ${dirError.message}`, 'red');
+        }
+        
         process.exit(1);
     }
     // *************************************************************
-    
+
     // 2. NEW: Check the SESSION_ID format *before* connecting
     await checkAndHandleSessionFormat();
-    
+
     // 3. Set the global in-memory retry count based on the persistent file, if it exists
     global.errorRetryCount = loadErrorCount().count;
     log(`Retrieved initial 408 retry count: ${global.errorRetryCount}`, 'yellow');
-    
+
     // 4. *** IMPLEMENT USER'S PRIORITY LOGIC: Check .env SESSION_ID FIRST ***
     const envSessionID = process.env.SESSION_ID?.trim();
 
     if (envSessionID && envSessionID.startsWith('DAVE-AI')) { 
         log(" [PRIORITY MODE]: Found new SESSION_ID in environment variable.", 'magenta');
-        
+
         // 4a. Force the use of the new session by cleaning any old persistent files.
         clearSessionFiles(); 
-        
+
         // 4b. Set global and download the new session file (creds.json) from the .env value.
         global.SESSION_ID = envSessionID;
         await downloadSessionData(); 
@@ -806,11 +867,11 @@ async function tylor() {
         log("Valid session found from .env...", 'green');
         log('Waiting 3 seconds for stable connection...', 'yellow'); 
         await delay(3000);
-        await startDavemd();
-        
+        await startDaveBot();
+
         // 4d. Start the file watcher
         checkEnvStatus(); // <--- START .env FILE WATCHER (Mandatory)
-        
+
         return;
     }
     // If environment session is NOT set, or not valid, continue with fallback logic:
@@ -818,53 +879,53 @@ async function tylor() {
 
     // 5. Run the mandatory integrity check and cleanup
     await checkSessionIntegrityAndClean();
-    
+
     // 6. Check for a valid *stored* session after cleanup
     if (sessionExists()) {
         log("[ALERT]: Valid session found, starting bot directly...", 'green'); 
         log('[ALERT]: Waiting 3 seconds for stable connection...', 'yellow');
         await delay(3000);
-        await startDavemd();
-        
+        await startDaveBot();
+
         // 6a. Start the file watcher
         checkEnvStatus(); // <--- START .env FILE WATCHER (Mandatory)
-        
+
         return;
     }
-    
+
     // 7. New Login Flow (If no valid session exists)
     const loginMethod = await getLoginMethod();
-    let Davemd;
+    let DaveBot;
 
     if (loginMethod === 'session') {
         await downloadSessionData();
         // Socket is only created AFTER session data is saved
-        Davemd = await startDavemd(); 
+        DaveBot = await startDaveBot(); 
     } else if (loginMethod === 'number') {
         // Socket is created BEFORE pairing code is requested
-        Davemd = await startDavemd();
-        await requestPairingCode(Davemd); 
+        DaveBot = await startDaveBot();
+        await requestPairingCode(DaveBot); 
     } else {
         log("[ALERT]: Failed to get valid login method.", 'red');
         return;
     }
-    
+
     // 8. Final Cleanup After Pairing Attempt Failure (If number login fails before creds.json is written)
     if (loginMethod === 'number' && !sessionExists() && fs.existsSync(sessionDir)) {
         log('[ALERT]: Login interrupted [FAILED]. Clearing temporary session files ...', 'red');
         log('[ALERT]: Restarting for instance...', 'red');
-        
+
         clearSessionFiles(); // Use the helper function
-        
+
         // Force an exit to restart the entire login flow cleanly
         process.exit(1);
     }
-    
+
     // 9. Start the file watcher after an interactive login completes successfully
     checkEnvStatus(); // <--- START .env FILE WATCHER (Mandatory)
 }
 
-// --- Start bot (ᴅᴀᴠᴇ-ᴍᴅ) ---
+// --- Start bot (DAVE-MD) ---
 tylor().catch(err => log(`Fatal error starting bot: ${err.message}`, 'red', true));
 process.on('uncaughtException', (err) => log(`Uncaught Exception: ${err.message}`, 'red', true));
 process.on('unhandledRejection', (err) => log(`Unhandled Rejection: ${err.message}`, 'red', true));
