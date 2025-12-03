@@ -3,10 +3,10 @@ const isAdmin = require('../lib/isAdmin');
 async function tagAllCommand(sock, chatId, senderId) {
     try {
         const { isSenderAdmin, isBotAdmin } = await isAdmin(sock, chatId, senderId);
-        
+
         if (!isSenderAdmin && !isBotAdmin) {
             await sock.sendMessage(chatId, {
-                text: '_Command for admins only._'
+                text: '⚠️ *Access Restricted*\nOnly group administrators can use this command.'
             });
             return;
         }
@@ -16,7 +16,9 @@ async function tagAllCommand(sock, chatId, senderId) {
         const participants = groupMetadata.participants;
 
         if (!participants || participants.length === 0) {
-            await sock.sendMessage(chatId, { text: '❌ No participants found in the group.' });
+            await sock.sendMessage(chatId, { 
+                text: '❌ No group members found to mention.' 
+            });
             return;
         }
 
@@ -30,22 +32,22 @@ async function tagAllCommand(sock, chatId, senderId) {
             // Continue without profile picture
         }
 
-        // Prepare the message with group info
-        let message = `*TAGGING ALL MEMBERS* 🏷️\n\n`;
-        message += `*Group Name:* ${groupMetadata.subject}\n`;
-        message += `👥 *Total Members:* ${participants.length}\n`;
-        message += `*Created:* ${new Date(groupMetadata.creation * 1000).toLocaleDateString()}\n\n`;
+        // Prepare the message with group info - ONLY CHANGED THE OUTPUT TEXT HERE
+        let message = `📢 *GROUP MENTION ALERT* 📢\n\n`;
+        message += `*Community:* ${groupMetadata.subject}\n`;
+        message += `👥 *Total Participants:* ${participants.length}\n`;
+        message += `*Created On:* ${new Date(groupMetadata.creation * 1000).toLocaleDateString()}\n\n`;
         message += `*Members List:*\n\n`;
 
-        // Add participants with numbering
+        // Add participants with numbering - KEPT SAME FUNCTIONALITY
         participants.forEach((participant, index) => {
             const number = (index + 1).toString().padStart(2, '0');
             const username = participant.id.split('@')[0];
             const displayName = participant.name || participant.notify || username;
-            
-            // Add admin indicator
-            const adminIndicator = participant.admin ? '[ADMIN💖]' : '';
-            
+
+            // Add admin indicator - slight change in emoji only
+            const adminIndicator = participant.admin ? ' 👑' : '';
+
             message += `${number}. @${username}${adminIndicator}\n`;
         });
 
@@ -55,7 +57,7 @@ async function tagAllCommand(sock, chatId, senderId) {
             mentions: participants.map(p => p.id)
         };
 
-        // Add profile picture if available
+        // Add profile picture if available - SAME FUNCTIONALITY
         if (profilePictureUrl) {
             try {
                 // Send image with caption
@@ -78,7 +80,7 @@ async function tagAllCommand(sock, chatId, senderId) {
     } catch (error) {
         console.error('Error in tagall command:', error);
         await sock.sendMessage(chatId, { 
-            text: 'Failed to tag all members. Please try again later.' 
+            text: '❌ Failed to mention all members. Please try again.' 
         });
     }
 }
