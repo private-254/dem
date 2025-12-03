@@ -1,7 +1,4 @@
-/**
- * A WhatsApp Bot
- * Autotyping Command - Shows fake typing status (straight typing presence with fixed 15s duration)
- */
+
 
 const fs = require('fs');
 const path = require('path');
@@ -23,7 +20,7 @@ async function autotypingCommand(sock, chatId, message) {
         // Check if sender is the owner (bot itself)
         if (!message.key.fromMe) {
             await sock.sendMessage(chatId, {
-                text: '❌ This command is only available for the owner!'
+                text: '_This command is only available for the owner!_'
             });
             return;
         }
