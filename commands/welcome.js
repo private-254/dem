@@ -6,7 +6,9 @@ const fetch = require('node-fetch');
 async function welcomeCommand(sock, chatId, message, match) {
     // Check if it's a group
     if (!chatId.endsWith('@g.us')) {
-        await sock.sendMessage(chatId, { text: 'This command can only be used in groups.' },{ quoted: message });
+        await sock.sendMessage(chatId, { 
+            text: '❌ *DAVE-MD Group Features*\n\nWelcome settings can only be configured in groups!' 
+        }, { quoted: message });
         return;
     }
 
@@ -37,7 +39,7 @@ async function handleJoinEvent(sock, id, participants) {
             // Handle case where participant might be an object or not a string
             const participantString = typeof participant === 'string' ? participant : (participant.id || participant.toString());
             const user = participantString.split('@')[0];
-            
+
             // Get user's display name
             let displayName = user; // Default to phone number
             try {
@@ -55,7 +57,7 @@ async function handleJoinEvent(sock, id, participants) {
             } catch (nameError) {
                 console.log('Could not fetch display name, using phone number');
             }
-            
+
             // Process custom message with variables
             let finalMessage;
             if (customMessage) {
@@ -75,10 +77,26 @@ async function handleJoinEvent(sock, id, participants) {
                     second: '2-digit',
                     hour12: true
                 });
-                
-                finalMessage = `╭╼━≪•NEW-MEMBER•≫━╾╮\n┃WELCOME: @${displayName} 👋\n┃Member count: #${groupMetadata.participants.length}\n┃𝚃𝙸𝙼𝙴: ${timeString}⏰\n╰━━━━━━━━━━━━━━━╯\n\n*@${displayName}* Welcome to *${groupName}*! 🎉\n*𝙳𝙴𝚂𝙲𝚁𝙸𝙿𝚃𝙸𝙾𝙽*\n${groupDesc}\n\n`;
+
+                finalMessage = `╭━━━━━━━━━━━━━━━━━━━━╮
+┃   🎉 *DAVE-MD WELCOME* 🎉   ┃
+╰━━━━━━━━━━━━━━━━━━━━╯
+
+👤 *New Member:* @${displayName}
+🏷️ *Group:* ${groupName}
+👥 *Members:* ${groupMetadata.participants.length}
+⏰ *Time:* ${timeString}
+
+*Welcome to the group!* 🌟
+Make sure to read the group description:
+
+📝 *Description:*
+${groupDesc}
+
+🤖 *Powered by DAVE-MD*
+`;
             }
-            
+
             // Try to send with image first (always try images)
             try {
                 // Get user profile picture
@@ -91,15 +109,15 @@ async function handleJoinEvent(sock, id, participants) {
                 } catch (profileError) {
                     console.log('Could not fetch profile picture, using default');
                 }
-                
+
                 // Construct API URL for welcome image
                 const apiUrl = `https://api.some-random-api.com/welcome/img/2/gaming3?type=join&textcolor=green&username=${encodeURIComponent(displayName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${groupMetadata.participants.length}&avatar=${encodeURIComponent(profilePicUrl)}`;
-                
+
                 // Fetch the welcome image
                 const response = await fetch(apiUrl);
                 if (response.ok) {
                     const imageBuffer = await response.buffer();
-                    
+
                     // Send welcome image with caption (custom or default message)
                     await sock.sendMessage(id, {
                         image: imageBuffer,
@@ -112,7 +130,7 @@ async function handleJoinEvent(sock, id, participants) {
             } catch (imageError) {
                 console.log('Image generation failed, falling back to text');
             }
-            
+
             // Send text message (either custom message or fallback)
             await sock.sendMessage(id, {
                 text: finalMessage,
@@ -124,7 +142,7 @@ async function handleJoinEvent(sock, id, participants) {
             // Fallback to text message
             const participantString = typeof participant === 'string' ? participant : (participant.id || participant.toString());
             const user = participantString.split('@')[0];
-            
+
             // Use custom message if available, otherwise use simple fallback
             let fallbackMessage;
             if (customMessage) {
@@ -133,9 +151,9 @@ async function handleJoinEvent(sock, id, participants) {
                     .replace(/{group}/g, groupName)
                     .replace(/{description}/g, groupDesc);
             } else {
-                fallbackMessage = `Welcome @${user} to ${groupName}! 🎉`;
+                fallbackMessage = `🎉 *DAVE-MD Welcome*\n\nWelcome @${user} to *${groupName}*!\n\n🤖 Your personal assistant is here to help!`;
             }
-            
+
             await sock.sendMessage(id, {
                 text: fallbackMessage,
                 mentions: [participantString],
