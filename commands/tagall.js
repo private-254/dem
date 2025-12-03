@@ -6,7 +6,7 @@ async function tagAllCommand(sock, chatId, senderId) {
         
         if (!isSenderAdmin && !isBotAdmin) {
             await sock.sendMessage(chatId, {
-                text: '❌ Only admins can use the .tagall command.'
+                text: '_Command for admins only._'
             });
             return;
         }
@@ -31,11 +31,11 @@ async function tagAllCommand(sock, chatId, senderId) {
         }
 
         // Prepare the message with group info
-        let message = `🏷️ *TAGGING ALL MEMBERS* 🏷️\n\n`;
-        message += `💳 *Group Name:* ${groupMetadata.subject}\n`;
+        let message = `*TAGGING ALL MEMBERS* 🏷️\n\n`;
+        message += `*Group Name:* ${groupMetadata.subject}\n`;
         message += `👥 *Total Members:* ${participants.length}\n`;
-        message += `📅 *Created:* ${new Date(groupMetadata.creation * 1000).toLocaleDateString()}\n\n`;
-        message += `🔊 *Members List:*\n\n`;
+        message += `*Created:* ${new Date(groupMetadata.creation * 1000).toLocaleDateString()}\n\n`;
+        message += `*Members List:*\n\n`;
 
         // Add participants with numbering
         participants.forEach((participant, index) => {
@@ -78,7 +78,7 @@ async function tagAllCommand(sock, chatId, senderId) {
     } catch (error) {
         console.error('Error in tagall command:', error);
         await sock.sendMessage(chatId, { 
-            text: '❌ Failed to tag all members. Please try again later.' 
+            text: 'Failed to tag all members. Please try again later.' 
         });
     }
 }
