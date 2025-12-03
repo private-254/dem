@@ -44,7 +44,7 @@ async function tagAllCommand(sock, chatId, senderId) {
             const displayName = participant.name || participant.notify || username;
             
             // Add admin indicator
-            const adminIndicator = participant.admin ? '[ADMIN👑]' : '';
+            const adminIndicator = participant.admin ? '[ADMIN💖]' : '';
             
             message += `${number}. @${username}${adminIndicator}\n`;
         });
