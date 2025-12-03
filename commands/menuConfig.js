@@ -1,4 +1,4 @@
-// commands/menuConfig.js
+
 
 
 const { 
@@ -16,11 +16,11 @@ async function menuConfigCommand(sock, chatId, message, args) {
     if (args.length === 0) {
         // Show current settings
         const settings = getMenuSettings();
-        let configMessage = `📑 *ᴅᴀᴠᴇ-ᴍᴅ MENU CONFIG*\n`;
-        configMessage += `🔵 *Current Style:* ${settings.menuStyle} (${MENU_STYLES[settings.menuStyle]})\n`;
-        configMessage += `🔵 *Show Memory:* ${settings.showMemory ? '✅' : '❌'}\n`;
-        configMessage += `🔵 *Show Uptime:* ${settings.showUptime ? '✅' : '❌'}\n`;
-        configMessage += `🔵 *Show Progress Bar:* ${settings.showProgressBar ? '✅' : '❌'}\n`;
+        let configMessage = `🕳️ *ᴅᴀᴠᴇ-ᴍᴅ Menu*\n`;
+        configMessage += `🕳️ *Current Style:* ${settings.menuStyle} (${MENU_STYLES[settings.menuStyle]})\n`;
+        configMessage += `🕳️ *Show Memory:* ${settings.showMemory ? '🕳️' : '❌'}\n`;
+        configMessage += `🕳️ *Show Uptime:* ${settings.showUptime ? '🕳️' : '❌'}\n`;
+        configMessage += `🕳️ *Show Progress Bar:* ${settings.showProgressBar ? '🕳️' : '❌'}\n`;
         configMessage += `\n\n`;
         
         configMessage += `*Available Styles:*\n`;
@@ -93,7 +93,7 @@ async function menuConfigCommand(sock, chatId, message, args) {
             case 'reset':
                 resetMenuSettings();
                 await sock.sendMessage(chatId, { 
-                    text: '✅ Menu settings reset to default' 
+                    text: '_Menu settings reset to default_' 
                 }, { quoted: message });
                 break;
                 
@@ -120,7 +120,7 @@ async function menuConfigCommand(sock, chatId, message, args) {
                 const setSettingKey = setSettingMap[args[1].toLowerCase()];
                 if (!setSettingKey) {
                     await sock.sendMessage(chatId, { 
-                        text: '❌ Invalid setting. Use: memory, uptime, or progress' 
+                        text: 'Invalid setting. Use: memory, uptime, or progress' 
                     }, { quoted: message });
                     return;
                 }
@@ -128,7 +128,7 @@ async function menuConfigCommand(sock, chatId, message, args) {
                 const value = args[2].toLowerCase();
                 if (value !== 'on' && value !== 'off') {
                     await sock.sendMessage(chatId, { 
-                        text: '❌ Invalid value. Use: on or off' 
+                        text: 'Invalid value. Use: on or off' 
                     }, { quoted: message });
                     return;
                 }
@@ -142,13 +142,13 @@ async function menuConfigCommand(sock, chatId, message, args) {
                 
             default:
                 await sock.sendMessage(chatId, { 
-                    text: '❌ Unknown action. Use: style, toggle, reset, set, or preview' 
+                    text: 'Unknown action. Use: style, toggle, reset, set, or preview' 
                 }, { quoted: message });
         }
     } catch (error) {
         console.error('Error in menu config:', error);
         await sock.sendMessage(chatId, { 
-            text: '❌ Error configuring menu settings' 
+            text: 'Error configuring menu settings' 
         }, { quoted: message });
     }
 }
