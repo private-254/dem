@@ -50,7 +50,7 @@ function downloadFile(url, dest, visited = new Set()) {
             const client = useHttps ? https : require('http');
             const req = client.get(url, {
                 headers: {
-                    'User-Agent': 'KnightBot-Updater/1.0',
+                    'User-Agent': 'DAVE-MD-Updater/1.0',
                     'Accept': '*/*'
                 }
             }, res => {
@@ -159,7 +159,7 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
     // Copy over while preserving runtime dirs/files
     const ignore = ['node_modules', '.git', 'session', 'tmp', 'tmp/', 'temp', 'data', 'baileys_store.json'];
     const copied = [];
-    
+
     // Preserve ownerNumber from existing settings.js if present
     let preservedOwner = null;
     let preservedBotOwner = null;
@@ -172,9 +172,9 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
     } catch (e) {
         console.log('Could not preserve settings:', e.message);
     }
-    
+
     copyRecursive(srcRoot, process.cwd(), ignore, '', copied);
-    
+
     if (preservedOwner) {
         try {
             const settingsPath = path.join(process.cwd(), 'settings.js');
@@ -190,7 +190,7 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
             console.log('Could not update settings file:', e.message);
         }
     }
-    
+
     // Cleanup extracted directory
     try { fs.rmSync(extractTo, { recursive: true, force: true }); } catch {}
     try { fs.rmSync(zipPath, { force: true }); } catch {}
@@ -199,7 +199,7 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
 
 async function restartProcess(sock, chatId, message) {
     try {
-        await sock.sendMessage(chatId, { text: '✅ Update complete! Restarting…' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: '✅ *DAVE-MD Updated*\nRestarting system for changes to take effect...' }, { quoted: message });
     } catch {}
     try {
         // Preferred: PM2
@@ -216,87 +216,91 @@ async function restartProcess(sock, chatId, message) {
 async function updateCommand(sock, chatId, message, zipOverride) {
     const senderId = message.key.participant || message.key.remoteJid;
     const isOwner = await isOwnerOrSudo(senderId, sock, chatId);
-    
+
     if (!message.key.fromMe && !isOwner) {
-        await sock.sendMessage(chatId, { text: 'Only bot owner or sudo can use .update' }, { quoted: message });
+        await sock.sendMessage(chatId, { 
+            text: '🚫 *Permission Denied*\nOnly *DAVE-MD Owner* or *Sudo Users* can update the system.' 
+        }, { quoted: message });
         return;
     }
 
     let statusMessage = null;
-    
+
     try {
         // Send initial message and store it for editing
-        statusMessage = await sock.sendMessage(chatId, { text: '🔄 Updating the *ᴅᴀᴠᴇ-ᴍᴅ*, please wait…' }, { quoted: message });
-        
+        statusMessage = await sock.sendMessage(chatId, { 
+            text: '🔄 *DAVE-MD System Update*\n\nInitializing update process...' 
+        }, { quoted: message });
+
         if (await hasGitRepo()) {
             // Update status message
             if (statusMessage && statusMessage.key) {
                 await sock.sendMessage(chatId, { 
-                    text: '🔄 Updating *ᴅᴀᴠᴇ-ᴍᴅ* via ZipExtraction...',
+                    text: '🔄 *DAVE-MD System Update*\n\nUpdating via Git repository...',
                     edit: statusMessage.key
                 });
             }
-            
+
             const { oldRev, newRev, alreadyUpToDate, commits, files } = await updateViaGit();
-            
+
             // Update status message with git result
             if (statusMessage && statusMessage.key) {
                 const summary = alreadyUpToDate ? 
-                    `✅ Already up to date: ${newRev}` : 
-                    `✅ Updated from ${oldRev.substring(0, 7)} to ${newRev.substring(0, 7)}`;
-                
+                    `✅ *DAVE-MD System Status*\nAlready up to date: ${newRev.substring(0, 7)}` : 
+                    `✅ *DAVE-MD Updated*\nVersion: ${oldRev.substring(0, 7)} → ${newRev.substring(0, 7)}\n\nInstalling dependencies...`;
+
                 await sock.sendMessage(chatId, { 
-                    text: `${summary}\n📦 Installing dependencies...`,
+                    text: summary,
                     edit: statusMessage.key
                 });
             }
-            
+
             await run('npm install --no-audit --no-fund');
         } else {
             // Update status message for ZIP update
             if (statusMessage && statusMessage.key) {
                 await sock.sendMessage(chatId, { 
-                    text: '📥 Downloading update via ZIP...',
+                    text: '🔄 *DAVE-MD System Update*\n\nDownloading update package via ZIP...',
                     edit: statusMessage.key
                 });
             }
-            
+
             const { copiedFiles } = await updateViaZip(sock, chatId, message, zipOverride);
-            
+
             // Update status message after ZIP extraction
             if (statusMessage && statusMessage.key) {
                 await sock.sendMessage(chatId, { 
-                    text: `✅ Extracted ${copiedFiles.length} files\n📦 Installing dependencies...`,
+                    text: `✅ *DAVE-MD System Update*\nExtracted ${copiedFiles.length} files\nInstalling dependencies...`,
                     edit: statusMessage.key
                 });
             }
-            
+
             // Install dependencies for ZIP update too
             await run('npm install --no-audit --no-fund');
         }
-        
+
         // Final update before restart
         if (statusMessage && statusMessage.key) {
             await sock.sendMessage(chatId, { 
-                text: '✅ Update completed! Restarting bot...',
+                text: '✅ *DAVE-MD Update Complete*\n\nRestarting system for changes to take effect...',
                 edit: statusMessage.key
             });
         }
-        
+
         await restartProcess(sock, chatId, message);
     } catch (err) {
         console.error('Update failed:', err);
-        
+
         // Edit the original status message with error
         if (statusMessage && statusMessage.key) {
             await sock.sendMessage(chatId, { 
-                text: `❌ Update failed:\n${String(err.message || err).substring(0, 1000)}`,
+                text: `❌ *DAVE-MD Update Failed*\n\nError: ${String(err.message || err).substring(0, 1000)}`,
                 edit: statusMessage.key
             });
         } else {
             // Fallback to new message if editing failed
             await sock.sendMessage(chatId, { 
-                text: `❌ Update failed:\n${String(err.message || err).substring(0, 1000)}`
+                text: `❌ *DAVE-MD Update Failed*\n\nError: ${String(err.message || err).substring(0, 1000)}`
             }, { quoted: message });
         }
     }
