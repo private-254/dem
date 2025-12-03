@@ -116,38 +116,30 @@ async function shazamCommand(sock, chatId, message) {
         debugLog('Shazam command started', { chatId, messageId: message.key.id });
 
         await sock.sendMessage(chatId, {
-            react: { text: '🎵', key: message.key }
+            react: { text: '🔍', key: message.key }
         });
 
         const media = await getAllMediaBuffers(message);
 
         if (!media) {
-            debugLog('No media found - sending instructions');
             await sock.sendMessage(chatId, {
-                text: 'Send or reply to an audio/voice note, video, or image to identify the song.\n\nSupported media:\n• Audio/Voice notes\n• Videos with audio.'
+                text: '_Send or reply to audio/video to identify music._'
             }, { quoted: message });
             return;
         }
 
-        debugLog('Media found, creating temp file...', { type: media.type, size: media.buffer.length });
-
         const tempDir = path.join(__dirname, '../temp');
         if (!fs.existsSync(tempDir)) {
-            debugLog('Creating temp directory...');
             fs.mkdirSync(tempDir, { recursive: true });
         }
 
         tempPath = path.join(tempDir, `${Date.now()}_${media.type}${media.ext}`);
         fs.writeFileSync(tempPath, media.buffer);
-        debugLog('Temp file created:', { path: tempPath, size: media.buffer.length });
 
         let mediaUrl = '';
         try {
-            debugLog('Uploading to Uguu...');
             const res = await UploadFileUgu(tempPath);
-            debugLog('Uguu upload response:', res);
-
-            // Robust parsing of Uguu response
+            
             if (typeof res === 'string') {
                 mediaUrl = res;
             } else if (res.url) {
@@ -161,77 +153,57 @@ async function shazamCommand(sock, chatId, message) {
             }
 
             if (!mediaUrl) {
-                debugLog('Uguu response structure unexpected:', res);
+                await sock.sendMessage(chatId, { text: '_Upload failed. Try again._' }, { quoted: message });
+                return;
             }
         } catch (uploadError) {
             console.error('[SHAZAM] Upload error:', uploadError);
-            throw new Error(`Upload failed: ${uploadError.message}`);
-        }
-
-        if (!mediaUrl) {
-            debugLog('No media URL obtained from upload');
-            await sock.sendMessage(chatId, { text: 'Failed to upload media - no URL returned.' }, { quoted: message });
+            await sock.sendMessage(chatId, { text: '_Upload error. Try another file._' }, { quoted: message });
             return;
         }
 
-        debugLog('Media uploaded successfully, URL:', mediaUrl);
-
         let resultText = '';
         try {
-            debugLog('Calling Shazam API...', { url: mediaUrl });
             const response = await axios.get(`https://apiskeith.vercel.app/ai/shazam`, {
                 params: { url: mediaUrl },
                 timeout: 30000
             });
 
-            debugLog('Shazam API response:', { status: response.status, data: response.data });
-
             const song = response.data?.result || response.data;
 
             if (song && (song.title || song.artists)) {
-                resultText = `🎶 *SONG IDENTIFIED ⬇️*\n\n` +
-                             `📝 *Title:* ${song.title || 'Unknown'}\n` +
-                             `🎤 *Artist:* ${song.artists || 'Unknown'}\n` +
-                             `💿 *Album:* ${song.album || 'N/A'}\n` +
-                             `📟 *Release:* ${song.release_date || 'N/A'}\n\n` +
-                             `📊 *Media Type:* ${media.type.charAt(0).toUpperCase() + media.type.slice(1)}`;
-                debugLog('Song identified successfully');
+                resultText = `_🎶 SONG FOUND_\n\n` +
+                             `_🎵 Title:_ ${song.title || 'Unknown'}\n` +
+                             `_🎤 Artist:_ ${song.artists || 'Unknown'}\n` +
+                             `_💿 Album:_ ${song.album || 'N/A'}\n` +
+                             `_📅 Release:_ ${song.release_date || 'N/A'}\n\n` +
+                             `_🤖 Powered by DAVE-MD_`;
             } else {
-                resultText = `❌ Sorry, could not identify the song from this ${media.type}.`;
-                debugLog('No song identified from Shazam API');
+                resultText = `_❌ Song not recognized. Try different audio._`;
             }
         } catch (apiError) {
             console.error('[SHAZAM] API error:', apiError.message);
-            debugLog('Shazam API error details:', {
-                code: apiError.code,
-                response: apiError.response?.data,
-                status: apiError.response?.status
-            });
-
+            
             if (apiError.code === 'ECONNREFUSED') {
-                resultText = `❌ Shazam service is currently unavailable. Please try again later.`;
+                resultText = `_❌ Service unavailable. Try later._`;
             } else if (apiError.response?.status === 404) {
-                resultText = `❌ Song not found. Try with a clearer audio sample.`;
+                resultText = `_❌ No match found._`;
             } else {
-                resultText = `❌ Failed to recognize the song from this ${media.type}.`;
+                resultText = `_❌ Recognition failed._`;
             }
         }
 
-        debugLog('Sending result to user...');
         await sock.sendMessage(chatId, { text: resultText }, { quoted: message });
 
     } catch (error) {
         console.error('[SHAZAM] General error:', error.message);
-        debugLog('General error details:', { stack: error.stack });
-
         await sock.sendMessage(chatId, {
-            text: `❌ Failed to process media for recognition: ${error.message}`
+            text: `_❌ Processing error. Try again._`
         }, { quoted: message });
     } finally {
         if (tempPath && fs.existsSync(tempPath)) {
             try {
                 fs.unlinkSync(tempPath);
-                debugLog('Temp file cleaned up');
             } catch (cleanupError) {
                 console.error('[SHAZAM] Cleanup error:', cleanupError.message);
             }
