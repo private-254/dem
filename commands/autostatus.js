@@ -1,20 +1,26 @@
 const fs = require('fs');
 const path = require('path');
 
-const channelInfo = {
-    contextInfo: {
-        forwardingScore: 1,
-        isForwarded: false,
-        forwardedNewsletterMessageInfo: {
-            newsletterJid: '',
-            newsletterName: '',
-            serverMessageId: -1
-        }
-    }
-};
-
-// Array of random emojis for reactions
-const randomEmojis = ['❤️', '😂', '😮', '😢', '😡', '👏', '🔥', '⭐', '🎉', '🙏', '👍', '👎', '💯', '🤔', '🤯', '😍', '🥰', '🤗', '😎', '🤩'];
+// Create fake contact for enhanced replies
+function createFakeContact(message) {
+    const sender = message.key.participant || message.key.remoteJid;
+    const number = sender.split('@')[0];
+    
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "status@broadcast",
+            fromMe: false,
+            id: "VENOM-XMD"
+        },
+        message: {
+            contactMessage: {
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:XL;Bot;;;\nFN:VENOM-XMD\nitem1.TEL;waid=${number}:${number}\nitem1.X-ABLabel:Phone\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
 
 // Path to store auto status configuration
 const configPath = path.join(__dirname, '../data/autoStatus.json');
@@ -24,8 +30,8 @@ if (!fs.existsSync(configPath)) {
     fs.writeFileSync(configPath, JSON.stringify({ 
         enabled: false, 
         reactOn: false,
-        reactionEmoji: '🖤', // Default emoji
-        randomReactions: true // New setting for random reactions
+        reactionEmoji: '❤️', // Default emoji
+        randomReactions: true
     }, null, 2));
 }
 
@@ -36,7 +42,7 @@ function readConfig() {
             const defaultConfig = { 
                 enabled: false, 
                 reactOn: false, 
-                reactionEmoji: '🖤',
+                reactionEmoji: '❤️',
                 randomReactions: true 
             };
             fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
@@ -48,7 +54,7 @@ function readConfig() {
         return { 
             enabled: false, 
             reactOn: false, 
-            reactionEmoji: '🖤',
+            reactionEmoji: '❤️',
             randomReactions: true 
         };
     }
@@ -67,22 +73,25 @@ function writeConfig(config) {
 
 // Helper function to get random emoji
 function getRandomEmoji() {
-    return randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
+    const emojis = ['❤️', '😂', '😮', '😢', '😡', '👏', '🔥', '⭐', '🎉', '🙏', '👍', '👎', '💯', '🤔', '🤯', '😍', '🥰', '🤗', '😎', '🤩'];
+    return emojis[Math.floor(Math.random() * emojis.length)];
 }
 
 async function autoStatusCommand(sock, chatId, msg, args) {
     try {
+        // Create fake contact for reply
+        const fake = createFakeContact(msg);
+        
         // Check if sender is owner or sudo
         const { isSudo } = require('../lib/index');
         const senderId = msg.key.participant || msg.key.remoteJid;
         const senderIsSudo = await isSudo(senderId);
         const isOwner = msg.key.fromMe || senderIsSudo;
-        
+
         if (!isOwner) {
             await sock.sendMessage(chatId, { 
-                text: '❌ This command can only be used by the owner!',
-                ...channelInfo
-            }, { quoted: msg });
+                text: 'This command can only be used by the owner.'
+            }, { quoted: fake });
             return;
         }
 
@@ -91,28 +100,26 @@ async function autoStatusCommand(sock, chatId, msg, args) {
 
         // If no arguments, show current status
         if (!args || args.length === 0) {
-            const status = config.enabled ? '✅ Enabled' : '❌ Disabled';
-            const reactStatus = config.reactOn ? '✅ Enabled' : '❌ Disabled';
-            const currentEmoji = config.reactionEmoji || '🖤';
-            const randomStatus = config.randomReactions ? '✅ Enabled' : '❌ Disabled';
-            
+            const status = config.enabled ? 'ENABLED' : 'DISABLED';
+            const reactStatus = config.reactOn ? 'ENABLED' : 'DISABLED';
+            const currentEmoji = config.reactionEmoji || '❤️';
+            const randomStatus = config.randomReactions ? 'ENABLED' : 'DISABLED';
+
             await sock.sendMessage(chatId, { 
-                text: `🔄 *Auto Status Settings*\n\n📱 *Auto Status View:* ${status}\n💫 *Status Reactions:* ${reactStatus}\n🎯 *Reaction Emoji:* ${currentEmoji}\n🎲 *Random Reactions:* ${randomStatus}\n\n*Commands:*\n• .autostatus on - Enable auto status view\n• .autostatus off - Disable auto status view\n• .autostatus react on - Enable status reactions\n• .autostatus react off - Disable status reactions\n• .autostatus emoji <emoji> - Change reaction emoji\n• .autostatus random on - Enable random reactions\n• .autostatus random off - Disable random reactions\n• .autostatus reset - Reset to default settings`,
-                ...channelInfo
-            }, { quoted: msg });
+                text: `AUTO STATUS SETTINGS\n\nAuto Status View: ${status}\nStatus Reactions: ${reactStatus}\nReaction Emoji: ${currentEmoji}\nRandom Reactions: ${randomStatus}\n\nCommands:\n• autostatus on - Enable auto status view\n• autostatus off - Disable auto status view\n• autostatus react on - Enable status reactions\n• autostatus react off - Disable status reactions\n• autostatus emoji <emoji> - Change reaction emoji\n• autostatus random on - Enable random reactions\n• autostatus random off - Disable random reactions\n• autostatus reset - Reset to default settings`
+            }, { quoted: fake });
             return;
         }
 
         // Handle commands
         const command = args[0].toLowerCase();
-        
+
         if (command === 'on') {
             config.enabled = true;
             if (writeConfig(config)) {
                 await sock.sendMessage(chatId, { 
-                    text: '✅ Auto status view has been enabled!\nBot will now automatically view all contact statuses.',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Auto status view has been enabled. Bot will now automatically view all contact statuses.'
+                }, { quoted: fake });
             } else {
                 throw new Error('Failed to save configuration');
             }
@@ -121,9 +128,8 @@ async function autoStatusCommand(sock, chatId, msg, args) {
             config.enabled = false;
             if (writeConfig(config)) {
                 await sock.sendMessage(chatId, { 
-                    text: '❌ Auto status view has been disabled!\nBot will no longer automatically view statuses.',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Auto status view has been disabled. Bot will no longer automatically view statuses.'
+                }, { quoted: fake });
             } else {
                 throw new Error('Failed to save configuration');
             }
@@ -132,21 +138,19 @@ async function autoStatusCommand(sock, chatId, msg, args) {
             // Handle react subcommand
             if (!args[1]) {
                 await sock.sendMessage(chatId, { 
-                    text: '❌ Please specify on/off for reactions!\nUse: .autostatus react on/off',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Please specify on/off for reactions. Use: autostatus react on/off'
+                }, { quoted: fake });
                 return;
             }
-            
+
             const reactCommand = args[1].toLowerCase();
             if (reactCommand === 'on') {
                 config.reactOn = true;
                 if (writeConfig(config)) {
                     const reactionType = config.randomReactions ? 'random emojis' : config.reactionEmoji;
                     await sock.sendMessage(chatId, { 
-                        text: `💫 Status reactions have been enabled!\nBot will now react to status updates with ${reactionType}.`,
-                        ...channelInfo
-                    }, { quoted: msg });
+                        text: `Status reactions have been enabled. Bot will now react to status updates with ${reactionType}.`
+                    }, { quoted: fake });
                 } else {
                     throw new Error('Failed to save configuration');
                 }
@@ -154,46 +158,41 @@ async function autoStatusCommand(sock, chatId, msg, args) {
                 config.reactOn = false;
                 if (writeConfig(config)) {
                     await sock.sendMessage(chatId, { 
-                        text: '❌ Status reactions have been disabled!\nBot will no longer react to status updates.',
-                        ...channelInfo
-                    }, { quoted: msg });
+                        text: 'Status reactions have been disabled. Bot will no longer react to status updates.'
+                    }, { quoted: fake });
                 } else {
                     throw new Error('Failed to save configuration');
                 }
             } else {
                 await sock.sendMessage(chatId, { 
-                    text: '❌ Invalid reaction command! Use: .autostatus react on/off',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Invalid reaction command. Use: autostatus react on/off'
+                }, { quoted: fake });
             }
         }
         else if (command === 'emoji') {
             // Handle emoji change
             if (!args[1]) {
                 await sock.sendMessage(chatId, { 
-                    text: '❌ Please provide an emoji!\nUse: .autostatus emoji <emoji>\nExample: .autostatus emoji 👍',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Please provide an emoji. Use: autostatus emoji <emoji>\nExample: autostatus emoji 👍'
+                }, { quoted: fake });
                 return;
             }
-            
+
             const newEmoji = args[1].trim();
-            
-            // Basic emoji validation (check if it's likely an emoji)
+
+            // Basic emoji validation
             if (newEmoji.length > 4 || !/\p{Emoji}/u.test(newEmoji)) {
                 await sock.sendMessage(chatId, { 
-                    text: '❌ Please provide a valid single emoji!\nExample: .autostatus emoji 🎉',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Please provide a valid single emoji.\nExample: autostatus emoji 🎉'
+                }, { quoted: fake });
                 return;
             }
-            
+
             config.reactionEmoji = newEmoji;
             if (writeConfig(config)) {
                 await sock.sendMessage(chatId, { 
-                    text: `✅ Reaction emoji changed to: ${newEmoji}\n${config.reactOn ? `Bot will now use ${newEmoji} for status reactions.` : 'Enable reactions with: .autostatus react on'}`,
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: `Reaction emoji changed to: ${newEmoji}\n${config.reactOn ? `Bot will now use ${newEmoji} for status reactions.` : 'Enable reactions with: autostatus react on'}`
+                }, { quoted: fake });
             } else {
                 throw new Error('Failed to save configuration');
             }
@@ -202,20 +201,18 @@ async function autoStatusCommand(sock, chatId, msg, args) {
             // Handle random reactions subcommand
             if (!args[1]) {
                 await sock.sendMessage(chatId, { 
-                    text: '❌ Please specify on/off for random reactions!\nUse: .autostatus random on/off',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Please specify on/off for random reactions. Use: autostatus random on/off'
+                }, { quoted: fake });
                 return;
             }
-            
+
             const randomCommand = args[1].toLowerCase();
             if (randomCommand === 'on') {
                 config.randomReactions = true;
                 if (writeConfig(config)) {
                     await sock.sendMessage(chatId, { 
-                        text: '🎲 Random reactions have been enabled!\nBot will now use random emojis for status reactions.',
-                        ...channelInfo
-                    }, { quoted: msg });
+                        text: 'Random reactions have been enabled. Bot will now use random emojis for status reactions.'
+                    }, { quoted: fake });
                 } else {
                     throw new Error('Failed to save configuration');
                 }
@@ -223,17 +220,15 @@ async function autoStatusCommand(sock, chatId, msg, args) {
                 config.randomReactions = false;
                 if (writeConfig(config)) {
                     await sock.sendMessage(chatId, { 
-                        text: `🎲 Random reactions have been disabled!\nBot will now use the fixed emoji: ${config.reactionEmoji || '🖤'}`,
-                        ...channelInfo
-                    }, { quoted: msg });
+                        text: `Random reactions have been disabled. Bot will now use the fixed emoji: ${config.reactionEmoji || '❤️'}`
+                    }, { quoted: fake });
                 } else {
                     throw new Error('Failed to save configuration');
                 }
             } else {
                 await sock.sendMessage(chatId, { 
-                    text: '❌ Invalid random command! Use: .autostatus random on/off',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Invalid random command. Use: autostatus random on/off'
+                }, { quoted: fake });
             }
         }
         else if (command === 'reset') {
@@ -241,31 +236,29 @@ async function autoStatusCommand(sock, chatId, msg, args) {
             const defaultConfig = { 
                 enabled: false, 
                 reactOn: false, 
-                reactionEmoji: '🖤',
+                reactionEmoji: '❤️',
                 randomReactions: true 
             };
             if (writeConfig(defaultConfig)) {
                 await sock.sendMessage(chatId, { 
-                    text: '🔄 Auto status settings have been reset to default!\n\n• Auto Status View: ❌ Disabled\n• Status Reactions: ❌ Disabled\n• Reaction Emoji: 🖤\n• Random Reactions: ✅ Enabled',
-                    ...channelInfo
-                }, { quoted: msg });
+                    text: 'Auto status settings have been reset to default.\n\nAuto Status View: DISABLED\nStatus Reactions: DISABLED\nReaction Emoji: ❤️\nRandom Reactions: ENABLED'
+                }, { quoted: fake });
             } else {
                 throw new Error('Failed to reset configuration');
             }
         }
         else {
             await sock.sendMessage(chatId, { 
-                text: '❌ Invalid command! Use:\n• .autostatus on/off - Enable/disable\n• .autostatus react on/off - Enable/disable status reactions\n• .autostatus emoji <emoji> - Change reaction emoji\n• .autostatus random on/off - Enable/disable random reactions\n• .autostatus reset - Reset to default settings',
-                ...channelInfo
-            }, { quoted: msg });
+                text: 'Invalid command. Use:\n• autostatus on/off - Enable/disable\n• autostatus react on/off - Enable/disable status reactions\n• autostatus emoji <emoji> - Change reaction emoji\n• autostatus random on/off - Enable/disable random reactions\n• autostatus reset - Reset to default settings'
+            }, { quoted: fake });
         }
 
     } catch (error) {
         console.error('Error in autostatus command:', error);
+        const fake = createFakeContact(msg);
         await sock.sendMessage(chatId, { 
-            text: '❌ Error occurred while managing auto status!\n' + error.message,
-            ...channelInfo
-        }, { quoted: msg });
+            text: 'Error occurred while managing auto status: ' + error.message
+        }, { quoted: fake });
     }
 }
 
@@ -295,17 +288,17 @@ function isStatusReactionEnabled() {
 function getReactionEmoji() {
     try {
         const config = readConfig();
-        
+
         // Return random emoji if random reactions are enabled
         if (config.randomReactions) {
             return getRandomEmoji();
         }
-        
+
         // Otherwise return the fixed emoji
-        return config.reactionEmoji || '🖤';
+        return config.reactionEmoji || '❤️';
     } catch (error) {
         console.error('Error getting reaction emoji:', error);
-        return '🖤';
+        return '❤️';
     }
 }
 
@@ -313,7 +306,7 @@ function getReactionEmoji() {
 function isRandomReactionsEnabled() {
     try {
         const config = readConfig();
-        return config.randomReactions !== false; // Default to true if not set
+        return config.randomReactions !== false;
     } catch (error) {
         console.error('Error checking random reactions config:', error);
         return true;
@@ -329,7 +322,6 @@ async function reactToStatus(sock, statusKey) {
 
         const emoji = getReactionEmoji();
 
-        // Use the proper relayMessage method for status reactions
         await sock.relayMessage(
             'status@broadcast',
             {
@@ -348,9 +340,9 @@ async function reactToStatus(sock, statusKey) {
                 statusJidList: [statusKey.remoteJid, statusKey.participant || statusKey.remoteJid]
             }
         );
-        
+
     } catch (error) {
-        console.error('❌ Error reacting to status:', error.message);
+        console.error('Error reacting to status:', error.message);
     }
 }
 
@@ -380,23 +372,23 @@ async function handleStatusUpdate(sock, status) {
             try {
                 // Mark status as viewed
                 await sock.readMessages([statusKey]);
-                
+
                 // React to status if enabled
                 await reactToStatus(sock, statusKey);
-                
+
             } catch (err) {
                 if (err.message?.includes('rate-overlimit')) {
-                    console.log('⚠️ Rate limit hit, waiting before retrying...');
+                    console.log('Rate limit hit, waiting before retrying...');
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     await sock.readMessages([statusKey]);
                 } else {
-                    console.error('❌ Error processing status:', err.message);
+                    console.error('Error processing status:', err.message);
                 }
             }
         }
 
     } catch (error) {
-        console.error('❌ Error in auto status view:', error.message);
+        console.error('Error in auto status view:', error.message);
     }
 }
 
