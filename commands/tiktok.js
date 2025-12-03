@@ -10,51 +10,51 @@ async function tiktokCommand(sock, chatId, message) {
         if (processedMessages.has(message.key.id)) {
             return;
         }
-        
+
         // Add message ID to processed set
         processedMessages.add(message.key.id);
-        
+
         // Clean up old message IDs after 5 minutes
         setTimeout(() => {
             processedMessages.delete(message.key.id);
         }, 5 * 60 * 1000);
 
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
-        
+
         if (!text) {
             return await sock.sendMessage(chatId, { 
-                text: "Please provide a TikTok link for the video."
+                text: "_🔗 Please provide a TikTok video link to download._"
             });
         }
 
         // Extract URL from command
         const url = text.split(' ').slice(1).join(' ').trim();
-        
+
         if (!url) {
             return await sock.sendMessage(chatId, { 
-                text: "Please provide a TikTok link for the video."
+                text: "_📱 Usage: .tiktok [tiktok-link]_"
             });
         }
 
         // Check for various TikTok URL formats
         const tiktokPatterns = [
             /https?:\/\/(?:www\.)?tiktok\.com\//,
-            /https?:\/\/(?:vm\.)?tiktok\.com\//,
-            /https?:\/\/(?:vt\.)?tiktok\.com\//,
+            /https?:\/\/(vm\.)?tiktok\.com\//,
+            /https?:\/\/(vt\.)?tiktok\.com\//,
             /https?:\/\/(?:www\.)?tiktok\.com\/@/,
             /https?:\/\/(?:www\.)?tiktok\.com\/t\//
         ];
 
         const isValidUrl = tiktokPatterns.some(pattern => pattern.test(url));
-        
+
         if (!isValidUrl) {
             return await sock.sendMessage(chatId, { 
-                text: "That is not a valid TikTok link. Please provide a valid TikTok video link."
+                text: "_❌ Invalid TikTok URL. Please check the link format._"
             });
         }
 
         await sock.sendMessage(chatId, {
-            react: { text: '🕹️', key: message.key }
+            react: { text: '📥', key: message.key }
         });
 
         try {
@@ -67,8 +67,6 @@ async function tiktokCommand(sock, chatId, message) {
                 `https://api.dreaded.site/api/tiktok?url=${encodeURIComponent(url)}`
             ];
 
-
-
             let videoUrl = null;
             let audioUrl = null;
             let title = null;
@@ -77,7 +75,7 @@ async function tiktokCommand(sock, chatId, message) {
             for (const apiUrl of apis) {
                 try {
                     const response = await axios.get(apiUrl, { timeout: 10000 });
-                    
+
                     if (response.data) {
                         // Handle different API response formats
                         if (response.data.result && response.data.result.videoUrl) {
@@ -119,12 +117,12 @@ async function tiktokCommand(sock, chatId, message) {
                             await sock.sendMessage(chatId, {
                                 video: { url: mediaUrl },
                                 mimetype: "video/mp4",
-                                caption: ""
+                                caption: "_📥 Downloaded via DAVE-MD_"
                             }, { quoted: message });
                         } else {
                             await sock.sendMessage(chatId, {
                                 image: { url: mediaUrl },
-                                caption: ""
+                                caption: "_📥 Downloaded via DAVE-MD_"
                             }, { quoted: message });
                         }
                     }
@@ -143,20 +141,20 @@ async function tiktokCommand(sock, chatId, message) {
                             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                         }
                     });
-                    
+
                     const videoBuffer = Buffer.from(videoResponse.data);
-                    
-                    const caption = title ? `📝 Title: ${title}` : "";
-                    
+
+                    const caption = title ? `_🎬 ${title}_\n_📥 Via DAVE-MD_` : "_📥 Downloaded via DAVE-MD_";
+
                     await sock.sendMessage(chatId, {
                         video: videoBuffer,
                         mimetype: "video/mp4",
                         caption: caption
                     }, { quoted: message });
 
-                      await sock.sendMessage(chatId, {
-            react: { text: '☑️', key: message.key }
-        });
+                    await sock.sendMessage(chatId, {
+                        react: { text: '✨', key: message.key }
+                    });
 
                     // If we have audio URL, download and send it as well
                     if (audioUrl) {
@@ -168,13 +166,13 @@ async function tiktokCommand(sock, chatId, message) {
                                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                                 }
                             });
-                            
+
                             const audioBuffer = Buffer.from(audioResponse.data);
-                            
+
                             await sock.sendMessage(chatId, {
                                 audio: audioBuffer,
                                 mimetype: "audio/mp3",
-                                caption: "🎵 Audio from TikTok"
+                                caption: "_🎵 Audio extracted via DAVE-MD_"
                             }, { quoted: message });
                         } catch (audioError) {
                             console.error(`Failed to download audio: ${audioError.message}`);
@@ -185,19 +183,18 @@ async function tiktokCommand(sock, chatId, message) {
                     console.error(`Failed to download video: ${downloadError.message}`);
                     // Fallback to URL method
                     try {
-                        const caption = title ? `📝 Title: ${title}` : "";
-                        
+                        const caption = title ? `_🎬 ${title}_\n_📥 Via DAVE-MD_` : "_📥 Downloaded via DAVE-MD_";
+
                         await sock.sendMessage(chatId, {
                             video: { url: videoUrl },
                             mimetype: "video/mp4",
                             caption: caption
                         }, { quoted: message });
-                        // success in download reaction
 
-             await sock.sendMessage(chatId, {
-            react: { text: '☑️', key: message.key }
-        }); 
-                        
+                        await sock.sendMessage(chatId, {
+                            react: { text: '✨', key: message.key }
+                        });
+
                         return;
                     } catch (urlError) {
                         console.error(`URL method also failed: ${urlError.message}`);
@@ -207,20 +204,20 @@ async function tiktokCommand(sock, chatId, message) {
 
             // If we reach here, no method worked
             return await sock.sendMessage(chatId, { 
-                text: "❌ Failed to download TikTok video. All download methods failed. Please try again with a different link or check if the video is available."
+                text: "_🚫 Download failed. Please check:\n• Link validity\n• Video availability\n• Try another link_"
             });
         } catch (error) {
             console.error('Error in TikTok download:', error);
             await sock.sendMessage(chatId, { 
-                text: "Failed to download the TikTok video. Please try again with a different link."
+                text: "_⚠️ Download error. Please try another video._"
             });
         }
     } catch (error) {
         console.error('Error in TikTok command:', error);
         await sock.sendMessage(chatId, { 
-            text: "An error occurred while processing the request. Please try again later."
+            text: "_⚡ System error. Please try again later._"
         });
     }
 }
 
-module.exports = tiktokCommand; 
+module.exports = tiktokCommand;
