@@ -1,66 +1,99 @@
-
-    const fs = require("fs");
-    const axios = require('axios');
-    const yts = require('yt-search');
-    const path = require('path');
-    const fetch = require('node-fetch');
+const fs = require("fs");
+const axios = require('axios');
+const yts = require('yt-search');
+const path = require('path');
 
 async function playCommand(sock, chatId, message) {
-                try { 
-    await sock.sendMessage(chatId, {
+    try {
+        // Send processing reaction
+        await sock.sendMessage(chatId, {
             react: { text: '🎼', key: message.key }
-        });         
-                    
-  const tempDir = path.join(__dirname, "temp");
-                    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
-                    
-      
- 
-const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
-   const parts = text.split(' ');
-   const query = parts.slice(1).join(' ').trim();
+        });
 
-             
-  if (!query) return await sock.sendMessage(chatId, { text: '🎵 Provide a song name!\nExample:.play Not Like Us'},{ quoted: message});
+        const tempDir = path.join(__dirname, "temp");
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
 
-               
-                    if (query.length > 100) return await sock.sendMessage(chatId, { text: `📝 Song name too long! Max 100 chars.`},{ quoted: message});
+        const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
+        const parts = text.split(' ');
+        const query = parts.slice(1).join(' ').trim();
 
+        if (!query) {
+            await sock.sendMessage(chatId, { 
+                text: 'Provide a song name!\nExample: .play Not Like Us'
+            }, { quoted: message });
+            return;
+        }
 
-   const searchResult = await (await yts(`${query} official`)).videos[0];
-                    if (!searchResult) return sock.sendMessage(chatId, { text: "😕 Couldn't find that song. Try another one!"},{ quoted: message });
+        // Search for video
+        const searchResult = await yts(`${query} official`);
+        if (!searchResult || !searchResult.videos || searchResult.videos.length === 0) {
+            await sock.sendMessage(chatId, { 
+                text: "Couldn't find that song. Try another one!"
+            }, { quoted: message });
+            return;
+        }
 
-                    const video = searchResult;
-                    const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
-                    const response = await axios.get(apiUrl);
-                    const apiData = response.data;
+        const video = searchResult.videos[0];
+        
+        // Get audio URL
+        const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
+        const response = await axios.get(apiUrl);
+        const apiData = response.data;
 
-                    if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) throw new Error("API failed to fetch track!");
+        if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
+            throw new Error("Failed to fetch audio");
+        }
 
-                    const timestamp = Date.now();
-                    const fileName = `audio_${timestamp}.mp3`;
-                    const filePath = path.join(tempDir, fileName);
+        const timestamp = Date.now();
+        const fileName = `audio_${timestamp}.mp3`;
+        const filePath = path.join(tempDir, fileName);
 
-                    // Download MP3
-                    const audioResponse = await axios({ method: "get", url: apiData.result.downloadUrl, responseType: "stream", timeout: 600000 });
-                    const writer = fs.createWriteStream(filePath);
-                    audioResponse.data.pipe(writer);
-                    await new Promise((resolve, reject) => { writer.on("finish", resolve); writer.on("error", reject); });
+        // Download MP3 directly
+        const audioResponse = await axios({
+            method: "get",
+            url: apiData.result.downloadUrl,
+            responseType: "arraybuffer",
+            timeout: 30000
+        });
 
-                    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) throw new Error("Download failed or empty file!");
- 
-                    await sock.sendMessage(chatId, { text:`🎶 Playing: _${apiData.result.title || video.title}_` }, { quoted: message });
-                    await sock.sendMessage(chatId, { document: { url: filePath }, mimetype: "audio/mpeg", fileName: `${(apiData.result.title || video.title).substring(0, 100)}.mp3` }, { quoted: message });
+        // Save file
+        fs.writeFileSync(filePath, audioResponse.data);
 
-                    // Cleanup
-                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        // Send audio directly
+        await sock.sendMessage(chatId, { 
+            audio: fs.readFileSync(filePath),
+            mimetype: 'audio/mpeg',
+            ptt: false
+        }, { quoted: message });
 
-                } catch (error) {
-                    console.error("Play command error:", error);
-                    return await sock.sendMessage(chatId, { text: `🚫 Error: ${error.message}`},{quoted: message});
-                }
+        // Cleanup
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+
+    } catch (error) {
+        console.error("Play command error:", error);
+        
+        // Send error as audio message caption (if we can get the original audio)
+        try {
+            const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
+            const parts = text.split(' ');
+            const query = parts.slice(1).join(' ').trim();
             
+            // Create error audio
+            await sock.sendMessage(chatId, { 
+                audio: fs.readFileSync(path.join(__dirname, 'error.mp3')), // You need an error.mp3 file
+                mimetype: 'audio/mpeg',
+                ptt: false,
+                caption: `Error: ${error.message}`
+            }, { quoted: message });
+        } catch (e) {
+            // Fallback to text
+            await sock.sendMessage(chatId, { 
+                text: `Error: ${error.message}`
+            }, { quoted: message });
+        }
+    }
 }
-
 
 module.exports = playCommand;
