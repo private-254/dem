@@ -44,7 +44,7 @@ const pushname = message.pushName || "Unknown User";
     txt += `🔹  *Forks* : ${json.forks_count}\n`;
     txt += `🔹  *Stars* : ${json.stargazers_count}\n`;
     txt += `🔹  *Desc* : ${json.description || 'None'}\n\n`;
-    txt += `Hey👋 ${pushname} _Thank you for choosing June, Fork-Star the repository_`;
+    txt += `Hey👋 ${pushname} _Thank you for choosing ᴅᴀᴠᴇ-ᴍᴅ, Fork-Star the repository_`;
 
     // Use the local asset image
     const imgPath = path.join(__dirname, '../assets/menu2.jpg');
@@ -59,7 +59,7 @@ const pushname = message.pushName || "Unknown User";
                     isForwarded: false,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: '@newsletter',
-                        newsletterName: 'June Official',
+                        newsletterName: 'ᴅᴀᴠᴇ-ᴍᴅ Official',
                         serverMessageId: -1
                     }
                 }
