@@ -1,39 +1,31 @@
-
-//new song API 
-
 const yts = require('yt-search');
 const axios = require('axios');
 
 async function songCommand(sock, chatId, message) {
-    
-    
-    
     try {
-         await sock.sendMessage(chatId, {
-            react: {
-                text: "🎵",
-                key: message.key
-            }
+        // Start reaction
+        await sock.sendMessage(chatId, {
+            react: { text: "🎵", key: message.key }
         });
-        
+
         const text = message.message?.conversation || message.message?.extendedTextMessage?.text;
         const searchQuery = text.split(' ').slice(1).join(' ').trim();
-        
+
         if (!searchQuery) {
-            return await sock.sendMessage(chatId, { 
-                text: "What song do you want to download?"},{ quoted: message
-            });
+            await sock.sendMessage(chatId, { 
+                text: "What song do you want to download?"
+            }, { quoted: message });
+            return;
         }
 
         // Search for the song
         const { videos } = await yts(searchQuery);
         if (!videos || videos.length === 0) {
-            return await sock.sendMessage(chatId, { 
+            await sock.sendMessage(chatId, { 
                 text: "No songs found!"
-            });
+            }, { quoted: message });
+            return;
         }
-
-        
 
         // Get the first video result
         const video = videos[0];
@@ -43,52 +35,41 @@ async function songCommand(sock, chatId, message) {
         const response = await axios.get(`https://api.privatezia.biz.id/api/downloader/ytmp3?url=${urlYt}`);
         const apiData = response.data;
 
-        if (!apiData || !apiData.status || !apiData.result || !apiData.result.downloadUrl) {
-            return await sock.sendMessage(chatId, { 
-                text: "Failed to fetch audio from the API. Please try again later."},{ quoted: message
-            });
+        if (!apiData?.status || !apiData.result?.downloadUrl) {
+            await sock.sendMessage(chatId, { 
+                text: "Failed to fetch audio"
+            }, { quoted: message });
+            return;
         }
 
-        const audioUrl = apiData.result.downloadUrl;
-        const title = apiData.result.title;
+        const title = apiData.result.title || video.title;
         
-       await sock.sendMessage(chatId, { text: `_🎶 Playing song: *${apiData.result.title}* 🎧_` }, { quoted: message });
-        //time out
-     //  const audioResponse = await axios({ method: "get", url: apiData.result.downloadUrl, responseType: "stream", timeout: 6000 });
-
-
-        
-        // Send the audio
+        // Send audio directly with all metadata
         await sock.sendMessage(chatId, {
-            audio: { url: audioUrl },
+            audio: { url: apiData.result.downloadUrl },
             mimetype: "audio/mpeg",
-            fileName: `${title}.mp3`
+            fileName: `${title}.mp3`,
+            caption: title
         }, { quoted: message });
-        
-        //successful react ✔️
-       await sock.sendMessage(chatId, { react: { text: '💅', key: message.key } 
+
+        // Success reaction
+        await sock.sendMessage(chatId, {
+            react: { text: '✅', key: message.key }
         });
-       
 
     } catch (error) {
-        console.error('Error in song2 command:', error);
-        await sock.sendMessage(chatId, { 
-            text: "Download failed. Please try again later."
-        });
+        console.error('Song command error:', error.message);
         
-        //err react ❌
-            await sock.sendMessage(chatId, {
+        // Error reaction
+        await sock.sendMessage(chatId, {
             react: { text: '❌', key: message.key }
         });
+        
+        // Send error message
+        await sock.sendMessage(chatId, { 
+            text: `Error: ${error.message}`
+        }, { quoted: message });
     }
 }
 
-module.exports = songCommand; 
-
-
-
-
-
-
-
-
+module.exports = songCommand;
