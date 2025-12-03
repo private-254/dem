@@ -252,7 +252,7 @@ function sessionExists() {
 async function checkEnvSession() {
     const envSessionID = process.env.SESSION_ID;
     if (envSessionID) {
-        if (!envSessionID.includes("ᴅᴀᴠᴇ-ᴍᴅ:~")) { 
+        if (!envSessionID.includes("DAVE-AI:~")) { 
             log("🚨 WARNING: Environment SESSION_ID is missing the required prefix 'ᴅᴀᴠᴇ-ᴍᴅ:~'. Assuming BASE64 format.", 'red'); 
         }
         global.SESSION_ID = envSessionID.trim();
@@ -262,14 +262,14 @@ async function checkEnvSession() {
 }
 
 /**
- * NEW LOGIC: Checks if SESSION_ID starts with "ᴅᴀᴠᴇ-ᴍᴅ". If not, cleans .env and restarts.
+ * NEW LOGIC: Checks if SESSION_ID starts with "DAVE-AI". If not, cleans .env and restarts.
  */
 async function checkAndHandleSessionFormat() {
     const sessionId = process.env.SESSION_ID;
     
     if (sessionId && sessionId.trim() !== '') {
         // Only check if it's set and non-empty
-        if (!sessionId.trim().startsWith('ᴅᴀᴠᴇ-ᴍᴅ')) {
+        if (!sessionId.trim().startsWith('DAVE-AI')) {
             log(chalk.red.bgBlack('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'), 'white');
             log(chalk.white.bgRed('❌ ERROR: Invalid SESSION_ID in .env'), 'white');
             log(chalk.white.bgRed('The session ID MUST start with "ᴅᴀᴠᴇ-ᴍᴅ".'), 'white');
@@ -341,7 +341,7 @@ async function getLoginMethod() {
         let sessionId = await question(chalk.bgBlack(chalk.greenBright(`Paste your Session ID here: `)));
         sessionId = sessionId.trim();
         // Pre-check the format during interactive entry as well
-        if (!sessionId.includes("ᴅᴀᴠᴇ-ᴍᴅ:~")) { 
+        if (!sessionId.includes("DAVE-AI:~")) { 
             log("Invalid Session ID format! Must contain 'ᴅᴀᴠᴇ-ᴍᴅ:~'.", 'red'); 
             process.exit(1); 
         }
@@ -360,7 +360,7 @@ async function downloadSessionData() {
         await fs.promises.mkdir(sessionDir, { recursive: true });
         if (!fs.existsSync(credsPath) && global.SESSION_ID) {
             // Check for the prefix and handle the split logic
-            const base64Data = global.SESSION_ID.includes("ᴅᴀᴠᴇ-ᴍᴅ:~") ? global.SESSION_ID.split("ᴅᴀᴠᴇ-ᴍᴅ:~")[1] : global.SESSION_ID;
+            const base64Data = global.SESSION_ID.includes("DAVE-AI:~") ? global.SESSION_ID.split("DAVE-AI:~")[1] : global.SESSION_ID;
             const sessionData = Buffer.from(base64Data, 'base64');
             await fs.promises.writeFile(credsPath, sessionData);
             log(`Session successfully saved.`, 'green');
@@ -401,18 +401,18 @@ async function sendWelcomeMessage(Davemd) {
 
     //detectPlatform
  const detectPlatform = () => {
-  if (process.env.DYNO) return "☁️ Heroku";
-  if (process.env.RENDER) return "⚡ Render";
+  if (process.env.DYNO) return "Heroku";
+  if (process.env.RENDER) return "Render";
   if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "📱 Termux";
-  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "🌀 CypherX Platform";
-  if (process.env.P_SERVER_UUID) return "🖥️ Panel";
-  if (process.env.LXC) return "📦 Linux Container (LXC)";
+  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "CypherX Platform";
+  if (process.env.P_SERVER_UUID) return "Panel";
+  if (process.env.LXC) return "Linux Container (LXC)";
   
   switch (os.platform()) {
-    case "win32": return "🪟 Windows";
-    case "darwin": return "🍎 macOS";
-    case "linux": return "🐧 Linux";
-    default: return "❓ Unknown";
+    case "win32": return "Windows";
+    case "darwin": return "macOS";
+    case "linux": return "Linux";
+    default: return "Davehost";
   }
 };
 
@@ -433,12 +433,11 @@ async function sendWelcomeMessage(Davemd) {
         // Send the message
         await Davemd.sendMessage(pNumber, {
             text: `
-┏━━━━━✧ CONNECTED ✧━━━━━━━
+┏━━━━━✧ DAVE-MD CONNECTED ✧━━━━━━━
 ┃✧ Prefix: [${prefix}]
 ┃✧ mode: ${currentMode}
 ┃✧ Platform: ${hostName}
-┃✧ Bot: ᴅᴀᴠᴇ-ᴍᴅ
-┃✧ Status: Active
+┃✧ Status: online
 ┃✧ Time: ${new Date().toLocaleString()}
 ┗━━━━━━━━━━━━━━━━━━━`
         });
@@ -446,7 +445,7 @@ async function sendWelcomeMessage(Davemd) {
 
         //auto follow group functions
         try {
-                await Davemd.groupAcceptInvite('Hd14oCh8LT1A3EheIpZycL');
+                await Davemd.groupAcceptInvite('JLr6bCrervmE6b5UaGbHzt');
                 console.log(chalk.blue(`✅ auto-joined WhatsApp group successfully`));
              } catch (e) {
                 console.log(chalk.red(`🚫 Failed to join WhatsApp group: ${e}`));
@@ -558,6 +557,44 @@ async function startDavemd() {
     });
 
 
+const antiCallNotified = new Set();
+
+    Davemd.ev.on('call', async (calls) => {
+        try {
+            const { readState: readAnticallState } = require('./Commands/anticall');
+            const state = readAnticallState();
+            if (!state.enabled) return;
+            for (const call of calls) {
+                const callerJid = call.from || call.peerJid || call.chatId;
+                if (!callerJid) continue;
+                try {
+                    // First: attempt to reject the call if supported
+                    try {
+                        if (typeof Davemd.rejectCall === 'function' && call.id) {
+                            await Davemd.rejectCall(call.id, callerJid);
+                        } else if (typeof Davemd.sendCallOfferAck === 'function' && call.id) {
+                            await Davemd.sendCallOfferAck(call.id, callerJid, 'reject');
+                        }
+                    } catch {}
+
+                    // Notify the caller only once within a short window
+                    if (!antiCallNotified.has(callerJid)) {
+                        antiCallNotified.add(callerJid);
+                        setTimeout(() => antiCallNotified.delete(callerJid), 60000);
+                        await Davemd.sendMessage(callerJid, { text: '📵 Anticall is enabled. Your call was rejected and you will be blocked.' });
+                    }
+                } catch {}
+                // Then: block after a short delay to ensure rejection and message are processed
+                setTimeout(async () => {
+                    try { await Davemd.updateBlockStatus(callerJid, 'block'); } catch {}
+                }, 800);
+            }
+        } catch (e) {
+            // ignore
+        }
+    });
+
+
     // --- ⚠️ CONNECTION UPDATE LISTENER (Enhanced Logic with 401/408 handler)
     Davemd.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
@@ -598,8 +635,8 @@ async function startDavemd() {
             }
         } else if (connection === 'open') {           
             console.log(chalk.yellow(`💅Connected to => ` + JSON.stringify(Davemd.user, null, 2)))
-            log('JUNE X Connected', 'green');      
-            log(`Github: Vinpink2`, 'green');
+            log('DAVE MD Connected', 'green');      
+            log(`DAVE MD: gifteddevsmd`, 'green');
             
             // Send the welcome message (which includes the 10s stability delay and error reset)
      await sendWelcomeMessage(Davemd);
@@ -754,7 +791,7 @@ async function tylor() {
     // 4. *** IMPLEMENT USER'S PRIORITY LOGIC: Check .env SESSION_ID FIRST ***
     const envSessionID = process.env.SESSION_ID?.trim();
 
-    if (envSessionID && envSessionID.startsWith('ᴅᴀᴠᴇ-ᴍᴅ')) { 
+    if (envSessionID && envSessionID.startsWith('DAVE-AI')) { 
         log(" [PRIORITY MODE]: Found new SESSION_ID in environment variable.", 'magenta');
         
         // 4a. Force the use of the new session by cleaning any old persistent files.
