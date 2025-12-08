@@ -110,6 +110,16 @@ export default [
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
+            // Send results
+            if (results.length > 0) {
+                let resultMessage = `Removal Results:\n\n${results.join('\n')}\n\n`;
+                resultMessage += `✅ Success: ${successCount}\n`;
+                resultMessage += `❌ Failed: ${failCount}`;
+                await reply(resultMessage);
+            } else {
+                await reply("No users specified for removal.");
+            }
+
         } catch (error) {
             await reply(`Error removing members: ${error.message}`);
         }
@@ -191,6 +201,14 @@ export default [
 
                 // Small delay to prevent spam
                 await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            // Send results
+            if (results.length > 0) {
+                let resultMessage = `Add Results:\n\n${results.join('\n')}\n\n`;
+                resultMessage += `✅ Success: ${successCount}\n`;
+                resultMessage += `❌ Failed: ${failCount}`;
+                await reply(resultMessage);
             }
 
         } catch (error) {
@@ -393,7 +411,7 @@ export default [
         try {
             const chatId = m.key.remoteJid;
             await context.react('ℹ️')
-            
+
             if (!chatId.endsWith('@g.us')) {
                 return await context.reply('This command can only be used in groups.');
             }
@@ -440,7 +458,7 @@ export default [
         try {
             const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, chatId } = context;
             await react('⬇️');
-            
+
             if (!chatId.endsWith('@g.us')) {
                 return await reply('This command can only be used in groups.');
             }
@@ -506,7 +524,7 @@ export default [
 
     execute: async (sock, message, args, context) {
         const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, chatId } = context;
-        
+
         if (!chatId.endsWith('@g.us')) {
             return await reply('This command can only be used in groups.');
         }
@@ -591,7 +609,7 @@ export default [
     usage: '.mute <minutes>',
     execute: async (sock, message, args, context) {
         const { reply, react, isSenderAdmin, isBotAdmin, chatId } = context;
-        
+
         if (!isBotAdmin) {
             return await reply('Bot must be admin first.');
         }
@@ -607,7 +625,7 @@ export default [
         try {
             await sock.groupSettingUpdate(chatId, 'announcement');
             await reply(`Group muted for ${durationInMinutes} minutes.`);
-            
+
             setTimeout(async () => {
                 await sock.groupSettingUpdate(chatId, 'not_announcement');
                 await sock.sendMessage(chatId, { text: 'Group unmuted.' });
