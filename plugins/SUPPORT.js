@@ -2,11 +2,11 @@
 
 const helpersList = [
 
-    { flag: "🇳🇬", country: "Nigeria", name: "Gift Support", number: "wa.me/254104260236" },
+    { flag: "🇳🇬", country: "Nigeria", name: "Dave Support", number: "wa.me/254104260236" },
 
     { flag: "✉️", country: "Kenya", name: "DAVE-MD", Gmail: "isaacodofin12345@mail.com" },
 
-    { flag: "🇳🇬", country: "nigey", name: "Gift USA", number: "wa.me/2348072642047" },
+    { flag: "🇳🇬", country: "nigey", name: "Dave USA", number: "wa.me/2348072642047" },
 
     // Add more helpers as needed
 
@@ -128,7 +128,7 @@ Thank you for using DAVE-MD Bot! 🤖`;
 
             filtered.sort((a, b) => a.country.localeCompare(b.country));
 
-            let text = `🌍 Gift Bot Verified Helpers\n\n`;
+            let text = `🌍 DAVE-MD Verified Helpers\n\n`;
 
             filtered.forEach((helper, index) => {
 
@@ -136,7 +136,7 @@ Thank you for using DAVE-MD Bot! 🤖`;
 
             });
 
-            text += `✅ Gift Bot Team\n`;
+            text += `✅ DAVE-MD Team\n`;
 
             text += `📢 Need general help? Contact our support:\n👉 ${global.devChannel}\n`;
 
@@ -188,7 +188,7 @@ Time: ${new Date().toLocaleString()}
 
 Hi ${pushName},
 
-Thank you for reporting this bug! Your report helps us improve Gift Bot.
+Thank you for reporting this bug! Your report helps us improve DAVE-MD.
 
 📝 Report Details:
 
@@ -258,7 +258,7 @@ Time: ${new Date().toLocaleString()}
 
 Hi ${pushName},
 
-Thank you for your suggestion! We appreciate users who help us improve Gift Bot.
+Thank you for your suggestion! We appreciate users who help us improve DAVE-MD.
 
 📝 Suggestion Details:
 

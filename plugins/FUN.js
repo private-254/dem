@@ -64,7 +64,7 @@ const compliments = [
     "You are an amazing listener.",
     "You're stronger than you think!",
     "Your laughter is infectious.",
-    "You have a natural gift for making others feel valued.",
+    "You have a natural Dave for making others feel valued.",
     "You make the world a better place just by being in it."
 ];
 
