@@ -11,7 +11,7 @@ global.Ai= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗔𝗶_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}DAVE_AI`
     }}};
 
 /**2*/ global.sora= {
@@ -22,7 +22,7 @@ global.Ai= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗦𝗢𝗥𝗔_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}SORA_CMD`
     }
   }
 };
@@ -37,7 +37,7 @@ global.sticker= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗦𝗧𝗜𝗖𝗞𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}STCK_CMD`
     }
   }
 };
@@ -50,7 +50,7 @@ global.MediaInfo= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗠𝗘𝗗𝗜𝗔𝗜𝗡𝗙𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}MEDIAINFO_CMD`
     }
   }
 };
@@ -64,7 +64,7 @@ global.emojimix= {
   },
   message: {
     extendedTextMessage: {
-      text: `🎄:DAVE-MD:🎄\n${prefix}𝗘𝗠𝗢𝗝𝗜𝗠𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}EMJMX_CMD`
     }
   }
 };
@@ -610,7 +610,7 @@ global.ping = {
   },
   message: {
     extendedTextMessage: {
-      text: `🎄:Dave_Ai: ${prefix}speedcheck_command`
+      text: `🎄:Dave_Ai:🎄${prefix}speedcheck_command`
     }
   }
 };
