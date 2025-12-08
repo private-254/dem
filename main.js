@@ -118,17 +118,17 @@ const rawText =
         }
        // === LOG ALL MESSAGES ===
   console.log('\x1b[30m--------------------\x1b[0m');
-  console.log(
+console.log(
     chalk.bgBlack.bold(rainbow(
-      `┏━━━━━━━━━━[DAVE-MD]━━━━━━━━━┓\n` +
-      ` 📩 New Message: [${time}]     \n` +
-      ` 📍 Chat: ${isGroup ? "Group" : isChannel ? "Channel" : "Private "}            \n` +
-      ` 📥 From: [${pushname}]\n`+
-      ` 🆔 Chatid: ${chatId}\n` +
-      ` 👤 Sender: ${senderId}\n`+
-      ` 🌟 SenderPn: ${global.sender}\n` +
-      ` 💌 Text: ${rawText||"[bot]"}               \n`+
- `┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`)));
+        `┌───────────────────[DAVE-MD]───────────────────┐\n` +
+        ` New Message: [${time}]\n` +
+        ` Chat: ${isGroup ? "Group" : isChannel ? "Channel" : "Private"}\n` +
+        ` From: [${pushname}]\n` +
+        ` Chat ID: ${chatId}\n` +
+        ` Sender: ${senderId}\n` +
+        ` Sender Number: ${global.sender}\n` +
+        ` Text: ${rawText||"[bot]"}\n` +
+        `└────────────────────────────────────────────────┘`)));
 
        // Only log command usage  
     if (userMessage.startsWith(currentPrefix)) {  
