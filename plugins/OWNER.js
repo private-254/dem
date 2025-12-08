@@ -49,13 +49,14 @@ async function extractMentionedJid(sock, message, chatId) {
         return null;}
 
 export default [
-   {
+   
+{
     name: 'pair',
     aliases: ['paircode'],
     category: 'owner',
     execute: async (sock, message, args, context) => {
       if (!message.key.fromMe && !context.senderIsSudo) {
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner.");
       }
 
       const text = args.slice(1).join(' ');
@@ -69,10 +70,11 @@ export default [
         return context.replyPlain('Invalid phone number. Please provide a valid number with country code.\n\nExample: .pair 2348012345678');
       }
 
-      await context.replyPlain('Generating pairing code...\nPlease wait...');
+      await context.replyPlain('Generating pairing code...');
 
       try {
-        const apiUrl = `https://pair-v44u.onrender.com/code?number=${phoneNumber}`;
+        // Fixed the double slash in the URL
+        const apiUrl = `https://dave-sessions.onrender.com/pair/code?number=${phoneNumber}`;
         
         const response = await axios.get(apiUrl, {
           timeout: 60000,
@@ -94,10 +96,10 @@ export default [
         }
 
         if (!code || code === "Service Unavailable" || code.includes("Unavailable") || code.includes("error")) {
-          return context.reply('Failed to generate pairing code.\nService temporarily unavailable. Please try again later.');
+          return context.reply('Failed to generate pairing code. Service temporarily unavailable.');
         }
 
-        const message = `DAVE-MD PAIRING CODE
+        const pairingMessage = `DAVE-MD PAIRING CODE
 
 Code: ${code}
 
@@ -111,12 +113,11 @@ HOW TO LINK:
 5. Tap Link with phone number instead
 6. Enter the code above
 
-Note: Code expires in 60 seconds!
+Note: Code expires in 60 seconds
 
 Powered by DAVE-MD`;
-        await context.replyPlain(`Code: ${code}`);
-
-        await context.replyPlain(message);
+        
+        await context.replyPlain(pairingMessage);
 
       } catch (error) {
         console.error('Pair command error:', error);
@@ -134,7 +135,8 @@ Powered by DAVE-MD`;
         await context.reply(errorMsg);
       }
     }
-  },
+},
+
   {
 
     name: 'block',
@@ -145,7 +147,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -175,7 +177,7 @@ Powered by DAVE-MD`;
 
       await sock.updateBlockStatus(userId, "block");
 
-      context.reply("✅ User blocked successfully!");
+      context.reply("User blocked successfully!");
 
     }
 
@@ -191,7 +193,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -243,7 +245,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -295,7 +297,7 @@ Powered by DAVE-MD`;
 
         console.error(err);
 
-        context.reply("⚠️ Failed to delete message.");
+        context.reply("Failed to delete message.");
 
       }
 
@@ -315,7 +317,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -371,7 +373,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -395,11 +397,11 @@ Powered by DAVE-MD`;
 
         await sock.groupAcceptInvite(link);
 
-        context.reply("✅ Joined successfully");
+        context.reply("Joined successfully");
 
       } catch {
 
-        context.reply("❌ Failed to join group");
+        context.reply("Failed to join group");
 
       }
 
@@ -419,7 +421,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -429,7 +431,7 @@ Powered by DAVE-MD`;
 
         if (!blockedList.length) {
 
-          return context.reply('✅ No contacts are currently blocked.');
+          return context.reply('No contacts are currently blocked.');
 
         }
 
@@ -437,7 +439,7 @@ Powered by DAVE-MD`;
 
         await sock.sendMessage(context.chatId, {
 
-          text: `🚫 *Blocked Contacts:*\n\n${blockedUsers}`,
+          text: `🚫 *My Blocked Contacts:*\n\n${blockedUsers}`,
 
           mentions: blockedList
 
@@ -445,7 +447,7 @@ Powered by DAVE-MD`;
 
       } catch (error) {
 
-        context.reply('⚠️ Unable to fetch blocked contacts.');
+        context.reply('Unable to fetch blocked contacts.');
 
       }
 
@@ -463,7 +465,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -514,7 +516,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -542,7 +544,7 @@ Powered by DAVE-MD`;
 
       if (!message.key.fromMe && !context.senderIsSudo) {
 
-        return context.reply("❌ This command is only for the owner!");
+        return context.reply("This command is only for the owner!");
 
       }
 
@@ -580,7 +582,7 @@ Powered by DAVE-MD`;
 
               image: buffer,
 
-              caption: "✅ Converted to view once",
+              caption: "Converted to view once",
 
               viewOnce: true
 
@@ -612,7 +614,7 @@ Powered by DAVE-MD`;
 
               video: buffer,
 
-              caption: "✅ Converted to view once",
+              caption: "Converted to view once",
 
               viewOnce: true
 
@@ -650,7 +652,7 @@ Powered by DAVE-MD`;
 
         } else {
 
-          context.reply("❌ Please reply to an image, video, or audio message");
+          context.reply("Please reply to an image, video, or audio message");
 
         }
 
@@ -658,7 +660,7 @@ Powered by DAVE-MD`;
 
         console.error(error);
 
-        context.reply("❌ Failed to convert to view once");
+        context.reply("Failed to convert to view once");
 
       }
 
@@ -685,7 +687,7 @@ Powered by DAVE-MD`;
 
         if (!senderIsSudo) {
 
-            return await reply('❌ This command is only available for the owner or sudo users!');
+            return await reply('This command is only available for the owner or sudo users!');
 
         }
 
@@ -697,7 +699,7 @@ Powered by DAVE-MD`;
 
             const currentMode = isPublic ? 'Public' : 'Private';
 
-            const statusIcon = isPublic ? '🌍' : '🗝️';
+            const statusIcon = isPublic ? '🎄' : '👾';
 
             const description = isPublic 
 
@@ -739,8 +741,7 @@ Powered by DAVE-MD`;
 
             
 
-            await reply('🌍 Bot Mode Changed\n\n✅ Bot is now in Public Mode\n\nEveryone can now use the bot commands.');
-
+            await reply('Bot Mode Changed\n\nBot is now in Public Mode.');
             
 
         } else if (newMode === 'private' || newMode === 'priv') {
@@ -763,13 +764,12 @@ Powered by DAVE-MD`;
 
             
 
-            await reply('🗝️ Bot Mode Changed\n\n✅ Bot is now in Private Mode\n\nOnly owner and sudo users can use the bot.');
-
+            await reply('Bot Mode Changed\n\nBot is now in Private Mode');
             
 
         } else {
 
-            return await reply('❌ Invalid mode! Use:\n• .mode public - Enable public access\n• .mode private - Enable private access\n• .mode - Check current status');
+            return await reply('Invalid mode! Use:\n• .mode public - Enable public access\n• .mode private - Enable private access\n• .mode - Check current status');
 
         }
 
@@ -790,12 +790,12 @@ Powered by DAVE-MD`;
             const query = args.slice(1).join(' ').trim();
             
             if (!query) {
-                await context.react('😒');
+                await context.react('✅');
                 return await context.replyPlain( {
-                    text: '❌ Please provide a song name.\n\nExample: .lyrics Shape of You - Ed Sheeran'
+                    text: 'Please provide a song name.\n\nExample: .lyrics Shape of You - Ed Sheeran'
                 }, { quoted: m });
             }
-await context.react('🥳');
+await context.react('⭐');
             await context.replyPlain( { text: '🎵 Searching for lyrics...' }, { quoted: m });
 
             const response = await axios.get(`https://lyricsapi.fly.dev/api/lyrics?q=${encodeURIComponent(query)}`);
@@ -803,7 +803,7 @@ await context.react('🥳');
 
             if (!result.status || !result.result) {
                 return await context.replyPlain( {
-                    text: '❌ Lyrics not found. Please check the song name and try again.'
+                    text: 'Lyrics not found. Please check the song name and try again.'
                 }, { quoted: m });
             }
 
@@ -829,7 +829,7 @@ await context.react('🥳');
         } catch (error) {
             console.error('❌ Lyrics Command Error:', error);
             await context.replyPlain({
-                text: '❌ Failed to fetch lyrics. Please try again later.'
+                text: 'Failed to fetch lyrics. Please try again later.'
             }, { quoted: m });
         }
     }
@@ -859,7 +859,7 @@ await context.react('🥳');
         }
 
         if (sub === 'list') {
-            await react('📋');
+            await react('🌚');
             const list = getSudo();
             
             if (list.length === 0) {
@@ -867,20 +867,19 @@ await context.react('🥳');
             }
 
             const text = list.map((j, i) => `${i + 1}. @${j.split('@')[0]}`).join('\n');
-            
-            return await replyPlain(
-                `👥 Sudo Users:\n\n${text}\n\nNote: Owner (@${settings.ownerNumber}) has permanent sudo privileges.`,
-                { mentions: list }
-            );
-        }
 
+                return await replyPlain(
+        `Sudo Users:\n\n${text}\n\nNote: Owner (@${settings.ownerNumber}) has permanent privileges.`,
+        { mentions: list }
+    );
+}
         if (!senderIsSudo) {
-            await react('😱');
-            return await reply('❌ Only owner can add/remove sudo users. Use .sudo list to view.');
+            await react('☺️');
+            return await reply('Only owner can add/remove sudo users. Use .sudo list to view.');
         }
 
         // For add/del commands
-        await react('🔍');
+        await react('🐛');
         
         // Try all 3 methods: reply, mention, manual number
         let targetJid = await extractMentionedJid(sock, message, chatId);
@@ -899,7 +898,7 @@ await context.react('🥳');
                 'Instructions:\n' +
                 '1. Reply to their message: .sudo add\n' +
                 '2. Mention them: .sudo add @user\n' +
-                '3. Use phone number: .sudo add 2348154853640'
+                '3. Use phone number: .sudo add 254104260236'
             );
         }
 
@@ -907,7 +906,7 @@ await context.react('🥳');
             await react('➕');
             
             if (targetJid === ownerJid) {
-                return await replyPlain('⚠️ Owner already has permanent sudo privileges.');
+                return await replyPlain('Owner already has permanent sudo privileges.');
             }
             
             // ✅ Check if user is already in sudo list
@@ -925,7 +924,7 @@ await context.react('🥳');
             
             if (ok) {
                 return await replyPlain(
-                    `✅ User: @${phoneNumber} has been added to the sudo registry.`,
+                    `User: @${phoneNumber} has been added to the sudo registry.`,
                     { mentions: [targetJid] }
                 );
             } else {
@@ -937,7 +936,7 @@ await context.react('🥳');
             await react('➖');
             
             if (targetJid === ownerJid) {
-                return await replyPlain('❌ Owner cannot be removed from sudo privileges.');
+                return await replyPlain('Owner cannot be removed from sudo privileges.');
             }
 
             // ✅ Check if user is in sudo list before removing
@@ -945,7 +944,7 @@ await context.react('🥳');
             if (!currentSudoList.includes(targetJid)) {
                 const phoneNumber = targetJid.split('@')[0];
                 return await replyPlain(
-                    `ℹ️ Operation aborted: User: @${phoneNumber} not found in sudo registry.`,
+                    `Operation aborted: User: @${phoneNumber} not found in sudo registry.`,
                     { mentions: [targetJid] }
                 );
             }
@@ -955,11 +954,11 @@ await context.react('🥳');
             
             if (ok) {
                 return await replyPlain(
-                    `✅ User: @${phoneNumber} has been removed from the sudo registry.`,
+                    `User: @${phoneNumber} has been removed from the sudo registry.`,
                     { mentions: [targetJid] }
                 );
             } else {
-                return await replyPlain('❌ Failed to remove sudo user. Please try again.');
+                return await replyPlain('Failed to remove sudo user. Please try again.');
             }
         }
     }
@@ -1087,12 +1086,12 @@ Failed: ${failCount}`;
             const { reply, isFromOwner, senderIsSudo, react } = context;
 
             if (!isFromOwner && !senderIsSudo) {
-                return await reply('❌ Only owner/sudo can clear sessions!');
+                return await reply('Only owner/sudo can clear sessions!');
             }
 
             try {
-                await react('⏳');
-                await reply('🔄 Clearing WhatsApp session...\n\nBot will restart automatically.');
+                await react('⭐');
+                await reply('Clearing WhatsApp session...\n\nThe Bot will restart automatically.');
 
                 // Clear session files
                 const sessionPaths = ['./data/session'];
@@ -1110,12 +1109,12 @@ Failed: ${failCount}`;
                             console.log(`✅ Cleared: ${sessionPath}`);
                         }
                     } catch (error) {
-                        console.error(`❌ Failed to clear ${sessionPath}:`, error.message);
+                        console.error(`Failed to clear ${sessionPath}:`, error.message);
                     }
                 });
 
                 await react('✅');
-                console.log(`🔄 Session cleared! ${clearedFiles} files/folders removed`);
+                console.log(`Session cleared! ${clearedFiles} files/folders removed`);
 
                 // Exit process to trigger restart
                 setTimeout(() => {
@@ -1125,7 +1124,7 @@ Failed: ${failCount}`;
             } catch (error) {
                 await react('❌');
                 console.error('Clear session error:', error);
-                await reply(`❌ Failed to clear session!\n\nError: ${error.message}`);
+                await reply(`Failed to clear session!\n\nError: ${error.message}`);
             }
         }
     },
@@ -1142,12 +1141,12 @@ Failed: ${failCount}`;
             const { reply, isFromOwner, senderIsSudo, react } = context;
 
             if (!isFromOwner && !senderIsSudo) {
-                return await reply('❌ Only owner/sudo can clear sessions!');
+                return await reply('Only owner/sudo can clear sessions!');
             }
 
             try {
-                await react('⏳');
-                await reply('🔄 Clearing temp/tmp..\n\nBot will restart automatically.');
+                await react('⭐');
+                await reply('Clearing temp/tmp..\n\nBot will restart automatically.');
 
                 // Clear session files
                 const sessionPaths = ['./tmp','./temp'];
@@ -1165,7 +1164,7 @@ Failed: ${failCount}`;
                             console.log(`✅ Cleared: ${sessionPath}`);
                         }
                     } catch (error) {
-                        console.error(`❌ Failed to clear ${sessionPath}:`, error.message);
+                        console.error(`Failed to clear ${sessionPath}:`, error.message);
                     }
                 });
 
@@ -1180,7 +1179,7 @@ Failed: ${failCount}`;
             } catch (error) {
                 await react('❌');
                 console.error('Clear session error:', error);
-                await reply(`❌ Failed to clear temp!\n\nError: ${error.message}`);
+                await reply(`Failed to clear temp!\n\nError: ${error.message}`);
             }
         }
     },
@@ -1197,13 +1196,13 @@ Failed: ${failCount}`;
             const { reply, isFromOwner, senderIsSudo, react } = context;
 
             if (!isFromOwner && !senderIsSudo) {
-                return await reply('❌ Only owner/sudo can reset database!');
+                return await reply('Only owner/sudo can reset database!');
             }
 
             const confirm = args[1]?.toLowerCase();
 
             if (confirm !== 'confirm') {
-                return await reply(`⚠️ DATABASE RESET WARNING
+                return await reply(`DATABASE RESET WARNING
 
 🚨 This will permanently delete ALL:
 • Chat settings and configurations
@@ -1216,12 +1215,12 @@ This action CANNOT be undone!
 
 To proceed, use: .resetdatabase confirm
 
-⚡ Think twice before continuing!`);
+Be sure bfore continuing!`);
             }
 
             try {
-                await react('⏳');
-                await reply('🔄 Resetting database to default...');
+                await react('⭐');
+                await reply('Resetting database to default...');
 
                 // Get database file paths
                 const dbPaths = [
@@ -1249,7 +1248,7 @@ To proceed, use: .resetdatabase confirm
                                 resetCount++;
                                 console.log(`✅ Deleted: ${dbPath}`);
                             } catch (error) {
-                                console.error(`❌ Failed to delete ${dbPath}:`, error.message);
+                                console.error(`Failed to delete ${dbPath}:`, error.message);
                             }
                         }
                     });
@@ -1278,13 +1277,13 @@ To proceed, use: .resetdatabase confirm
                 });
 
                 await react('✅');
-                await reply(`✅ Database reset completed!
+                await reply(`Database reset completed!
 
-🔄 Files reset: ${resetCount}
-🗂️ Data directories cleared
-⚡ All settings restored to default
+Files reset: ${resetCount}
+Data directories cleared
+All settings restored to default
 
-Bot will restart to apply changes...`);
+Bot will restart to apply the  changes...`);
 
                 // Restart bot to reinitialize with default settings
                 setTimeout(() => {
@@ -1294,7 +1293,7 @@ Bot will restart to apply changes...`);
             } catch (error) {
                 await react('❌');
                 console.error('Database reset error:', error);
-                await reply(`❌ Failed to reset database!\n\nError: ${error.message}\n\nPlease check console for details.`);
+                await reply(`Failed to reset database!\n\nError: ${error.message}\n\nPlease check console for details.`);
             }
         }
     }
