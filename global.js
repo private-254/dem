@@ -64,7 +64,7 @@ global.emojimix= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗘𝗠𝗢𝗝𝗜𝗠𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}𝗘𝗠𝗢𝗝𝗜𝗠𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -79,7 +79,7 @@ global.apk= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗔𝗣𝗞_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}apk_cmd`
     }
   }
 };
@@ -92,7 +92,7 @@ global.download= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}DWNLD_CMD`
     }
   }
 };
@@ -105,7 +105,7 @@ global.gdrive= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗚𝗗𝗥𝗜𝗩𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}GDRV_CMD`
     }
   }
 };
@@ -118,7 +118,7 @@ global.gitclone = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗚𝗜𝗧𝗖𝗟𝗢𝗡𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄\n${prefix}GITCLN_CMD`
     }
   }
 };
@@ -134,7 +134,7 @@ global.work = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗪𝗢𝗥𝗞_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}WRK_CMD`
     }
   }
 };
@@ -147,7 +147,7 @@ global.transfer = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗧𝗥𝗔𝗡𝗦𝗙𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}TRNSF_CMD`
     }
   }
 };
@@ -160,7 +160,7 @@ global.gamble = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗚𝗔𝗠𝗕𝗟𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}𝗚𝗔𝗠𝗕𝗟𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -173,7 +173,7 @@ global.learderboard = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗟𝗘𝗔𝗗𝗘𝗥𝗕𝗢𝗔𝗥𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}𝗟𝗘𝗔𝗗𝗘𝗥𝗕𝗢𝗔𝗥𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -186,7 +186,7 @@ global.daily = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗗𝗔𝗜𝗟𝗬_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}𝗗𝗔𝗜𝗟𝗬_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -199,7 +199,7 @@ global.balance = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗕𝗔𝗟𝗔𝗡𝗖𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}𝗕𝗔𝗟𝗔𝗡𝗖𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -215,7 +215,7 @@ global.vv= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗩𝗩_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}VV_CMND`
     }
   }
 };
@@ -228,7 +228,7 @@ global.owner= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗢𝗪𝗡𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix} OWNER_CMD`
     }
   }
 };
@@ -241,7 +241,7 @@ global.prfx = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗣𝗥𝗘𝗙𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}PREFIX_CMD`
     }
   }
 };
@@ -254,7 +254,7 @@ global.setprefix = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗦𝗘𝗧𝗣𝗥𝗘𝗙𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}SETPREFIX_CMD `
     }
   }
 };
@@ -267,7 +267,7 @@ global.listcmd = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗟𝗜𝗦𝗧𝗖𝗠𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}LSTCMD_CMD`
     }
   }
 };
@@ -280,7 +280,7 @@ global.url= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗨𝗥𝗟_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}URL_CMD`
     }
   }
 };
@@ -293,7 +293,7 @@ global.creategc = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗖𝗥𝗘𝗔𝗧𝗘𝗚𝗖_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}CREATEGC_CMD`
     }
   }
 };
@@ -306,7 +306,7 @@ global.pdf = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗣𝗗𝗙_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}PDF_CMD`
     }
   }
 };
@@ -321,7 +321,7 @@ global.textmaker = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗧𝗘𝗫𝗧𝗠𝗔𝗞𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}TEXTMAKER_CMD`
     }
   }
 };
@@ -334,7 +334,7 @@ global.fliptext = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗙𝗟𝗜𝗣𝗧𝗘𝗫𝗧_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}FLIPTXT_CMD`
     }
   }
 };
@@ -349,7 +349,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗔𝗡𝗜𝗠𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}𝗔𝗡𝗜𝗠𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -362,7 +362,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗜𝗡𝗦𝗨𝗟𝗧_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}INSULT_CMD`
     }
   }
 };
@@ -375,7 +375,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗤𝗨𝗢𝗧𝗘𝗦_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}BOOK OF DAVE`
     }
   }
 };
@@ -388,7 +388,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗫𝗫𝗤𝗖_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}XXQC_CMD`
     }
   }
 };
@@ -402,7 +402,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗛𝗔𝗡𝗚𝗠𝗔𝗡_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}HANGMAN_CMD`
     }
   }
 };
@@ -416,7 +416,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗠𝗘𝗡𝗨_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}MENU_CMD`
     }
   }
 };
@@ -429,7 +429,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗦𝗘𝗧𝗠𝗘𝗡𝗨_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}SETMN_CMND`
     }
   }
 };
@@ -441,7 +441,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗦𝗘𝗧𝗠𝗘𝗡𝗨𝗜𝗠𝗚_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}DAVEMNU_IMG`
     }
   }
 };
@@ -454,7 +454,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗠𝗔𝗨𝗗𝗜𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}AUD_CMD`
     }
   }
 };
@@ -467,7 +467,7 @@ global.menuInfo = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗠𝗘𝗡𝗨𝗜𝗡𝗙𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🎄:DAVE-MD:🎄||${prefix}DAVEMENU_INFO`
     }
   }
 };
@@ -483,7 +483,7 @@ global.TZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||🌟${prefix}𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
+      text: `🎄:DAVE-MD:🎄||🎁${prefix}TIMEZONE_CMD`
     }
   }
 };
@@ -496,7 +496,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||🌟${prefix}𝐒𝐄𝐓𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
+      text: `🎄:DAVE-MD:🎄||🎁${prefix}SETTMZN_CMD`
     }
   }
 };
@@ -508,7 +508,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||🌟${prefix}𝐅𝐈𝐍𝐃𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
+      text: `🎄:DAVE-MD:🎄||🎁${prefix}𝐅𝐈𝐍𝐃𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🎁`
     }
   }
 };
@@ -520,7 +520,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:DAVE-MD:🇳🇬||🌟${prefix}𝐑𝐄𝐒𝐄𝐓𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
+      text: `🎄:DAVE-MD:🎄||🎁${prefix}Reset_timezone`
     }
   }
 };
@@ -534,7 +534,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝐆𝐈𝐅𝐓_𝐌𝐃:🇳🇬||⏰${prefix}𝐑𝐔𝐍𝐓𝐈𝐌𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃⏰`
+      text: `🎄:Dave_Md:🎄||🎁${prefix}Runtime_command`
     }
   }
 };
@@ -546,7 +546,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🌟:𝐆𝐈𝐅𝐓_𝐌𝐃:🌟||📅${prefix}𝐃𝐀𝐓𝐄_𝗖𝗢𝗠𝗠𝗔𝗡𝗗📅`
+      text: `🎄:Dave_Md:🎄||🎁${prefix}Date checker`
     }
   }
 };
@@ -558,7 +558,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🌟:𝐆𝐈𝐅𝐓_𝐌𝐃:🌟||😎${prefix}𝐒𝐄𝐓𝐅𝐎𝐍𝐓_𝐂𝐎𝐌𝐌𝐀𝐍𝐃😎`
+      text: `🎄:Dave_Ai:🎄||🎁${prefix}Font set cmd`
     }
   }
 };
@@ -571,7 +571,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🌟:𝐆𝐈𝐅𝐓_𝐌𝐃:🌟||😎${prefix}𝐁𝐎𝐓𝐈𝐍𝐅𝐎_𝐂𝐎𝐌𝐌𝐀𝐍𝐃😎`
+      text: `🎁:𝐆𝐈𝐅𝐓_𝐌𝐃:🎁||🎄${prefix}My Bot info`
     }
   }
 };
@@ -584,7 +584,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🌟:𝐆𝐈𝐅𝐓_𝐌𝐃:🌟||😎${prefix}𝐔𝐏𝐓𝐈𝐌𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃😎`
+      text: `🎄:Dave-Ai:🎄||🎄${prefix}Uptime cmd`
     }
   }
 };
@@ -597,7 +597,7 @@ global.mmr = {
   },
   message: {
     extendedTextMessage: {
-      text: `🌟:𝐆𝐈𝐅𝐓_𝐌𝐃:🌟||📋${prefix}𝐌𝐄𝐌𝐎𝐑𝐘_𝐂𝐎𝐌𝐌𝐀𝐍𝐃📋`
+      text: `🎄:Dave-Ai:🎄||🎄${prefix}Mem check`
     }
   }
 };
@@ -610,7 +610,7 @@ global.ping = {
   },
   message: {
     extendedTextMessage: {
-      text: `🔥:𝐆𝐈𝐅𝐓_𝐌𝐃: ${prefix}𝐏𝐈𝐍𝐆_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🔥`
+      text: `🎄:Dave_Ai: ${prefix}speedcheck_command`
     }
   }
 };
@@ -623,7 +623,7 @@ global.alive = {
   },
   message: {
     extendedTextMessage: {
-      text: `🌟:𝐆𝐈𝐅𝐓_𝐌𝐃:🌟||🔥${prefix}𝐀𝐋𝐈𝐕𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🔥`
+      text: `🎄: DAVE:🎄||💰${prefix}alive_command`
     }
   }
 };
@@ -636,7 +636,7 @@ global.takeStk = {
   },
   message: {
     extendedTextMessage: {
-      text: `🌟:𝐆𝐈𝐅𝐓_𝐌𝐃:🌟||😔${prefix}𝐭𝐚𝐤𝐞_𝐜𝐨𝐦𝐚𝐧𝐝😔`
+      text: `🎄:DAVE:💰||☺️${prefix}him`
     }
   }
 };
