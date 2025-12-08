@@ -306,7 +306,7 @@ global.version = getSetting('version', settings.version);
 global.author = "DAVE";
 global.channelLink = "https://whatsapp.com/channel/0029VbApvFQ2Jl84lhONkc3k";
 global.dev = "254104260236";
-global.devgit = "https://github.com/Daveeddevsmd/DAVE-MD";
+global.devgit = "https://github.com/gifteddevsmd/DAVE-MD2";
 global.devyt = "@davlodavlo19";
 global.ytch = "Davke";
 global.getCurrentTime = getCurrentTime;
@@ -808,7 +808,7 @@ XeonBotInc.ev.on('connection.update', async (s) => {
         },
         message: {
     contactMessage: {
-        displayName: "DAVE-MD Bot",
+        displayName: "DAVE-MD",
         vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE-MD\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Phone\nEND:VCARD`
     }
 },
