@@ -42,16 +42,6 @@ const {
 } = Baileys;
 
 import baileysPkg from '@whiskeysockets/baileys/package.json' with { type: "json" };
-import pino from "pino";
-import readline from "readline";
-import { parsePhoneNumber } from "libphonenumber-js";
-// Remove the problematic PHONENUMBER_MCC import
-import { rmSync, existsSync } from 'fs';
-import { join } from 'path';
-import store from './lib/lightweight.js';
-import os from 'os';
-import dotenv from "dotenv";
-dotenv.config();
 
 const envPath = path.resolve(process.cwd(), '.env');
 
