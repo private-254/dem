@@ -133,7 +133,11 @@ export default [
                     "https://files.catbox.moe/fl4buk.jpg"
                 ];
                 let menuImage = db.settings.menuimage || "";
-                if (!menuImage) menuImage = defaultImages[Math.floor(Math.random() * defaultImages.length)];
+                
+                // Only use default image if style is not 2 and no custom image is set
+                if (!menuImage && menuStyle !== "2") {
+                    menuImage = defaultImages[Math.floor(Math.random() * defaultImages.length)];
+                }
 
                 const menuAudio = db.settings.menuaudio || "off";
 
@@ -149,19 +153,35 @@ export default [
 
                 const menuText = menuStyles[menuStyle](botInfo, categories, totalCommands);
 
+                // DECIDE WHICH TYPE OF MENU TO SEND (ONLY ONE!)
+                let menuSent = false;
+                
                 if (menuStyle === "2") {
+                    // Style 2: Always send as plain text (no image)
                     await context.replyPlain(menuText, { quoted: global.menu });
-                } else if (menuImage) {
+                    menuSent = true;
+                } else if (menuImage && menuImage.trim() !== "") {
+                    // Try to send with image (styles 1, 3, 4, 5)
                     try {
-                        await context.reply({ image: { url: menuImage }, caption: menuText }, { quoted: global.menu });
-                    } catch {
-                        await context.replyPlain(menuText + "\nMenu image failed to load", { quoted: global.menu });
+                        await context.reply({ 
+                            image: { url: menuImage }, 
+                            caption: menuText 
+                        }, { quoted: global.menu });
+                        menuSent = true;
+                    } catch (error) {
+                        console.error("Failed to send menu with image, falling back to plain text:", error);
+                        // Fallback to plain text if image fails
+                        await context.replyPlain(menuText + "\n\n⚠️ Image failed to load", { quoted: global.menu });
+                        menuSent = true;
                     }
-                } else {
+                }
+                
+                // If no menu was sent yet (no image and not style 2)
+                if (!menuSent) {
                     await context.replyPlain(menuText, { quoted: global.menu });
                 }
 
-                // Send audio if enabled
+                // Send audio if enabled (separate message)
                 if (menuAudio === "on") {
                     try {
                         const defaultAudios = [
@@ -185,9 +205,16 @@ export default [
                                 .save(outputFile);
                         });
 
-                        await context.replyPlain({ audio: fs.readFileSync(outputFile), mimetype: "audio/ogg; codecs=opus", ptt: true }, { quoted: message });
+                        // Send audio as separate message (not quoted)
+                        await sock.sendMessage(context.chatId, {
+                            audio: fs.readFileSync(outputFile),
+                            mimetype: "audio/ogg; codecs=opus",
+                            ptt: true
+                        });
                         fs.unlinkSync(outputFile);
-                    } catch (err) { console.error("Failed to send menu audio:", err); }
+                    } catch (err) { 
+                        console.error("Failed to send menu audio:", err); 
+                    }
                 }
             } catch (err) {
                 console.error("Error in menu command:", err);
