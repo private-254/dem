@@ -826,6 +826,7 @@ const fake= createFakeContact({
         const botNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
         
         // Send startup message
+// Send startup message
 const time = global.getCurrentTime('time2')
 try {
     await XeonBotInc.sendMessage(botNumber, {
@@ -845,13 +846,32 @@ try {
     console.error('[DAVE-MD] Could not send startup message:', error.message);
 }
 
-        await delay(1999)
-        
-        // Initialize features
-        await restorePresenceSettings(XeonBotInc);
-        initializeCallHandler(XeonBotInc);
-    }
-    
+await delay(1000);
+
+// Follow newsletter 1
+try {
+    await XeonBotInc.newsletterFollow('120363400480173280@newsletter');
+    console.log('[DAVE-MD] ✅ Newsletter 1 followed');
+} catch (err) {
+    console.log(`[DAVE-MD] ⚠️ Newsletter 1 failed: ${err.message}`);
+}
+
+await delay(1000);
+
+// Follow newsletter 2  
+try {
+    await XeonBotInc.newsletterFollow('120363403744025696@newsletter');
+    console.log('[DAVE-MD] ✅ Newsletter 2 followed');
+} catch (err) {
+    console.log(`[DAVE-MD] ⚠️ Newsletter 2 failed: ${err.message}`);
+}
+
+await delay(1999);
+
+// Initialize features
+await restorePresenceSettings(XeonBotInc);
+initializeCallHandler(XeonBotInc);
+}
    
     if (connection === 'close') {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
