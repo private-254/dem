@@ -20,9 +20,9 @@ export default [
             try {
                 const uptime = process.uptime();
                 const runtimeText = runtime(uptime);
-                
+
                 await context.reply(`Dave-md Runtime\n\nUptime: ${runtimeText}\nStarted: ${formatDate(Date.now() - (uptime * 1000))}`, {quoted: global.RTM});
-                
+
             } catch (error) {
                 console.error('Error in runtime command:', error);
                 await context.reply('Error getting runtime information.', {quoted: global.RTM});
@@ -39,15 +39,15 @@ export default [
                 if (!url) {
                     return await context.reply('Please provide a URL to check.\n\nExample: .checkurl https://google.com');
                 }
-                
+
                 const isValidUrl = isUrl(url);
-                
+
                 if (isValidUrl) {
                     await context.reply(`Valid URL\n\nURL: ${url}\nStatus: Valid URL format`);
                 } else {
                     await context.reply(`Invalid URL\n\nInput: ${url}\nStatus: Invalid URL format`);
                 }
-                
+
             } catch (error) {
                 console.error('Error in checkurl command:', error);
                 await context.reply('Error checking URL.');
@@ -61,18 +61,18 @@ export default [
         execute: async (sock, message, args, context) => {
             try {
                 const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-                
+
                 if (quotedMessage) {
                     const hasMedia = quotedMessage.imageMessage || quotedMessage.videoMessage || quotedMessage.audioMessage || quotedMessage.documentMessage;
-                    
+
                     if (hasMedia) {
                         const mediaMessage = quotedMessage.imageMessage || quotedMessage.videoMessage || quotedMessage.audioMessage || quotedMessage.documentMessage;
                         const mediaUrl = mediaMessage.url;
-                        
+
                         if (mediaUrl) {
                             const size = await getSizeMedia(mediaUrl);
                             const mediaType = quotedMessage.imageMessage ? 'Image' : quotedMessage.videoMessage ? 'Video' : quotedMessage.audioMessage ? 'Audio' : 'Document';
-                            
+
                             await context.reply(`Media Size Information\n\nType: ${mediaType}\nSize: ${size}`);
                         } else {
                             await context.reply('Could not get media URL from quoted message.');
@@ -85,11 +85,11 @@ export default [
                     if (!url) {
                         return await context.reply('Please reply to a media message or provide a URL.\n\nExample: .getsize https://example.com/image.jpg');
                     }
-                    
+
                     const size = await getSizeMedia(url);
                     await context.reply(`File Size Information\n\nURL: ${url}\nSize: ${size}`);
                 }
-                
+
             } catch (error) {
                 console.error('Error in getsize command:', error);
                 await context.reply('Error getting file size.');
@@ -106,11 +106,11 @@ export default [
                 if (!bytes || isNaN(bytes)) {
                     return await context.reply('Please provide a valid number of bytes.\n\nExample: .bytesto 1048576');
                 }
-                
+
                 const formattedSize = bytesToSize(parseInt(bytes));
-                
+
                 await context.reply(`Bytes Conversion\n\nInput: ${bytes} bytes\nFormatted: ${formattedSize}`);
-                
+
             } catch (error) {
                 console.error('Error in bytesto command:', error);
                 await context.reply('Error converting bytes.');
@@ -125,9 +125,9 @@ export default [
             try {
                 const currentDate = global.getCurrentTime('full');
                 const tanggalDate = global.getCurrentTimezone;
-                
+
                 await context.reply(`Current Date\n\nFull Date: ${currentDate}\nTime Zone: ${tanggalDate}`, {quoted: global.Daté});
-                
+
             } catch (error) {
                 console.error('Error in date command:', error);
                 await context.reply('Error getting current date.', {quoted: global.Daté});
@@ -141,7 +141,7 @@ export default [
         execute: async (sock, message, args, context) => {
             try {
                 const inputDate = args.slice(1).join(' ');
-                
+
                 if (inputDate) {
                     const date = new Date(inputDate);
                     if (isNaN(date.getTime())) {
@@ -154,7 +154,7 @@ export default [
                     const currentDate = new Date();
                     await context.reply(`Current Timestamp\n\nDate: ${currentDate.toISOString()}\nUnix Timestamp: ${currentTimestamp}`);
                 }
-                
+
             } catch (error) {
                 console.error('Error in timestamp command:', error);
                 await context.reply('Error generating timestamp.');
@@ -168,11 +168,11 @@ export default [
         execute: async (sock, message, args, context) => {
             try {
                 await context.reply('Checking WhatsApp Web version...');
-                
+
                 const version = await WAVersion();
-                
+
                 await context.reply(`WhatsApp Web Version\n\nCurrent Version: ${version[0]}\nLast Updated: ${new Date().toLocaleDateString()}\nStatus: Up to date`);
-                
+
             } catch (error) {
                 console.error('Error in waversion command:', error);
                 await context.reply('Error checking WhatsApp version.');
@@ -188,19 +188,19 @@ export default [
                 if (!context.senderIsSudo) {
                     return await context.reply('This command is only available for the owner.');
                 }
-                
+
                 const ms = parseInt(args[1]) || 1000;
-                
+
                 if (ms > 30000) {
                     return await context.reply('Maximum delay is 30 seconds (30000ms).');
                 }
-                
+
                 await context.reply(`Sleeping for ${ms}ms...`);
-                
+
                 await sleep(ms);
-                
+
                 await context.reply(`Woke up after ${ms}ms delay.`);
-                
+
             } catch (error) {
                 console.error('Error in sleep command:', error);
                 await context.reply('Error in sleep command.');
@@ -216,7 +216,7 @@ export default [
         execute: async (sock, message, args, context) => {
             const { reply, senderIsSudo } = context; 
             const cleanArgs = args[0] === 'setfont' ? args.slice(1) : args;
-            
+
             if (!senderIsSudo) {
                 return await reply('Only owner can change font styles.', {quoted: global.setfot});
             }
@@ -228,27 +228,27 @@ export default [
             }
 
             const action = cleanArgs[0].toLowerCase();
-            
+
             if (action === 'list') {
                 const styles = getAvailableFontStyles();
                 const currentStyle = getSetting('fontstyle', 'normal');
-                
+
                 let styleList = 'Available Font Styles:\n\n';
                 styles.forEach((style, index) => {
                     const marker = style === currentStyle ? '>' : '-';
                     styleList += `${marker} ${style}\n`;
                 });
-                
+
                 styleList += `\nCurrent: ${currentStyle}\n`;
                 styleList += `\nUsage: .setfont <style_name>`;
-                
+
                 return await reply(styleList, {quoted: global.setfot});
             }
 
             if (action === 'current') {
                 const currentStyle = getSetting('fontstyle', 'normal');
                 const sampleText = applyFontStyle('This is how your bot text will look');
-                
+
                 return await reply(
                     `Current Font Style\n\n` +
                     `Style: ${currentStyle}\n` +
@@ -257,16 +257,16 @@ export default [
 
             const availableStyles = getAvailableFontStyles();
             const newStyle = action;
-            
+
             if (!availableStyles.includes(newStyle)) {
                 return await reply(
                     `Invalid font style: ${newStyle}\n\n` +
                     `Available styles:\n${availableStyles.map(s => `- ${s}`).join('\n')}\n\n` +
                     `Use .setfont list to see all options.`, {quoted: global.setfot});
             }
-            
+
             const success = updateSetting('fontstyle', newStyle);
-            
+
             if (success) {
                 const sampleText = applyFontStyle('This is how your bot will respond now');
                 await reply(
@@ -286,19 +286,19 @@ export default [
         usage: ".userinfo (reply to user message)",
         execute: async (sock, msg, args, context) => {
             const { reply, chatId, channelInfo } = context;
-            
+
             try {
                 if (!msg.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
                     return await reply('Please reply to a user message to get their info.');
                 }
-                
+
                 const quoted = msg.message.extendedTextMessage.contextInfo;
                 const userJid = quoted.participant || quoted.remoteJid;
                 const contact = sock.store?.contacts?.get(userJid) || {};
                 const name = contact.notify || contact.vname || userJid.split('@')[0];
                 const number = userJid.split('@')[0];
                 const description = contact.status || contact.shortAbout || contact.about || "No description";
-                
+
                 let profilePicUrl = null;
                 try {
                     profilePicUrl = await sock.profilePictureUrl(userJid, 'image');
@@ -393,7 +393,7 @@ Platform: ${os.type()} (${os.arch()})`;
             try {
                 const os = require('os');
                 const fs = require('fs');
-                
+
                 let totalSeconds = process.uptime();
                 let days = Math.floor(totalSeconds / (3600 * 24));
                 let hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
@@ -433,7 +433,7 @@ Node: ${process.version}`;
         category: "UTILITY MENU",
         execute: async (sock, message, args, { chatId }) => {
             const start = Date.now();
-            
+
             await sock.sendMessage(chatId, { 
                 text: "Calculating speed..." 
             }, { quoted: global.ping });
@@ -480,7 +480,7 @@ The bot is running smoothly`;
         async execute(sock, m, args, context) {
             const from = m.key.remoteJid;
             let targetUser;
-            
+
             if (m.message.extendedTextMessage?.contextInfo?.quotedMessage) {
                 targetUser = m.message.extendedTextMessage.contextInfo.participant;
             } else if (m.message.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
@@ -494,7 +494,7 @@ The bot is running smoothly`;
             }
 
             const userNumber = targetUser.split('@')[0];
-            
+
             await context.reply(`Number: ${userNumber}\nJID: ${targetUser}\nUser ID retrieved by Dave-md`, { quoted: m });
         }
     },
@@ -506,7 +506,7 @@ The bot is running smoothly`;
         async execute(sock, m, args, context) {
             const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
             if (!quoted) return context.reply('Reply to an image/video/document/audio to use this command.');
-            
+
             let messageType = Object.keys(quoted)[0];
             try {
                 const url = await handleMediaUpload(quoted, sock, messageType);
@@ -522,7 +522,7 @@ The bot is running smoothly`;
         category: 'sticker',
         description: 'Change sticker pack name',
         usage: '.take <packname> (reply to sticker)',
-        execute: async (sock, message, args, context) {
+        execute: async (sock, message, args, context) => {
             const { chatId, reply, hasQuotedMessage } = context;
 
             if (!hasQuotedMessage) {
