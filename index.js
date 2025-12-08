@@ -1,20 +1,31 @@
 import { spawn } from 'child_process';
-import path from 'path';
-import fs from 'fs';
-import chalk from 'chalk';  
-//=========== BOT MODE==========//
+import path, { join } from 'path';
+import fs, { rmSync, existsSync } from 'fs';
+import chalk from 'chalk';
 import settings from './settings.js';
 import { getSetting } from './lib/database.js';
 import { channelInfo } from './lib/messageConfig.js';
 import { Boom } from '@hapi/boom';
 import FileType from 'file-type';
 import axios from 'axios';
-import { handleMessages, handleGroupParticipantUpdate, handleStatus, restorePresenceSettings, initializeCallHandler} from './main.js';
+import { handleMessages, handleGroupParticipantUpdate, handleStatus, restorePresenceSettings, initializeCallHandler } from './main.js';
 import awesomePhoneNumber from 'awesome-phonenumber';
 import PhoneNumber from 'awesome-phonenumber';
 import { imageToWebp, videoToWebp, writeExifImg, writeExifVid } from './lib/exif.js';
-import { smsg, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep, reSize,isUrl, getCurrentTime, getCurrentTimezone } from './lib/myfunc.js';
-import makeWASocket, {
+import { smsg, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep, reSize, isUrl, getCurrentTime, getCurrentTimezone } from './lib/myfunc.js';
+import NodeCache from 'node-cache';
+import pino from 'pino';
+import readline from 'readline';
+import { parsePhoneNumber } from 'libphonenumber-js';
+import store from './lib/lightweight.js';
+import os from 'os';
+import dotenv from 'dotenv';
+dotenv.config();
+
+// === FIXED Baileys IMPORT ===
+import Baileys from '@whiskeysockets/baileys';
+const { 
+    default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason, 
     fetchLatestBaileysVersion,
@@ -28,8 +39,9 @@ import makeWASocket, {
     jidNormalizedUser,
     makeCacheableSignalKeyStore,
     delay
-} from "@whiskeysockets/baileys";
-import baileysPkg from '@whiskeysockets/baileys/package.json' with { type: "json" };
+} = Baileys;
+
+import baileysPkg from '@whiskeysockets/baileys/package.json' assert { type: 'json' };
 import NodeCache from "node-cache";
 import pino from "pino";
 import readline from "readline";
