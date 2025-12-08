@@ -4,30 +4,29 @@ import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import fs from 'fs';
 import path from 'path';
 export default [ 
-
 {
     name: "remove",
     aliases: ["kick", "removemember"],
     description: "Remove members from group",
     category: "GROUP MENU",
-    usage: ".remove [@user] or .remove 254123456789,254987654321 or reply to message",
+    usage: ".remove [@user] or .remove 1234567890,0987654321 or reply to message",
 
     execute: async (sock, m, args, context) => {
         const { chatId, reply, react, senderIsSudo, isGroup, isSenderAdmin, isBotAdmin } = context;
 
         if (!isGroup) {
-            return await reply("This command is for groups only.");
+            return await reply("This command is for groups only!");
         }
 
         if (!isBotAdmin) {
-            return await reply("Bot must be admin to remove members.");
+            return await reply("Bot must be admin to remove members!");
         }
 
         if (!isSenderAdmin && !senderIsSudo) {
-            return await reply("Only group admins can remove members.");
+            return await reply("Only group admins can remove members!");
         }
 
-        await react("⏳");
+        await react("🐀");
 
         try {
             let targetsToRemove = [];
@@ -52,6 +51,20 @@ export default [
                 }
             }
 
+           /** if (targetsToRemove.length === 0) {
+                return await reply(
+                    `📜 Remove Members Usage\n\n` +
+                    `Method 1: Reply to a message → .remove\n` +
+                    `Method 2: Mention users → .remove @user1 @user2\n` +
+                    `Method 3: Use numbers → .remove 234123456789,234987654321\n\n` +
+                    `⚠️ Notes:\n` +
+                    `• Separate numbers with commas\n` +
+                    `• Use international format (with country code)\n` +
+                    `• Bot must be admin to remove members\n` +
+                    `• Cannot remove other admins`
+                );
+            }*/
+
             // Collect results
             let successCount = 0;
             let failCount = 0;
@@ -69,14 +82,14 @@ export default [
 
                     // 1. Prevent removing admins
                     if (groupAdmins.includes(targetJid)) {
-                        results.push(`${targetNumber} - Cannot remove admin`);
+                        results.push(`⚠️ ${targetNumber} - Cannot remove admin`);
                         failCount++;
                         continue;
                     }
 
                     // 2. Prevent removing the bot
                     if (sock.user && targetJid === sock.user.id) {
-                        results.push(`${targetNumber} - Cannot remove bot`);
+                        results.push(`😅 ${targetNumber} - Cannot remove myself!`);
                         failCount++;
                         continue;
                     }
@@ -84,7 +97,7 @@ export default [
                     // 3. Check if user is in group
                     const isInGroup = groupMetadata.participants.some(p => p.id === targetJid);
                     if (!isInGroup) {
-                        results.push(`${targetNumber} - Not in this group`);
+                        results.push(`❌ ${targetNumber} - Not in this group`);
                         failCount++;
                         continue;
                     }
@@ -93,16 +106,16 @@ export default [
                     const response = await sock.groupParticipantsUpdate(chatId, [targetJid], "remove");
 
                     if (response[0]?.status === "200") {
-                        results.push(`${targetNumber} - Removed`);
+                        results.push(`😅 ${targetNumber} - Removed successfully`);
                         successCount++;
                     } else {
-                        results.push(`${targetNumber} - ${response[0]?.status || "Failed"}`);
+                        results.push(`❌ ${targetNumber} - ${response[0]?.status || "Failed to remove"}`);
                         failCount++;
                     }
 
                 } catch (error) {
                     const targetNumber = targetJid.split("@")[0];
-                    results.push(`${targetNumber} - Error`);
+                    results.push(`❌ ${targetNumber} - ${error.message}`);
                     failCount++;
                 }
 
@@ -110,317 +123,592 @@ export default [
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
-            // Send results
-            if (results.length > 0) {
-                let resultMessage = `Removal Results:\n\n${results.join('\n')}\n\n`;
-                resultMessage += `✅ Success: ${successCount}\n`;
-                resultMessage += `❌ Failed: ${failCount}`;
-                await reply(resultMessage);
-            } else {
-                await reply("No users specified for removal.");
-            }
+            /**const resultText =
+                `👥 Remove Members Results\n\n` +
+                `📊 Summary:\n✅ Removed: ${successCount}\n❌ Failed: ${failCount}\n\n` +
+                `📜 Details:\n${results.join("\n")}\n\n` +
+                `Members removed by GIFT-MD BOT 🤖`;
+
+            await reply(resultText);*/
 
         } catch (error) {
-            await reply(`Error removing members: ${error.message}`);
+            await reply(`❌ Error removing members: ${error.message}\n\n⚠️ Make sure bot is admin!`);
         }
     }
 },  
     {
+
     name: "add",
+
     aliases: ["addmember", "invite"],
+
     description: "Add members to group using phone numbers",
+
     category: "GROUP MENU",
-    usage: ".add 254123456789,254987654321,254555666777",
+
+    usage: ".add 254104260263,079787654321,555666777",
+
+    
 
     execute: async (sock, message, args, context) => {
+
         const { chatId, reply, react, senderIsSudo, isGroup, isSenderAdmin, isBotAdmin } = context;
 
+        
+
         if (!isGroup) {
-            return await reply("This command is for groups only.");
+
+            return await reply("This command is for groups only!");
+
         }
 
+        /**if (!args || args.length === 0) {
+
+            return await reply(
+
+                `📝 Add Members Usage\n\n` +
+
+                `Format: .add number1,number2,number3\n\n` +
+
+                `Example: .add 2341234567890,2340987654321\n\n` +
+
+                `⚠️ Notes:\n` +
+
+                `• Separate numbers with commas\n` +
+
+                `• Use international format (with country code)\n` +
+
+                `• No spaces or special characters\n` +
+
+                `• Bot must be admin to add members`
+
+            );
+
+        }*/
+
         // Check if bot has admin permissions
+
         if (!isBotAdmin) {
-            return await reply("Bot must be admin to add members.");
+
+            return await reply("The Bot must be admin to add members!");
+
         }
 
         // Check if sender has admin permissions
+
         if (!isSenderAdmin && !senderIsSudo) {
-            return await reply("Only group admins can add members.");
+
+            return await reply("Only group admins can add members!");
+
         }
 
-        await react('👥');
+        await react('🌚');
 
         try {
+
             // Parse phone numbers
+
             const numbers = args.join(' ').split(',').map(num => num.trim());
 
+            
+
             if (numbers.length === 0) {
-                return await reply("No phone numbers provided.");
+
+                return await reply("❌ No valid phone numbers provided!");
+
             }
 
             let successCount = 0;
+
             let failCount = 0;
+
             let results = [];
 
             for (const number of numbers) {
+
                 try {
+
                     // Clean the number
+
                     const cleanNumber = number.replace(/[^\d]/g, '');
 
+                    
+
                     if (cleanNumber.length < 10) {
-                        results.push(`${number} - Invalid number`);
+
+                        results.push(`❌ ${number} - Invalid number format`);
+
                         failCount++;
+
                         continue;
+
                     }
 
                     const jid = cleanNumber + '@s.whatsapp.net';
 
+                    
+
                     // Check if user exists on WhatsApp
+
                     const [exists] = await sock.onWhatsApp(jid);
+
                     if (!exists) {
-                        results.push(`${cleanNumber} - Not on WhatsApp`);
+
+                        results.push(`❌ ${cleanNumber} - Not on WhatsApp`);
+
                         failCount++;
+
                         continue;
+
                     }
 
                     // Try to add the user
+
                     const response = await sock.groupParticipantsUpdate(chatId, [jid], 'add');
 
+                    
+
                     if (response[0]?.status === '200') {
-                        results.push(`${cleanNumber} - Added`);
+
+                        results.push(`✅ ${cleanNumber} - Added successfully`);
+
                         successCount++;
+
                     } else {
-                        results.push(`${cleanNumber} - ${response[0]?.status || 'Failed'}`);
+
+                        results.push(`⚠️ ${cleanNumber} - ${response[0]?.status || 'Failed to add'}`);
+
                         failCount++;
+
                     }
+
                 } catch (error) {
-                    results.push(`${number} - Error`);
+
+                    results.push(`❌ ${number} - ${error.message}`);
+
                     failCount++;
+
                 }
 
                 // Small delay to prevent spam
+
                 await new Promise(resolve => setTimeout(resolve, 1000));
+
             }
 
-            // Send results
-            if (results.length > 0) {
-                let resultMessage = `Add Results:\n\n${results.join('\n')}\n\n`;
-                resultMessage += `✅ Success: ${successCount}\n`;
-                resultMessage += `❌ Failed: ${failCount}`;
-                await reply(resultMessage);
-            }
+           /** const resultText = `
+Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n❌ Failed: ${failCount}\n\n📝 Details:\n${results.join('\n')}\n\Members added by GIFT-MD BOT 🤖`;
+
+            await reply(resultText);*/
 
         } catch (error) {
-            await reply(`Error adding members: ${error.message}`);
+
+            await reply(`❌ Error adding members: ${error.message}\n\n⚠️ Make sure bot is admin!`);
+
         }
+
     }
+
 },
  {
+
     name: "close",
+
     aliases: ["closetime"],
+
     description: "Close group (only admins can send messages)",
+
     category: "GROUP MENU",
+
     usage: ".close",
 
+    
+
     async execute(sock, m, args, context) {
+
         const from = m.key.remoteJid;
+
         const isGroup = from.endsWith("@g.us");
-        await context.react('🔒')
+
+        await context.react('☺️')
 
         if (!isGroup) {
-            return await context.reply("This command is for groups only.");
+
+            return await context.reply(
+
+                { text: "This command is for groups only!" } 
+
+               
+
+            );
+
         }
 
         try {
+
             const groupMetadata = await sock.groupMetadata(from);
+
             const groupAdmins = groupMetadata.participants
+
                 .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
+
                 .map(p => p.id);
 
+            
+
             const sender = m.key.participant || m.key.remoteJid;
+
             const isOwner = m.key.fromMe || sender.split('@')[0] === settings.ownerNumber;
+
             const isAdmin = groupAdmins.includes(sender);
 
+            
+
             if (!isOwner && !isAdmin) {
-                return await context.reply("Only group admins can close the group.");
+
+                return await context.reply( 
+
+                    { text: "❌ Only group admins can close the group!" }, 
+
+                    { quoted: m }
+
+                );
+
             }
 
             await sock.groupSettingUpdate(from, 'announcement');
 
+            
+
             await context.reply({
-                text: `Group Closed.\n\nOnly admins can send messages.\n\nGroup closed by DAVE-MD`
+
+                text: `Group Closed!\n\n` +
+
+                      `Only admins can send messages now\n` +
+
+                      `Regular members cannot chat\n\n` +
+
+                      `Group closed by Admin`
+
             }, { quoted: m });
 
         } catch (error) {
-            await context.reply({
-                text: `Failed to close group: ${error.message}`
+
+            await context.reply( {
+
+                text: `Failed to close group: ${error.message}\n\n😆 Make sure bot is admin!`
+
             }, { quoted: m });
+
         }
+
     }
+
 },
     {
+
     name: "open",
+
     aliases: ["opentime"],
+
     description: "Open group (allow all members to send messages)",
+
     category: "GROUP MENU",
+
     usage: ".open",
 
+    
+
     async execute(sock, m, args, context) {
+
         const from = m.key.remoteJid;
+
         const isGroup = from.endsWith("@g.us");
-        await context.react('🔓')
+
+    await context.react('⭐')
 
         if (!isGroup) {
-            return await context.reply("This command is for groups only.");
+
+            return await context.reply( 
+
+                { text: "This command is for groups only!" }, 
+
+                { quoted: m }
+
+            );
+
         }
 
         try {
+
             const groupMetadata = await sock.groupMetadata(from);
+
             const groupAdmins = groupMetadata.participants
+
                 .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
+
                 .map(p => p.id);
 
+            
+
             const sender = m.key.participant || m.key.remoteJid;
+
             const isOwner = m.key.fromMe || sender.split('@')[0] === settings.ownerNumber;
+
             const isAdmin = groupAdmins.includes(sender);
 
+            
+
             if (!isOwner && !isAdmin) {
-                return await context.reply("Only group admins can open the group.");
+
+                return await context.reply(
+
+                    { text: "Only group admins can open the group!" }, 
+
+                    { quoted: m }
+
+                );
+
             }
 
             await sock.groupSettingUpdate(from, 'not_announcement');
 
-            await context.reply({
-                text: `Group Opened.\n\nAll members can now send messages.\n\nGroup opened by DAVE-MD`
+            
+
+            await context.reply( {
+
+                text: `Group Opened!\n\n` +
+
+                      `All members are allowed messages\n` +
+
+                      `Everyone can participate in the chat\n\n` +
+
+                      `Group opened by Admin`
+
             }, { quoted: m });
 
         } catch (error) {
-            await context.reply({
-                text: `Failed to open group: ${error.message}`
+
+            await context.reply(from, {
+
+                text: `Failed to open group: ${error.message}\n\n😕 Make sure bot is admin!`
+
             }, { quoted: m });
+
         }
+
     }
+
 },
    {
+
     name: 'kick',
+
     aliases: ['remove'],
+
     category: 'GROUP MENU',
+
     description: 'Remove users from the group',
+
     usage: '.kick @user or reply to message',
+
     execute: async (sock, message, args, context) => {
+
         const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, chatId } = context;
+
         const isOwner = message.key.fromMe;
 
         if (!isOwner) {
+
             if (!isBotAdmin) {
-                return await reply('Bot must be admin first.');
+
+                return await reply('Please make the bot an admin first.');
+
             }
+
             if (!isSenderAdmin) {
+
                 return await reply('Only group admins can use the kick command.');
+
             }
+
         }
 
         let usersToKick = [];
 
+        
+
         if (mentions.length > 0) {
+
             usersToKick = mentions;
+
         } else if (hasQuotedMessage && message.message?.extendedTextMessage?.contextInfo?.participant) {
+
             usersToKick = [message.message.extendedTextMessage.contextInfo.participant];
+
         }
 
+        
+
         if (usersToKick.length === 0) {
-            return await reply('Mention user or reply to their message to kick.');
+
+            return await reply('Please mention the user or reply to their message to kick!');
+
         }
 
         const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+
         if (usersToKick.includes(botId)) {
-            return await reply("Cannot kick the bot.");
+
+            return await reply("I can't kick myself bitch! 😂");
+
         }
 
-        await react('👢');
+        await react('🫴');
 
         try {
+
             await sock.groupParticipantsUpdate(chatId, usersToKick, "remove");
 
+            
+
             const usernames = await Promise.all(usersToKick.map(async jid => {
+
                 return `@${jid.split('@')[0]}`;
+
             }));
 
+            
+
             await sock.sendMessage(chatId, { 
-                text: `${usernames.join(', ')} removed from group.`,
+
+                text: `${usernames.join(', ')} has been kicked successfully!`,
+
                 mentions: usersToKick
+
             });
 
         } catch (error) {
-            await reply('Failed to remove user.');
+
+            await reply('Failed to kick user(s)!');
+
         }
+
     }
+
 },
    {
+
     name: "link",
+
     aliases: ["grouplink", "invite"],
+
     description: "Get group invite link",
+
     category: "GROUP MENU",
+
     usage: ".link",
 
+    
+
     async execute(sock, m, args, context) {
+
         const from = m.key.remoteJid;
+
         const isGroup = from.endsWith("@g.us");
-        await context.react('🔗')
+
+     await context.react('🖇️')
 
         if (!isGroup) {
-            return await context.reply("This command is for groups only.");
+
+            return await context.reply( 
+
+                { text: "This command is for groups only!" }, 
+
+                { quoted: m }
+
+            );
+
         }
 
         try {
+
             const groupMetadata = await sock.groupMetadata(from);
+
             const groupAdmins = groupMetadata.participants
+
                 .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
+
                 .map(p => p.id);
 
+            
+
             const sender = m.key.participant || m.key.remoteJid;
+
             const isOwner = m.key.fromMe || sender.split('@')[0] === settings.ownerNumber;
+
             const isAdmin = groupAdmins.includes(sender);
 
+            
+
             if (!isOwner && !isAdmin) {
-                return await context.reply("Only group admins can get the invite link.");
+
+                return await context.reply(
+
+                    { text: "❌ Only group admins can get the invite link!" }, 
+
+                    { quoted: m }
+
+                );
+
             }
 
             const inviteCode = await sock.groupInviteCode(from);
+
             const inviteLink = `https://chat.whatsapp.com/${inviteCode}`;
 
-            await context.reply({
-                text: `Group Invite Link\n\nGroup: ${groupMetadata.subject}\nMembers: ${groupMetadata.participants.length}\nLink: ${inviteLink}\n\nNote: Anyone with this link can join.\nDAVE-MD`
+            
+
+            await context.reply( {
+
+                                text: `Group Invite Link\n\nGroup: ${groupMetadata.subject}\nMembers: ${groupMetadata.participants.length}\nLink: ${inviteLink}\n\nNote: Anyone with this link can join.\nDAVE-MD`
+
             }, { quoted: m });
 
         } catch (error) {
-            await context.reply({
-                text: `Failed to get group link: ${error.message}`
+
+            await context.reply( {
+
+                text: `❌ Failed to get group link: ${error.message}\n\n⚠️ Make sure bot is admin!`
+
             }, { quoted: m });
+
         }
+
     }
+
 },
       {
     name: "groupinfo",
     description: "Get information about the current group",
     category: "GROUP MENU",
     usage: ".groupinfo",
-
+    
     async execute(sock, m, args, context) {
         try {
             const chatId = m.key.remoteJid;
             await context.react('ℹ️')
-
             if (!chatId.endsWith('@g.us')) {
-                return await context.reply('This command can only be used in groups.');
+                return await context.reply( {
+                    text: '❌ This command can only be used in groups.'
+                }, { quoted: m });
             }
 
             const groupMetadata = await sock.groupMetadata(chatId);
             const groupAdmins = groupMetadata.participants.filter(p => p.admin === 'admin' || p.admin === 'superadmin');
             const totalMembers = groupMetadata.participants.length;
 
-            let groupInfo = `Group Information\n\n`;
+                        let groupInfo = `Group Information\n\n`;
             groupInfo += `Name: ${groupMetadata.subject}\n`;
             groupInfo += `ID: ${groupMetadata.id}\n`;
             groupInfo += `Members: ${totalMembers}\n`;
@@ -431,44 +719,49 @@ export default [
                 groupInfo += `Description: ${groupMetadata.desc}\n`;
             }
 
-            groupInfo += `\nGroup Admins:\n`;
+                        groupInfo += `\nGroup Admins:\n`;
             groupAdmins.forEach((admin, index) => {
                 const adminName = admin.id.split('@')[0];
                 groupInfo += `${index + 1}. @${adminName}\n`;
             });
 
-            await context.reply({
+            await context.reply( {
                 text: groupInfo,
                 mentions: groupAdmins.map(admin => admin.id)
             }, { quoted: m });
 
         } catch (error) {
-            console.error('GroupInfo Error:', error);
-            await context.reply('Failed to get group information.');
-        }
-    }
-},
+            console.error('❌ GroupInfo Command Error:', error);
+            await context.reply( {
+                text: '❌ Failed to get group information. Please try again.'
+            }, { quoted: m });
+     }
+     }
+     },
            {
     name: "demote",
     description: "Demote a group admin to member",
     category: "GROUP MENU",
     usage: ".demote @user",
-
-    execute: async (sock, m, args, context) {
+    
+    execute: async (sock, m, args, context) => {
         try {
-            const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, chatId } = context;
-            await react('⬇️');
-
+const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, chatId } = context;
+            await react('✅');
             if (!chatId.endsWith('@g.us')) {
-                return await reply('This command can only be used in groups.');
+                return await reply (
+                    'This command can only be used in groups.'
+                );
             }
-
+      
             const groupMetadata = await sock.groupMetadata(chatId);
             const groupAdmins = groupMetadata.participants.filter(p => p.admin === 'admin' || p.admin === 'superadmin').map(p => p.id);
             const senderNumber = m.key.participant || m.key.remoteJid;
 
             if (!groupAdmins.includes(senderNumber)) {
-                return await context.reply('Only group admins can use this command.');
+                return await context.reply(
+                    'Only group admins can use this command.'
+                );
             }
 
             let targetUser;
@@ -477,164 +770,268 @@ export default [
             } else if (m.message?.extendedTextMessage?.contextInfo?.quotedMessage) {
                 targetUser = m.message.extendedTextMessage.contextInfo.participant;
             } else {
-                return await reply('Mention or reply to user to demote.');
+                return await reply ( 
+'Please mention or reply to the user you want to demote.\n\nExample: .demote @user'
+                );
             }
-
+       
             if (!groupAdmins.includes(targetUser)) {
-                return await reply('User is not an admin.');
+                return await reply(
+                    'User is not an admin.'
+                );
             }
 
             try {
                 await sock.groupParticipantsUpdate(chatId, [targetUser], 'demote');
-
+                
                 const userName = targetUser.split('@')[0];
                 const groupName = groupMetadata.subject || 'Unknown Group';
                 const currentTime = new Date().toLocaleString();
-
-                const demoteMessage = `User Demoted\n\nGroup: ${groupName}\nUser: @${userName}\nRole: Member\nTime: ${currentTime}\n\nDAVE-MD`;
+                
+                                const demoteMessage = `User Demoted\n\nGroup: ${groupName}\nUser: @${userName}\nRole: Member\nTime: ${currentTime}\n\nDAVE-MD`;
 
                 await context.reply(demoteMessage, {
-                    mentions: [targetUser]
-                });
+    mentions: [targetUser]
+});
 
             } catch (demoteError) {
                 let errorMsg = 'Failed to demote user.';
-
+                
                 if (demoteError.message.includes('forbidden')) {
-                    errorMsg = 'No permission to demote users.';
+                    errorMsg = 'I don\'t have permission to demote users in this group.';
                 } else if (demoteError.message.includes('not-authorized')) {
-                    errorMsg = 'Need admin privileges to demote users.';
+                    errorMsg = 'I need admin privileges to demote users.';
                 }
-
-                await context.reply(errorMsg, { quoted: m });
+                
+                await context.reply( {
+                    text: errorMsg + '\n\nDave Md'
+                }, { quoted: m });
             }
 
         } catch (error) {
-            console.error('Demote Error:', error);
-            await context.reply('Failed to demote user.');
+            console.error('❌ Demote Command Error:', error);
+            await context.reply( {
+                text: 'Failed to demote user. Please try again.\n\nDave Md'
+            });
         }
     }
 },
    {
+
     name: 'promote',
+
     aliases: ['pmt'],
+
     category: 'GROUP MENU',
+
     description: 'Promote users to admin',
+
     usage: '.promote @user or reply to message',
 
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
+
         const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, chatId } = context;
 
         if (!chatId.endsWith('@g.us')) {
-            return await reply('This command can only be used in groups.');
-        }
-
+                return await reply(
+                   'This command can only be used in groups.'
+                );
+            }
+        
         if (!isBotAdmin) {
-            return await reply('Bot must be admin first.');
+
+            return await reply('Please make the bot an admin first.');
+
         }
 
         if (!isSenderAdmin) {
+
             return await reply('Only group admins can use the promote command.');
+
         }
 
         let userToPromote = [];
 
+        
+
         if (mentions.length > 0) {
+
             userToPromote = mentions;
+
         } else if (hasQuotedMessage && message.message?.extendedTextMessage?.contextInfo?.participant) {
+
             userToPromote = [message.message.extendedTextMessage.contextInfo.participant];
+
         }
+
+        
 
         if (userToPromote.length === 0) {
-            return await reply('Mention user or reply to their message to promote.');
+
+            return await reply('Please mention the user or reply to their message to promote!');
+
         }
 
-        await react('⬆️');
+        await react('👑');
 
         try {
+
             await sock.groupParticipantsUpdate(chatId, userToPromote, "promote");
 
+            
+
+            // Get group metadata for group name
+
             const groupMetadata = await sock.groupMetadata(chatId);
+
             const groupName = groupMetadata.subject || 'Unknown Group';
+
             const currentTime = new Date().toLocaleString();
 
+            
+
+            // Handle multiple users (but use the fancy format for each)
+
             for (const user of userToPromote) {
+
                 const userName = user.split('@')[0];
 
-                const promotionMessage = `User Promoted\n\nGroup: ${groupName}\nUser: @${userName}\nRole: Admin\nTime: ${currentTime}\n\nDAVE-MD`;
+                
+
+                                const promotionMessage = `User Promoted\n\nGroup: ${groupName}\nUser: @${userName}\nRole: Admin\nTime: ${currentTime}\n\nDAVE-MD`;
 
                 await sock.sendMessage(chatId, { 
+
                     text: promotionMessage,
+
                     mentions: [user]
+
                 });
+
             }
 
         } catch (error) {
-            await reply('Failed to promote user.');
+
+            await reply('Failed to promote user(s)!');
         }
     }
 },
     {
+
     name: "gjid",
+
     aliases: ["groupjid", "groupid"],
+
     description: "Get group JID/ID",
+
     category: "GROUP MENU",
+
     usage: ".gjid",
 
+    
+
     async execute(sock, m, args, context) {
+
         const from = m.key.remoteJid;
+
         const isGroup = from.endsWith("@g.us");
 
+        
+
         if (!isGroup) {
-            return await context.reply("This command is for groups only.");
+
+            return await context.reply( 
+
+                { text: "This command is for groups only!" }, 
+
+                { quoted: m }
+
+            );
+
         }
 
         try {
+
             const groupMetadata = await sock.groupMetadata(from);
 
-            await context.reply({
+            
+
+                        await context.reply({
                 text: `Group Information\n\nName: ${groupMetadata.subject}\nJID: ${from}\nMembers: ${groupMetadata.participants.length}\nCreated: ${new Date(groupMetadata.creation * 1000).toLocaleDateString()}\n\nDAVE-MD`
+
             }, { quoted: m });
 
         } catch (error) {
-            await context.reply(`Error getting group info: ${error.message}`, { quoted: m });
+
+            await context.reply( {
+
+                text: `❌ Error getting group info: ${error.message}`
+
+            }, { quoted: m });
+
         }
+
     }
+
 },
 {
+
     name: 'mute',
+
     aliases: ['silence'],
+
     category: 'GROUP MENU',
+
     description: 'Mute the group for specified minutes',
+
     usage: '.mute <minutes>',
-    execute: async (sock, message, args, context) {
+
+    execute: async (sock, message, args, context) => {
+
         const { reply, react, isSenderAdmin, isBotAdmin, chatId } = context;
 
         if (!isBotAdmin) {
-            return await reply('Bot must be admin first.');
+
+            return await reply('Please make the bot an admin first.');
+
         }
 
         if (!isSenderAdmin) {
+
             return await reply('Only group admins can use the mute command.');
+
         }
 
         const durationInMinutes = parseInt(args[1]) || 5;
-        await react('🔇');
+
+        await react('🐀');
+
         const durationInMilliseconds = durationInMinutes * 60 * 1000;
 
+        
+
         try {
+
             await sock.groupSettingUpdate(chatId, 'announcement');
-            await reply(`Group muted for ${durationInMinutes} minutes.`);
+
+            await reply(`The group has been muted for ${durationInMinutes} minutes.`);
 
             setTimeout(async () => {
+
                 await sock.groupSettingUpdate(chatId, 'not_announcement');
-                await sock.sendMessage(chatId, { text: 'Group unmuted.' });
+
+                await sock.sendMessage(chatId, { text: 'The group has been unmuted.' });
+
             }, durationInMilliseconds);
 
         } catch (error) {
-            await reply('Error muting group.');
+
+            await reply('An error occurred while muting/unmuting the group. Please try again.');
+
         }
+
     }
+
 }, 
   {
     name: 'unmute',
@@ -642,11 +1039,11 @@ export default [
     category: 'GROUP MENU',
     description: 'Unmute the group',
     usage: '.unmute',
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
         const { chatId, reply, react, isSenderAdmin, isBotAdmin } = context;
 
         if (!isBotAdmin) {
-            return await reply('Bot must be admin first.');
+            return await reply('Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
@@ -656,9 +1053,9 @@ export default [
         try {
             await react('🔊');
             await sock.groupSettingUpdate(chatId, 'not_announcement');
-            await reply('Group unmuted.');
+            await reply('The group has been unmuted.');
         } catch (error) {
-            await reply('Error unmuting group.');
+            await reply('An error occurred while unmuting the group. Please try again.');
         }
     }
 },
@@ -675,63 +1072,76 @@ export default [
         const isGroup = from.endsWith("@g.us");
 
         if (!isGroup) {
-            return await reply('This command is for groups only.');
+            return await reply('This command is for groups only!');
         }
 
         try {
             const groupMetadata = await sock.groupMetadata(from);
+
+            // Get group creator/owner
             const groupOwner = groupMetadata.owner;
 
+            // Get all participants with admin privileges INCLUDING the creator
             const allAdmins = groupMetadata.participants
                 .filter(p => p.admin === 'admin' || p.admin === 'superadmin' || p.id === groupOwner);
 
+            // Remove duplicates (in case creator is also listed as admin)
             const uniqueAdmins = allAdmins.filter((admin, index, self) =>
                 index === self.findIndex(a => a.id === admin.id)
             );
 
             if (uniqueAdmins.length === 0) {
-                return await reply("No admins found.");
+                return await reply("No admins found in this group");
             }
 
             const action = args[0]?.toLowerCase();
             const mentions = uniqueAdmins.map(admin => admin.id);
 
+            // Helper function to get display name or phone number
             const getDisplayName = (participant) => {
+                // Check if there's a saved name/contact name
                 if (participant.notify && participant.notify.trim() !== '') {
                     return participant.notify;
                 }
+                // Check if there's a display name in the group
                 if (participant.displayName && participant.displayName.trim() !== '') {
                     return participant.displayName;
                 }
+                // Fall back to clean phone number
                 const phoneNumber = participant.id.split('@')[0];
                 return phoneNumber;
             };
 
             if (action === 'tag') {
+                // Tag all admins with their names/numbers
                 const adminTags = uniqueAdmins.map(admin => {
                     const displayName = getDisplayName(admin);
                     return `@${displayName}`;
                 }).join(' ');
 
-                await reply(`Group Admins (${uniqueAdmins.length})\n\n${adminTags}`, { mentions });
+                await reply(
+                    `👑 Group Admins (${uniqueAdmins.length})\n\n${adminTags}\n${global.watermark}`,
+                    { mentions }
+                );
 
             } else {
-                let adminList = `Group Admins (${uniqueAdmins.length})\n\n`;
+                // List admins with proper roles and names/numbers
+                let adminList = `👑 Group Admins (${uniqueAdmins.length})\n\n`;
 
                 uniqueAdmins.forEach((admin, index) => {
                     const displayName = getDisplayName(admin);
                     let role;
 
                     if (admin.id === groupOwner) {
-                        role = 'Creator';
+                        role = '👑 Creator';
                     } else {
-                        role = 'Admin';
+                        role = '⭐ Admin';
                     }
 
-                    adminList += `${index + 1}. ${role}: @${displayName}\n`;
+                    adminList += `${index + 1}.${role}: @${displayName}\n`;
                 });
 
-                adminList += `\nUse .admins tag to mention all admins`;
+                adminList += `\nUse .admins tag to mention all admins\n${global.watermark}`;
 
                 await reply(adminList, { mentions });
             }
@@ -747,7 +1157,7 @@ export default [
     category: 'GROUP MENU',
     description: 'Tag all group members',
     usage: '.tagall [message]',
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
         const { chatId, reply, react, senderIsSudo, isSenderAdmin, isBotAdmin, rawText } = context;
 
         if (!chatId.endsWith('@g.us')) {
@@ -755,26 +1165,26 @@ export default [
         }
 
         if (!isSenderAdmin && !isBotAdmin) {
-            return await reply('Only admins can use the tagall command.');
+            return await reply('Only admins can use the .tagall command.');
         }
         if (!senderIsSudo){
-            return await reply('Only owner can use the tagall command.');
-        }
+            return await reply('Only owner can use the .tagall command.');
+    }
 
         try {
-            await react('📢');
+            await react('💰');
 
             const groupMetadata = await sock.groupMetadata(chatId);
             const participants = groupMetadata.participants;
 
             if (!participants || participants.length === 0) {
-                return await reply('No participants found.');
+                return await reply('No participants found in the group.');
             }
 
             const customMessage = rawText.split(' ').slice(1).join(' ').trim();
-
-            let message = customMessage ? `Announcement:\n${customMessage}` : 'Group Members:\n';
-
+            
+            let message = customMessage ? `📢 Announcement:\n${customMessage}` : '🔊 Group Members:\n';
+            
             participants.forEach(participant => {
                 message += `@${participant.id.split('@')[0]}\n`;
             });
@@ -789,43 +1199,43 @@ export default [
             await reply('Failed to tag all members.');
         }
     }
-},
- {
+    },
+     {
     name: 'tagnotadmin',
     aliases: [],
     category: 'GROUP',
     description: 'Tag all non-admin members in the group',
     usage: '.tagnotadmin',
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
         const { reply, react, isSenderAdmin, isBotAdmin,isGroup, chatId,senderId } = context;
         try {
             if (!isGroup) {
-                return await reply('This command can only be used in groups.');
+                return await reply('This command can only be used in groups!');
             }
 
             if (!isBotAdmin) {
                 await react('❌');
-                return await reply('Bot must be admin first.');
+                return await reply('Please make the bot an admin first.');
             }
 
             if (!isSenderAdmin) {
-                await react('🚫');
+                await react('🙂');
                 return await reply('Only admins can use this command.');
             }
 
-            await react('⏳');
+            await react('⭐');
 
             const groupMetadata = await sock.groupMetadata(chatId);
             const participants = groupMetadata.participants || [];
 
             const nonAdmins = participants.filter(p => !p.admin).map(p => p.id);
-
+            
             if (nonAdmins.length === 0) {
-                await react('ℹ️');
+                await react('👾');
                 return await reply('No non-admin members to tag.');
             }
 
-            let text = 'Tagging Members:\n\n';
+            let text = 'Tagging All Members:\n\n';
             nonAdmins.forEach(jid => {
                 text += `@${jid.split('@')[0]}\n`;
             });
@@ -838,9 +1248,9 @@ export default [
             await react('✅');
 
         } catch (error) {
-            console.error('TagNotAdmin Error:', error.message);
+            console.error('[TAGNOTADMIN] Error:', error.message);
             await react('❌');
-            await reply('Failed to tag non-admin members.');
+            await reply('⚠️ Failed to tag non-admin members.');
         }
     }
 },
@@ -850,83 +1260,95 @@ export default [
     category: 'GROUP',
     description: 'Tag all admin members in the group',
     usage: '.tagadmin',
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
         const { reply, react, senderId, isSenderAdmin, isGroup, isBotAdmin, chatId } = context;
 
         try {
             if (!isGroup) {
-                return await reply('This command can only be used in groups.');
+                return await reply('This command can only be used in groups!');
             }
 
             if (!isBotAdmin) {
-                await react('❌');
-                return await reply('Bot must be admin first.');
+                await react('⭐');
+                return await reply('Please make the bot an admin first.');
             }
 
             if (!isSenderAdmin) {
-                await react('🚫');
+                await react('⭐');
                 return await reply('Only admins can use this command.');
             }
 
-            await react('⏳');
+            await react('⭐');
 
             const groupMetadata = await sock.groupMetadata(chatId);
             const participants = groupMetadata.participants || [];
 
+            // ✅ Filter admins
             const admins = participants.filter(p => p.admin);
 
             if (admins.length === 0) {
-                await react('ℹ️');
+                await react('⭐');
                 return await reply('No admin members to tag.');
             }
 
-            let text = 'Tagging Admins:\n\n';
+            // ✅ Build mention text
+            let text = '🔊 Tagging All Admins:\n\n';
             admins.forEach(p => {
                 text += `@${p.id.split('@')[0]}\n`;
             });
 
-            await sock.sendMessage(chatId, { text, mentions: admins.map(a => a.id) }, { quoted: message });
-            await react('✅');
+            // ✅ Send message with mentions
+            await sock.sendMessage(
+                chatId,
+                {
+                    text,
+                    mentions: admins.map(a => a.id)
+                },
+                { quoted: message }
+            );
+
+            await react('⭐');
 
         } catch (error) {
-            console.error('TagAdmin Error:', error.message);
+            console.error('[TAGADMIN] Error:', error.message);
             await react('❌');
             await reply('Failed to tag admin members.');
         }
     }
 },
+
 {
     name: 'setgpp',
     aliases: ['setgphoto'],
     category: 'GROUP',
-    description: 'Change group profile picture',
+    description: 'Change group profile picture (Admin only)',
     usage: 'Reply to an image with .setgpp',
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
         const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = context;
 
         if (!isGroup) {
-            return await reply('This command can only be used in groups.');
+            return await reply('❌ This command can only be used in groups.');
         }
 
         if (!isBotAdmin) {
-            await react('❌');
-            return await reply('Bot must be admin first.');
+            await react('⭐');
+            return await reply('Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
-            await react('🚫');
+            await react('⭐');
             return await reply('Only group admins can use this command.');
         }
 
         const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         const imageMessage = quoted?.imageMessage || quoted?.stickerMessage;
-
+        
         if (!imageMessage) {
             return await reply('Reply to an image or sticker with .setgpp');
         }
 
         try {
-            await react('⏳');
+            await react('⭐');
 
             const tmpDir = path.join(process.cwd(), 'tmp');
             if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
@@ -939,13 +1361,13 @@ export default [
             fs.writeFileSync(imgPath, buffer);
 
             await sock.updateProfilePicture(chatId, { url: imgPath });
-
+            
             try { fs.unlinkSync(imgPath); } catch (_) {}
-
+            
             await react('✅');
-            await reply('Group profile photo updated.');
+            await reply('Group profile photo updated successfully!');
         } catch (e) {
-            console.error('SetGPP Error:', e.message);
+            console.error('[SETGPP] Error:', e.message);
             await react('❌');
             await reply('Failed to update group profile photo.');
         }
@@ -955,10 +1377,10 @@ export default [
     name: 'setgname',
     aliases: [],
     category: 'GROUP',
-    description: 'Change group name',
+    description: 'Change group name (Admin only)',
     usage: '.setgname <new name>',
-    execute: async (sock, message, args, context) {
-        const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = context;
+    execute: async (sock, message, args, context) => {
+const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = context;
 
         if (!isGroup) {
             return await reply('This command can only be used in groups.');
@@ -966,29 +1388,29 @@ export default [
 
         if (!isBotAdmin) {
             await react('❌');
-            return await reply('Bot must be admin first.');
+            return await reply('Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
-            await react('🚫');
+            await react('⭐');
             return await reply('Only group admins can use this command.');
         }
 
         const name = args.slice(1).join(' ').trim();
-
+        
         if (!name) {
-            return await reply('Usage: .setgname <new name>');
+            return await reply('Usage: .setgname <new name>\n\nExample: .setgname Cool Squad 2025');
         }
 
         try {
-            await react('⏳');
+            await react('⭐');
             await sock.groupUpdateSubject(chatId, name);
             await react('✅');
-            await reply(`Group name updated to: ${name}`);
+            await reply(`Group name updated to: *${name}*`);
         } catch (e) {
-            console.error('SetGName Error:', e.message);
+            console.error('[SETGNAME] Error:', e.message);
             await react('❌');
-            await reply('Failed to update group name.');
+            await reply('❌ Failed to update group name.');
         }
     }
 },
@@ -996,9 +1418,9 @@ export default [
     name: 'setgdesc',
     aliases: ['setdesc', 'gdesc'],
     category: 'GROUP',
-    description: 'Change group description',
+    description: 'Change group description (Admin only)',
     usage: '.setgdesc <new description>',
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
         const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = context;
 
         if (!isGroup) {
@@ -1006,30 +1428,30 @@ export default [
         }
 
         if (!isBotAdmin) {
-            await react('❌');
-            return await reply('Bot must be admin first.');
+            await react('⭐');
+            return await reply('Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
-            await react('🚫');
+            await react('⭐');
             return await reply('Only group admins can use this command.');
         }
 
         const desc = args.slice(1).join(' ').trim();
-
+        
         if (!desc) {
-            return await reply('Usage: .setgdesc <description>');
+            return await reply('Usage: .setgdesc <description>\n\nExample: .setgdesc Welcome to our amazing group!');
         }
 
         try {
-            await react('⏳');
+            await react('⭐');
             await sock.groupUpdateDescription(chatId, desc);
             await react('✅');
-            await reply('Group description updated.');
+            await reply('Group description updated successfully!');
         } catch (e) {
-            console.error('SetGDesc Error:', e.message);
+            console.error('[SETGDESC] Error:', e.message);
             await react('❌');
-            await reply('Failed to update group description.');
+            await reply('❌ Failed to update group description.');
         }
     }
 },
@@ -1037,9 +1459,9 @@ export default [
     name: 'resetlink',
     aliases: ['revoke', 'newlink'],
     category: 'GROUP',
-    description: 'Reset group invite link',
+    description: 'Reset group invite link (Admin only)',
     usage: '.resetlink',
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
         const { chatId, senderId, reply, isSenderAdmin, isBotAdmin,react, isGroup } = context;
 
         if (!isGroup) {
@@ -1047,23 +1469,23 @@ export default [
         }
 
         if (!isBotAdmin) {
-            await react('❌');
-            return await reply('Bot must be admin first.');
+            await react('⭐');
+            return await reply('Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
-            await react('🚫');
+            await react('⭐');
             return await reply('Only group admins can use this command.');
         }
 
         try {
-            await react('⏳');
+            await react('⭐');
             await sock.groupRevokeInvite(chatId);
             const code = await sock.groupInviteCode(chatId);
             await react('✅');
-            await reply(`New group link:\n\nhttps://chat.whatsapp.com/${code}\n\nPrevious link revoked.`);
+            await reply(`🔗 *The New group invite link:*\n\nhttps://chat.whatsapp.com/${code}\n\n_Previous link has been revoked!_`);
         } catch (e) {
-            console.error('ResetLink Error:', e.message);
+            console.error('[RESETLINK] Error:', e.message);
             await react('❌');
             await reply('Failed to reset group link.');
         }
@@ -1073,9 +1495,9 @@ export default [
     name: 'poll',
     aliases: ['createpoll', 'vote'],
     category: 'GROUP',
-    description: 'Create a poll in the group',
+    description: 'Create a poll in the group (Admin only)',
     usage: '.poll "Question?" | Option1, Option2, Option3',
-    execute: async (sock, message, args, context) {
+    execute: async (sock, message, args, context) => {
         const { chatId, senderId, reply, react,isSenderAdmin, isBotAdmin, isGroup } = context;
 
         if (!isGroup) {
@@ -1083,35 +1505,35 @@ export default [
         }
 
         if (!isBotAdmin) {
-            await react('❌');
-            return await reply('Bot must be admin first.');
+            await react('⭐');
+            return await reply('Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
-            await react('🚫');
+            await react('⭐');
             return await reply('Only group admins can use this command.');
         }
 
         const text = args.slice(1).join(' ').trim();
 
         if (!text) {
-            return await reply('Usage: .poll "Question?" | Option1, Option2, Option3');
+            return await reply('Usage: .poll "Question?" | Option1, Option2, Option3\n\nExample: .poll "Favorite color?" | Red, Blue, Green');
         }
 
         const [questionPart, optionsPart] = text.split('|').map(t => t.trim());
-
+        
         if (!questionPart || !optionsPart) {
-            return await reply('Invalid format.\nExample: .poll "Favorite color?" | Red, Blue, Green');
+            return await reply('Invalid format.\n\n📊 Example: .poll "Favorite color?" | Red, Blue, Green');
         }
 
         const options = optionsPart.split(',').map(opt => opt.trim()).filter(opt => opt.length);
-
+        
         if (options.length < 2) {
-            return await reply('At least 2 options required.');
+            return await reply('Please provide at least 2 options.');
         }
 
         try {
-            await react('⏳');
+            await react('⭐');
             await sock.sendMessage(chatId, {
                 poll: {
                     name: questionPart,
@@ -1119,12 +1541,12 @@ export default [
                 }
             });
             await react('✅');
-            await reply('Poll created.');
+            await reply('✅ Poll created successfully!');
         } catch (e) {
-            console.error('Poll Error:', e.message);
+            console.error('[POLL] Error:', e.message);
             await react('❌');
             await reply('Failed to create poll.');
         }
     }
 }
-];
+    ];
