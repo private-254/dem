@@ -2,7 +2,7 @@ const settings = {
 
   botName: "DAVE-MD",
   
-  botOwner: 'eminentboy', //Ur-Name
+  botOwner: 'Dave', //Ur-Name
   
   ownerNumber: '', //👈input ur phone number in-between empty '',
 
@@ -10,11 +10,11 @@ const settings = {
 
   prefix: '.',
 
-  defaultReaction: '✅',  // Fixed
+  defaultReaction: '✅',  
 
   errorReaction: '❌',
 
- watermark: "©DAVE-MD is on fire!🔥",
+ watermark: "© DAVE-TECH!",
 
   Mode: "private",
 
