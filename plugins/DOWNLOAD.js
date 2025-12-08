@@ -659,21 +659,20 @@ execute: async (sock, message, args, context) => {
         const text = args.slice(1).join(" ");
 
         if (!text) {
-            return await context.reply("❌ What song do you want to download?\n\nExample: `.play spectre`");
+            return await context.reply("Please provide a song name.\n\nExample: .play spectre");
         }
 
         try {
             const { videos } = await yts(text);
             if (!videos || videos.length === 0) {
-                return await context.reply("❌ No songs found!");
+                return await context.reply("No songs found.");
             }
 
-            await context.replyPlain("🎵 Please wait, fetching your song...");
+            await context.replyPlain("Processing your request...");
 
             const video = videos[0];
             const urlYt = video.url;
 
-            // Call Keith API
             const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(urlYt)}`;
             const response = await axios.get(apiUrl, {
                 timeout: 45000,
@@ -682,18 +681,16 @@ execute: async (sock, message, args, context) => {
 
             const data = response.data;
 
-            // ✅ Updated JSON structure check
             if (!data.status || !data.result || !data.result.data) {
-                return await context.replyPlain("❌ Failed to fetch song data from API.");
+                return await context.replyPlain("Failed to fetch song data.");
             }
 
             const song = data.result.data;
 
             if (!song.downloadUrl) {
-                return await context.replyPlain("❌ No download URL found in API response.");
+                return await context.replyPlain("Download URL not found.");
             }
 
-            // Helpers
             const formatDuration = (seconds) => {
                 const mins = Math.floor(seconds / 60);
                 const secs = seconds % 60;
@@ -704,28 +701,17 @@ execute: async (sock, message, args, context) => {
                 return views ? views.toLocaleString() : 'Unknown';
             };
 
-            // Info
             const title = song.title || video.title;
             const duration = formatDuration(video.duration.seconds || song.duration);
             const views = formatViews(video.views);
             const author = video.author?.name || 'Unknown Artist';
             const thumbnail = song.thumbnail || video.thumbnail;
 
-            // Send song info
             await context.replyPlain({
                 image: { url: thumbnail },
-                caption: `🎵 ${title}
-⏱️ Duration: ${duration}
-👤 Artist: ${author}
-👁️ Views: ${views}
-🔗 Link: ${urlYt}
-
-Reply with:
-🅰️ - For Audio Format 🎵
-🇩 - For Document Format 📄`
+                caption: `Title: ${title}\nDuration: ${duration}\nArtist: ${author}\nViews: ${views}\nURL: ${urlYt}\n\nSelect format:\nA - Audio\nD - Document`
             }, { quoted: msg });
 
-            // Store download info for follow-up
             global.playQueue = global.playQueue || {};
             global.playQueue[from] = {
                 audioUrl: song.downloadUrl,
@@ -736,450 +722,186 @@ Reply with:
             };
 
         } catch (error) {
-            console.error('❌ Error in play command:', error);
+            console.error('Error in play command:', error);
 
-            let errorMessage = "❌ Download failed. Please try again later.";
+            let errorMessage = "Failed to download song.";
 
             if (error.code === 'ENOTFOUND') {
-                errorMessage = "❌ Network error. Check your internet connection.";
+                errorMessage = "Network error.";
             } else if (error.response?.status === 429) {
-                errorMessage = "❌ Too many requests. Please wait a moment and try again.";
+                errorMessage = "Too many requests.";
             } else if (error.message.includes('timeout')) {
-                errorMessage = "❌ Request timeout. The server took too long to respond.";
+                errorMessage = "Request timeout.";
             }
 
             await context.reply(errorMessage);
         }
     }
 },
-   {
-
+{
     name: 'tiktok',
-
     aliases: ['tt', 'tiktokdl', 'tiktokvideo'],
-
     category: 'downloader',
-
     description: 'Download TikTok videos',
-
     usage: 'tiktok <tiktok_url>',
 
-    
-
     async execute(sock, message, args, context) {
-
         try {
-
             const { chatId, reply, react } = context;
 
-            
-
-            // Check if message has already been processed
-
             if (processedMessages.has(message.key.id)) {
-
                 return;
-
             }
-
-            
-
-            // Add message ID to processed set
 
             processedMessages.add(message.key.id);
 
-            
-
-            // Clean up old message IDs after 5 minutes
-
             setTimeout(() => {
-
                 processedMessages.delete(message.key.id);
-
             }, 5 * 60 * 1000);
-
-            // Get URL from args
 
             const url = args.slice(1).join(' ').trim();
 
-            
-
             if (!url) {
-
-                return await reply({
-
-                    text: "❌ Please provide a TikTok link!\n\n📝 Usage: .tiktok <tiktok_url>",
-
-                    ...channelInfo
-
-                });
-
+                return await reply("Please provide a TikTok URL.\n\nUsage: .tiktok <url>");
             }
-
-            // Check for various TikTok URL formats
 
             const tiktokPatterns = [
-
                 /https?:\/\/(?:www\.)?tiktok\.com\//,
-
                 /https?:\/\/(?:vm\.)?tiktok\.com\//,
-
                 /https?:\/\/(?:vt\.)?tiktok\.com\//,
-
                 /https?:\/\/(?:www\.)?tiktok\.com\/@/,
-
                 /https?:\/\/(?:www\.)?tiktok\.com\/t\//
-
             ];
-
             const isValidUrl = tiktokPatterns.some(pattern => pattern.test(url));
 
-            
-
             if (!isValidUrl) {
-
-                return await reply({
-
-                    text: "❌ That is not a valid TikTok link!\n\n📝 Please provide a valid TikTok video link.",
-
-                    ...channelInfo
-
-                });
-
+                return await reply("Invalid TikTok URL.");
             }
-
-            // Show processing reaction
 
             await react('🔄');
 
             try {
-
-                // Try multiple APIs in sequence
-
                 const apis = [
-
                     `https://api.princetechn.com/api/download/tiktok?apikey=prince&url=${encodeURIComponent(url)}`,
-
                     `https://api.princetechn.com/api/download/tiktokdlv2?apikey=prince&url=${encodeURIComponent(url)}`,
-
                     `https://api.princetechn.com/api/download/tiktokdlv3?apikey=prince&url=${encodeURIComponent(url)}`,
-
                     `https://api.princetechn.com/api/download/tiktokdlv4?apikey=prince&url=${encodeURIComponent(url)}`,
-
                     `https://api.dreaded.site/api/tiktok?url=${encodeURIComponent(url)}`
-
                 ];
 
                 let videoUrl = null;
-
                 let audioUrl = null;
-
                 let title = null;
 
-                // Try each API until one works
-
                 for (const apiUrl of apis) {
-
                     try {
-
                         const response = await axios.get(apiUrl, { timeout: 10000 });
 
-                        
-
                         if (response.data) {
-
-                            // Handle different API response formats
-
                             if (response.data.result && response.data.result.videoUrl) {
-
-                                // PrinceTech API format
-
                                 videoUrl = response.data.result.videoUrl;
-
                                 audioUrl = response.data.result.audioUrl;
-
                                 title = response.data.result.title;
-
                                 break;
-
                             } else if (response.data.tiktok && response.data.tiktok.video) {
-
-                                // Dreaded API format
-
                                 videoUrl = response.data.tiktok.video;
-
                                 break;
-
                             } else if (response.data.video) {
-
-                                // Alternative format
-
                                 videoUrl = response.data.video;
-
                                 break;
-
                             }
-
                         }
-
                     } catch (apiError) {
-
-                        console.error(`TikTok API failed: ${apiError.message}`);
-
                         continue;
-
                     }
-
                 }
-
-                // If no API worked, try the original ttdl method
 
                 if (!videoUrl) {
-
-                    let downloadData = await ttdl(url);
-
-                    if (downloadData && downloadData.data && downloadData.data.length > 0) {
-
-                        const mediaData = downloadData.data;
-
-                        for (let i = 0; i < Math.min(20, mediaData.length); i++) {
-
-                            const media = mediaData[i];
-
-                            const mediaUrl = media.url;
-
-                            // Check if URL ends with common video extensions
-
-                            const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(mediaUrl) || 
-
-                                          media.type === 'video';
-
-                            if (isVideo) {
-
-                                await reply({
-
-                                    video: { url: mediaUrl },
-
-                                    mimetype: "video/mp4",
-
-                                    caption: "🎬 DOWNLOADED BY DAVE-MD\n\n💫 TikTok Video Downloaded Successfully!"
-
-                                });
-
-                            } else {
-
-                                await reply({
-
-                                    image: { url: mediaUrl },
-
-                                    caption: "🖼️ *DOWNLOADED BY DAVE-MD\n\n💫 TikTok Image Downloaded Successfully!"
-
-                                });
-
-                            }
-
-                        }
-
-                        await react('✅');
-
-                        return;
-
-                    }
-
+                    return await reply("Failed to download video.");
                 }
 
-                // Send the video if we got a URL from the APIs
-
-                if (videoUrl) {
-
-                    try {
-
-                        // Download video as buffer
-
-                        const videoResponse = await axios.get(videoUrl, {
-
-                            responseType: 'arraybuffer',
-
-                            timeout: 30000,
-
-                            headers: {
-
-                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-
-                            }
-
-                        });
-
-                        
-
-                        const videoBuffer = Buffer.from(videoResponse.data);
-
-                        
-
-                        const caption = title ? 
-
-                            `🎬 DOWNLOADED BY DAVE-MD\n\n📝 Title: ${title}\n💫 TikTok Video Downloaded Successfully!` : 
-
-                            "🎬 DOWNLOADED BY DAVE-MD\n\n💫 TikTok Video Downloaded Successfully!";
-
-                        
-
-                        await reply({
-
-                            video: videoBuffer,
-
-                            mimetype: "video/mp4",
-
-                            caption: caption
-
-                        });
-
-                        // If we have audio URL, download and send it as well
-
-                        if (audioUrl) {
-
-                            try {
-
-                                const audioResponse = await axios.get(audioUrl, {
-
-                                    responseType: 'arraybuffer',
-
-                                    timeout: 30000,
-
-                                    headers: {
-
-                                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-
-                                    }
-
-                                });
-
-                                
-
-                                const audioBuffer = Buffer.from(audioResponse.data);
-
-                                
-
-                                await reply({
-
-                                    audio: audioBuffer,
-
-                                    mimetype: "audio/mp3",
-
-                                    caption: "🎵 Audio from TikTok\n\n💫 Downloaded by DAVE-MD"
-
-                                });
-
-                            } catch (audioError) {
-
-                                console.error(`Failed to download audio: ${audioError.message}`);
-
-                            }
-
+                try {
+                    const videoResponse = await axios.get(videoUrl, {
+                        responseType: 'arraybuffer',
+                        timeout: 30000,
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                         }
+                    });
 
-                        
+                    const videoBuffer = Buffer.from(videoResponse.data);
 
-                        await react('✅');
+                    const caption = title ?
+                        `TikTok Video\nTitle: ${title}\nDownloaded by DAVE-MD` :
+                        "TikTok Video\nDownloaded by DAVE-MD";
 
-                        return;
+                    await reply({
+                        video: videoBuffer,
+                        mimetype: "video/mp4",
+                        caption: caption
+                    });
 
-                        
-
-                    } catch (downloadError) {
-
-                        console.error(`Failed to download video: ${downloadError.message}`);
-
-                        // Fallback to URL method
-
+                    if (audioUrl) {
                         try {
-
-                            const caption = title ? 
-
-                                `🎬 DOWNLOADED BY DAVE-MD\n\n📝 Title: ${title}\n💫 TikTok Video Downloaded Successfully!` : 
-
-                                "🎬 DOWNLOADED BY DAVE-MD\n\n💫 TikTok Video Downloaded Successfully!";
-
-                            
-
-                            await reply({
-
-                                video: { url: videoUrl },
-
-                                mimetype: "video/mp4",
-
-                                caption: caption
-
+                            const audioResponse = await axios.get(audioUrl, {
+                                responseType: 'arraybuffer',
+                                timeout: 30000,
+                                headers: {
+                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                                }
                             });
 
-                            
+                            const audioBuffer = Buffer.from(audioResponse.data);
 
-                            await react('✅');
-
-                            return;
-
-                            
-
-                        } catch (urlError) {
-
-                            console.error(`URL method also failed: ${urlError.message}`);
-
+                            await reply({
+                                audio: audioBuffer,
+                                mimetype: "audio/mp3",
+                                caption: "TikTok Audio\nDownloaded by DAVE-MD"
+                            });
+                        } catch (audioError) {
+                            console.error(`Failed to download audio: ${audioError.message}`);
                         }
-
                     }
 
+                    await react('✅');
+                    return;
+
+                } catch (downloadError) {
+                    console.error(`Failed to download video: ${downloadError.message}`);
+
+                    try {
+                        const caption = title ?
+                            `TikTok Video\nTitle: ${title}\nDownloaded by DAVE-MD` :
+                            "TikTok Video\nDownloaded by DAVE-MD";
+
+                        await reply({
+                            video: { url: videoUrl },
+                            mimetype: "video/mp4",
+                            caption: caption
+                        });
+
+                        await react('✅');
+                        return;
+
+                    } catch (urlError) {
+                        console.error(`URL method failed: ${urlError.message}`);
+                    }
                 }
 
-                // If we reach here, no method worked
-
                 await react('❌');
-
-                return await reply({
-
-                    text: "❌ Failed to download TikTok video!\n\n🔄 All download methods failed. Please try again with a different link or check if the video is available.",
-
-                    ...channelInfo
-
-                });
-
-                
+                return await reply("Download failed.");
 
             } catch (error) {
-
-                console.error('Error in TikTok download:', error);
-
+                console.error('TikTok download error:', error);
                 await react('❌');
-
-                await reply({
-
-                    text: "❌ Failed to download the TikTok video!\n\n🔄 Please try again with a different link.",
-
-                    ...channelInfo
-
-                });
-
+                await reply("Download error.");
             }
 
-            
-
         } catch (error) {
-
-            console.error('Error in TikTok command:', error);
-
+            console.error('TikTok command error:', error);
             await context.react('❌');
-
-            await context.reply({
-
-                text: "❌ An error occurred while processing the request!\n\n🔄 Please try again later.",
-
-                ...channelInfo
-
-            });
-
+            await context.reply("Command error.");
         }
-
     }
-
 }
-
-];
+    
