@@ -1,3 +1,10 @@
+import settings from '../settings.js';
+import isAdmin from '../lib/isAdmin.js';
+import { downloadContentFromMessage } from '@whiskeysockets/baileys';
+import fs from 'fs';
+import path from 'path';
+export default [ 
+
 {
     name: "remove",
     aliases: ["kick", "removemember"],
