@@ -11,7 +11,7 @@ global.Ai= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗔𝗶_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗔𝗶_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }}};
 
 /**2*/ global.sora= {
@@ -22,7 +22,7 @@ global.Ai= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗦𝗢𝗥𝗔_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗦𝗢𝗥𝗔_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -37,7 +37,7 @@ global.sticker= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗦𝗧𝗜𝗖𝗞𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗦𝗧𝗜𝗖𝗞𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -50,7 +50,7 @@ global.MediaInfo= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗠𝗘𝗗𝗜𝗔𝗜𝗡𝗙𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗠𝗘𝗗𝗜𝗔𝗜𝗡𝗙𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -64,7 +64,7 @@ global.emojimix= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗘𝗠𝗢𝗝𝗜𝗠𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗘𝗠𝗢𝗝𝗜𝗠𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -79,7 +79,7 @@ global.apk= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗔𝗣𝗞_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗔𝗣𝗞_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -92,7 +92,7 @@ global.download= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗗𝗢𝗪𝗡𝗟𝗢𝗔𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -105,7 +105,7 @@ global.gdrive= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗚𝗗𝗥𝗜𝗩𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗚𝗗𝗥𝗜𝗩𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -118,7 +118,7 @@ global.gitclone = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n${prefix}𝗚𝗜𝗧𝗖𝗟𝗢𝗡𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬\n${prefix}𝗚𝗜𝗧𝗖𝗟𝗢𝗡𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -134,7 +134,7 @@ global.work = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗪𝗢𝗥𝗞_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗪𝗢𝗥𝗞_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -147,7 +147,7 @@ global.transfer = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗧𝗥𝗔𝗡𝗦𝗙𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗧𝗥𝗔𝗡𝗦𝗙𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -160,7 +160,7 @@ global.gamble = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗚𝗔𝗠𝗕𝗟𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗚𝗔𝗠𝗕𝗟𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -173,7 +173,7 @@ global.learderboard = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗟𝗘𝗔𝗗𝗘𝗥𝗕𝗢𝗔𝗥𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗟𝗘𝗔𝗗𝗘𝗥𝗕𝗢𝗔𝗥𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -186,7 +186,7 @@ global.daily = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗗𝗔𝗜𝗟𝗬_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗗𝗔𝗜𝗟𝗬_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -199,7 +199,7 @@ global.balance = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗕𝗔𝗟𝗔𝗡𝗖𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗕𝗔𝗟𝗔𝗡𝗖𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -215,7 +215,7 @@ global.vv= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗩𝗩_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗩𝗩_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -228,7 +228,7 @@ global.owner= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗢𝗪𝗡𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗢𝗪𝗡𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -241,7 +241,7 @@ global.prfx = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗣𝗥𝗘𝗙𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗣𝗥𝗘𝗙𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -254,7 +254,7 @@ global.setprefix = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗦𝗘𝗧𝗣𝗥𝗘𝗙𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗦𝗘𝗧𝗣𝗥𝗘𝗙𝗜𝗫_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -267,7 +267,7 @@ global.listcmd = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗟𝗜𝗦𝗧𝗖𝗠𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗟𝗜𝗦𝗧𝗖𝗠𝗗_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -280,7 +280,7 @@ global.url= {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗨𝗥𝗟_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗨𝗥𝗟_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -293,7 +293,7 @@ global.creategc = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗖𝗥𝗘𝗔𝗧𝗘𝗚𝗖_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗖𝗥𝗘𝗔𝗧𝗘𝗚𝗖_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -306,7 +306,7 @@ global.pdf = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗣𝗗𝗙_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗣𝗗𝗙_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -321,7 +321,7 @@ global.textmaker = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗧𝗘𝗫𝗧𝗠𝗔𝗞𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗧𝗘𝗫𝗧𝗠𝗔𝗞𝗘𝗥_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -334,7 +334,7 @@ global.fliptext = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗙𝗟𝗜𝗣𝗧𝗘𝗫𝗧_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗙𝗟𝗜𝗣𝗧𝗘𝗫𝗧_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -349,7 +349,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗔𝗡𝗜𝗠𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗔𝗡𝗜𝗠𝗘_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -362,7 +362,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗜𝗡𝗦𝗨𝗟𝗧_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗜𝗡𝗦𝗨𝗟𝗧_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -375,7 +375,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗤𝗨𝗢𝗧𝗘𝗦_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗤𝗨𝗢𝗧𝗘𝗦_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -388,7 +388,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗫𝗫𝗤𝗖_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗫𝗫𝗤𝗖_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -402,7 +402,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗛𝗔𝗡𝗚𝗠𝗔𝗡_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗛𝗔𝗡𝗚𝗠𝗔𝗡_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -416,7 +416,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗠𝗘𝗡𝗨_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗠𝗘𝗡𝗨_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -429,7 +429,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗦𝗘𝗧𝗠𝗘𝗡𝗨_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗦𝗘𝗧𝗠𝗘𝗡𝗨_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -441,7 +441,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗦𝗘𝗧𝗠𝗘𝗡𝗨𝗜𝗠𝗚_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗦𝗘𝗧𝗠𝗘𝗡𝗨𝗜𝗠𝗚_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -454,7 +454,7 @@ global.anime = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗠𝗔𝗨𝗗𝗜𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗠𝗔𝗨𝗗𝗜𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -467,7 +467,7 @@ global.menuInfo = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||${prefix}𝗠𝗘𝗡𝗨𝗜𝗡𝗙𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
+      text: `🇳🇬:DAVE-MD:🇳🇬||${prefix}𝗠𝗘𝗡𝗨𝗜𝗡𝗙𝗢_𝗖𝗢𝗠𝗠𝗔𝗡𝗗`
     }
   }
 };
@@ -483,7 +483,7 @@ global.TZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||🌟${prefix}𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
+      text: `🇳🇬:DAVE-MD:🇳🇬||🌟${prefix}𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
     }
   }
 };
@@ -496,7 +496,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||🌟${prefix}𝐒𝐄𝐓𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
+      text: `🇳🇬:DAVE-MD:🇳🇬||🌟${prefix}𝐒𝐄𝐓𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
     }
   }
 };
@@ -508,7 +508,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||🌟${prefix}𝐅𝐈𝐍𝐃𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
+      text: `🇳🇬:DAVE-MD:🇳🇬||🌟${prefix}𝐅𝐈𝐍𝐃𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
     }
   }
 };
@@ -520,7 +520,7 @@ global.STZ = {
   },
   message: {
     extendedTextMessage: {
-      text: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬||🌟${prefix}𝐑𝐄𝐒𝐄𝐓𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
+      text: `🇳🇬:DAVE-MD:🇳🇬||🌟${prefix}𝐑𝐄𝐒𝐄𝐓𝐓𝐈𝐌𝐄𝐙𝐎𝐍𝐄_𝐂𝐎𝐌𝐌𝐀𝐍𝐃🌟`
     }
   }
 };

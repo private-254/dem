@@ -303,10 +303,10 @@ global.botName = getSetting('botName', settings.botName);
 global.botOwner = getSetting('botOwner', settings.botOwner);
 global.version = getSetting('version', settings.version);
 global.author = "DAVE";
-global.channelLink = "https://whatsapp.com/channel/0029Va90zAnIHphOuO8Msp3A";
+global.channelLink = "https://whatsapp.com/channel/0029VbApvFQ2Jl84lhONkc3k";
 global.dev = "254104260236";
-global.devgit = "https://github.com/gifteddevsmd/OfficialDAVE-MD";
-global.devyt = "@officialDAVE-MD";
+global.devgit = "https://github.com/gifteddevsmd/DAVE-MD";
+global.devyt = "@davlodavlo19";
 global.ytch = "Mr Unique Hacker";
 global.getCurrentTime = getCurrentTime;
 global.getCurrentTimezone = getCurrentTimezone;
@@ -807,7 +807,7 @@ XeonBotInc.ev.on('connection.update', async (s) => {
         },
         message: {
             contactMessage: {
-              displayName: `🇳🇬:𝗚𝗜𝗙𝗧_𝗠𝗗:🇳🇬\n🌟:𝗕𝗢𝗢𝗧 𝗠𝗘𝗦𝗦𝗔𝗚𝗘:🌟`,
+              displayName: `🇳🇬:DAVE-MD:🇳🇬\n🌟:LAST TIME is know:🌟`,
                 vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE-AI\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
 
             }
