@@ -807,17 +807,13 @@ XeonBotInc.ev.on('connection.update', async (s) => {
             fromMe: false
         },
         message: {
-            contactMessage: {
-              displayName: `🇳🇬:DAVE-MD:🇳🇬\n🌟:LAST TIME is know:🌟`,
-                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE-AI\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
-
-            }
-
-        },
-
-        participant: "0@s.whatsapp.net"
-
-    };
+    contactMessage: {
+        displayName: "DAVE-MD Bot",
+        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE-MD\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Phone\nEND:VCARD`
+    }
+},
+participant: "0@s.whatsapp.net"
+};
 
 }
 
@@ -830,14 +826,24 @@ const fake= createFakeContact({
         const botNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
         
         // Send startup message
-        const time = global.getCurrentTime('time2')
-        try {
-            await XeonBotInc.sendMessage(botNumber, {
-                text: `╔═▣══════════▣╗\n║       ▣ DAVE-MD ▣     ║\n╚═▣══════════▣╝\n▣ Time: ${time}\n▣ Platform: ${global.server}\n▣ Status: active and steady!\n▣ Current prefix is: [ ${global.prefix} ]\n▣ ✅Do ur best to join below channel`, }, { quoted: fake});
-            console.log(chalk.green('[DAVE-MD] ✅ Startup message sent to User!'));
-        } catch (error) {
-            console.error(chalk.yellow('[DAVE-MD] ⚠️ Could not send startup message:'), error.message);
-        }
+const time = global.getCurrentTime('time2')
+try {
+    await XeonBotInc.sendMessage(botNumber, {
+        text: `
+┏━━━━━✧ DAVE-MD CONNECTED ✧━━━━━━━
+┃✧ Prefix: ${global.prefix}
+┃✧ Mode: ${global.mode || 'public'}
+┃✧ Platform: ${global.server}
+┃✧ Bot: DAVE-MD
+┃✧ Status: Active
+┃✧ Time: ${time}
+┃✧ Developer: DAVE
+┗━━━━━━━━━━━━━━━━━━━`, 
+    }, { quoted: fake});
+    console.log('[DAVE-MD] Startup message sent.');
+} catch (error) {
+    console.error('[DAVE-MD] Could not send startup message:', error.message);
+}
 
         await delay(1999)
         
