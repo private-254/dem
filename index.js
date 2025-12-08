@@ -308,10 +308,10 @@ global.channelLink = "https://whatsapp.com/channel/0029VbApvFQ2Jl84lhONkc3k";
 global.dev = "254104260236";
 global.devgit = "https://github.com/Daveeddevsmd/DAVE-MD";
 global.devyt = "@davlodavlo19";
-global.ytch = "Mr Unique Hacker";
+global.ytch = "Davke";
 global.getCurrentTime = getCurrentTime;
 global.getCurrentTimezone = getCurrentTimezone;
-global.channelLid = '120363403001461';
+global.channelLid = '120363400480173280';
 global.startTime = Date.now();
 
 const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code")
