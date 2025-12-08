@@ -10,643 +10,294 @@ import settings from '../settings.js';
 const processedMessages = new Set();
 
 export default [
-
   {
-
     name: 'apk',
-
     aliases: ['apkdl'],
-
     category: 'SETTINGS MENU',
-
     execute: async (sock, message, args, context) => {
-
       const text = args.slice(1).join(' ');
-
       if (!text) return context.reply("Which apk do you want to download?",{ quoted: global.apk});
 
-      
-
       try {
-
         let apiUrl = await fetchJson(`https://api.bk9.dev/search/apk?q=${text}`);
-
         let tylor = await fetchJson(`https://api.bk9.dev/download/apk?id=${apiUrl.BK9[0].id}`);
-
         await sock.sendMessage(
-
           context.chatId,
-
           {
-
             document: { url: tylor.BK9.dllink },
-
             fileName: tylor.BK9.name,
-
             mimetype: "application/vnd.android.package-archive",
-
             contextInfo: {
-
               externalAdReply: {
-
                 title: global.botName || "Knight Bot",
-
                 body: `${tylor.BK9.name}`,
-
                 thumbnailUrl: `${tylor.BK9.icon}`,
-
                 sourceUrl: `${tylor.BK9.dllink}`,
-
                 mediaType: 2,
-
                 showAdAttribution: true,
-
                 renderLargerThumbnail: false
-
               }
-
             }
-
           },{ quoted: global.apk}
-
         );
-
       } catch (error) {
-
         context.reply("❌ Error downloading APK. Please try again later.",{ quoted: global.apk});
-
       }
-
     }
-
   },
-
-  
-
   {
-
     name: 'download',
-
     category: 'downloader',
-
     execute: async (sock, message, args, context) => {
-
       const text = args.slice(1).join(' ');
-
       if (!text) return context.reply('Enter download URL',{ quoted: global.download});
 
-      
-
       try {
-
         let res = await fetch(text, { method: 'GET', redirect: 'follow' });
-
         let contentType = res.headers.get('content-type');
-
         let buffer = await res.buffer();
-
         let extension = contentType.split('/')[1]; 
-
         let filename = res.headers.get('content-disposition')?.match(/filename="(.*)"/)?.[1] || `download-${Math.random().toString(36).slice(2, 10)}.${extension}`;
-
         let mimeType;
-
         switch (contentType) {
-
           case 'audio/mpeg':
-
             mimeType = 'audio/mpeg';
-
             break;
-
           case 'image/png':
-
             mimeType = 'image/png';
-
             break;
-
           case 'image/jpeg':
-
             mimeType = 'image/jpeg';
-
             break;
-
           case 'application/pdf':
-
             mimeType = 'application/pdf';
-
             break;
-
           case 'application/zip':
-
             mimeType = 'application/zip';
-
             break;
-
           case 'video/mp4':
-
             mimeType = 'video/mp4';
-
             break;
-
           case 'video/webm':
-
             mimeType = 'video/webm';
-
             break;
-
           case 'application/vnd.android.package-archive':
-
             mimeType = 'application/vnd.android.package-archive';
-
             break;
-
           default:
-
             mimeType = 'application/octet-stream';
-
         }
-
         sock.sendMessage(context.chatId, { document: buffer, mimetype: mimeType, fileName: filename },{ quoted: global.download});
-
       } catch (error) {
-
         context.reply(`Error downloading file: ${error.message}`);
-
       }
-
     }
-
-  },/**
-    
- {name: 'facebook',
-aliases: ['fbdl'],
-category: 'downloader',
-
-execute: async (sock, message, args, context) => {
-  const text = args[0]; // take the first argument only
-
-  if (!text) return context.reply(`*Please provide a Facebook video url!*`);
-
-  try {
-    var dlink = await fetchJson(`https://api-aswin-sparky.koyeb.app/api/downloader/fbdl?url=${text}`);
-
-    if (!dlink.status || !dlink.data?.high) {
-      return context.reply("❌ Could not fetch video. Please check the link.");
-    }
-
-    var dlurl = dlink.data.high;
-
-    await sock.sendMessage(
-      context.chatId,
-      {
-        video: { url: dlurl },
-        caption: global.botName || "DAVE-MD",
-      },
-      { quoted: message }
-    );
-  } catch (error) {
-    console.error("Facebook download error:", error);
-    context.reply("❌ Error downloading Facebook video. Please try again later.");
-  }
-},*/
-  {
-
-    name: 'gdrive',
-
-    category: 'downloader',
-
-    execute: async (sock, message, args, context) => {
-
-      const text = args.slice(1).join(' ');
-
-      if (!text) return context.reply("Please provide a Google Drive file URL",{ quoted: global.gdrive});
-
-      try {
-
-        let response = await fetch(`https://api.siputzx.my.id/api/d/gdrive?url=${encodeURIComponent(text)}`);
-
-        let data = await response.json();
-
-        if (response.status !== 200 || !data.status || !data.data) {
-
-          return context.reply("Please try again later or try another command!",{quoted: global.gdrive});
-
-        } else {
-
-          const downloadUrl = data.data.download;
-
-          const filePath = path.join(__dirname, `${data.data.name}`);
-
-          const writer = fs.createWriteStream(filePath);
-
-          const fileResponse = await axios({
-
-            url: downloadUrl,
-
-            method: 'GET',
-
-            responseType: 'stream'
-
-          });
-
-          fileResponse.data.pipe(writer);
-
-          writer.on('finish', async () => {
-
-            await sock.sendMessage(context.chatId, {
-
-              document: { url: filePath },
-
-              fileName: data.data.name,
-
-              mimetype: fileResponse.headers['content-type']
-
-            },{quoted: global.gdrive});
-
-            fs.unlinkSync(filePath);
-
-          });
-
-          writer.on('error', (err) => {
-
-            console.error('Error downloading the file:', err);
-
-            context.reply("An error occurred while downloading the file.",{quoted: global.gdrive});
-
-          });
-
-        }
-
-      } catch (error) {
-
-        console.error('Error fetching Google Drive file details:', error);
-
-        context.reply("❌ Error downloading Google Drive file. Please try again later.");
-
-      }
-
-    }
-
   },
-
-  
-
   {
-
-    name: 'gitclone',
-
+    name: 'gdrive',
     category: 'downloader',
-
     execute: async (sock, message, args, context) => {
-
       const text = args.slice(1).join(' ');
-
+      if (!text) return context.reply("Please provide a Google Drive file URL",{ quoted: global.gdrive});
+      try {
+        let response = await fetch(`https://api.siputzx.my.id/api/d/gdrive?url=${encodeURIComponent(text)}`);
+        let data = await response.json();
+        if (response.status !== 200 || !data.status || !data.data) {
+          return context.reply("Please try again later or try another command!",{quoted: global.gdrive});
+        } else {
+          const downloadUrl = data.data.download;
+          const filePath = path.join(__dirname, `${data.data.name}`);
+          const writer = fs.createWriteStream(filePath);
+          const fileResponse = await axios({
+            url: downloadUrl,
+            method: 'GET',
+            responseType: 'stream'
+          });
+          fileResponse.data.pipe(writer);
+          writer.on('finish', async () => {
+            await sock.sendMessage(context.chatId, {
+              document: { url: filePath },
+              fileName: data.data.name,
+              mimetype: fileResponse.headers['content-type']
+            },{quoted: global.gdrive});
+            fs.unlinkSync(filePath);
+          });
+          writer.on('error', (err) => {
+            console.error('Error downloading the file:', err);
+            context.reply("An error occurred while downloading the file.",{quoted: global.gdrive});
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching Google Drive file details:', error);
+        context.reply("❌ Error downloading Google Drive file. Please try again later.");
+      }
+    }
+  },
+  {
+    name: 'gitclone',
+    category: 'downloader',
+    execute: async (sock, message, args, context) => {
+      const text = args.slice(1).join(' ');
       if (!text)
-
         return context.reply(`GitHub link to clone?\nExample :\n${global.prefix}gitclone https://github.com/Dark-Xploit/CypherX`, { quoted: global.gitclone });
 
-      
-
       if (!isUrl(text))
-
         return context.reply("Link invalid! Please provide a valid URL.");
-
       const regex1 = /(?:https|git)(?::\/\/|@)(www\.)?github\.com[\/:]([^\/:]+)\/(.+)/i;
-
       const [, , user, repo] = text.match(regex1) || [];
 
-      
-
       if (!repo) {
-
         return context.reply("Invalid GitHub link format. Please double-check the provided link.");
-
       }
-
-      
 
       const repoName = repo.replace(/.git$/, "");
-
       const url = `https://api.github.com/repos/${user}/${repoName}/zipball`;
 
-      
-
       try {
-
         const response = await fetch(url, { method: "HEAD" });
-
         const filename = response.headers
-
           .get("content-disposition")
-
           .match(/attachment; filename=(.*)/)[1];
 
-        
-
         await sock.sendMessage(
-
           context.chatId,
-
           {
-
             document: { url: url },
-
             fileName: filename + ".zip",
-
             mimetype: "application/zip",
-
           }, { quoted: global.gitclone }
-
         );
-
       } catch (err) {
-
         console.error(err);
-
         context.reply("❌ Error cloning repository. Please try again later.");
-
       }
-
     }
-
   },
-
-  
-
   {
-
     name: 'image',
-
     aliases: ['img', 'pinterest'],
-
     category: 'downloader',
-
     execute: async (sock, message, args, context) => {
-
       const text = args.slice(1).join(' ');
-
       if (!text) return context.reply("Please provide a search query");
-
       try {
-
         let response = await fetch(`https://api.vreden.my.id/api/pinterest?query=${encodeURIComponent(text)}`);
-
         let data = await response.json();
-
         if (response.status !== 200 || !data.result || data.result.length === 0) {
-
           return context.reply("*No images found or API error. Please try again later or try another query!*");
-
         } else {
-
           const images = data.result.slice(0, 5);
-
           for (const imageUrl of images) {
-
             await sock.sendMessage(context.chatId, {
-
               image: { url: imageUrl },
-
               caption: `Search: ${text}`,
-
             });
-
             await new Promise(resolve => setTimeout(resolve, 500)); 
-
           }
-
         }
-
       } catch (error) {
-
         console.error('Error fetching images:', error);
-
         context.reply("❌ Error fetching images. Please try again later.");
-
       }
-
     }
-
   },
-
-  
-
   {
-
     name: 'instagram',
-
     aliases: ['igdl'],
-
     category: 'downloader',
-
     execute: async (sock, message, args, context) => {
-
       const text = args.slice(1).join(' ');
-
       if (!text) return context.reply('*Please provide an Instagram URL!*');
-
       const apiUrl = `https://api.siputzx.my.id/api/d/igdl?url=${encodeURIComponent(text)}`;
 
-      
-
       try {
-
         const response = await fetch(apiUrl);
-
         const data = await response.json();
-
         if (!data || data.url.length === 0) return context.reply('*Failed to retrieve the video!*');
-
         const videoUrl = data.url;
-
         const title = `Instagram Video`;
-
         await sock.sendMessage(context.chatId, {
-
           video: { url: videoUrl },
-
           mimetype: 'video/mp4',
-
           fileName: `${title}.mp4`
-
         }, { quoted: message });
-
       } catch (error) {
-
         console.error('Download command failed:', error);
-
         context.reply("❌ Error downloading Instagram video. Please try again later.");
-
       }
-
     }
-
   },
-
-  
-
   {
-
     name: 'itunes',
-
     category: 'downloader',
-
     execute: async (sock, message, args, context) => {
-
       const text = args.slice(1).join(' ');
-
       if (!text) return context.reply("*Please provide a song name*");
 
-      
-
       try {
-
         let res = await fetch(`https://api.popcat.xyz/itunes?q=${encodeURIComponent(text)}`);
-
         if (!res.ok) {
-
           throw new Error(`*API request failed with status ${res.status}*`);
-
         }
-
         let json = await res.json();
-
-        let songInfo = `*Song Information:*\n
-
- • *Name:* ${json.name}\n
-
- • *Artist:* ${json.artist}\n
-
- • *Album:* ${json.album}\n
-
- • *Release Date:* ${json.release_date}\n
-
- • *Price:* ${json.price}\n
-
- • *Length:* ${json.length}\n
-
- • *Genre:* ${json.genre}\n
-
- • *URL:* ${json.url}`;
-
-       
+        let songInfo = `*Song Information:*\n\n • *Name:* ${json.name}\n\n • *Artist:* ${json.artist}\n\n • *Album:* ${json.album}\n\n • *Release Date:* ${json.release_date}\n\n • *Price:* ${json.price}\n\n • *Length:* ${json.length}\n\n • *Genre:* ${json.genre}\n\n • *URL:* ${json.url}`;
 
         if (json.thumbnail) {
-
           await sock.sendMessage(
-
             context.chatId,
-
             { image: { url: json.thumbnail }, caption: songInfo },
-
             { quoted: message }
-
           );
-
         } else {
-
           context.reply(songInfo);
-
         }
-
       } catch (error) {
-
         console.error(error);
-
         context.reply("❌ Error fetching iTunes info. Please try again later.");
-
       }
-
     }
-
   },
-
-  
-
   {
-
     name: 'mediafire',
-
     category: 'downloader',
-
     execute: async (sock, message, args, context) => {
-
       const text = args.slice(1).join(' ');
-
       if (!text) return context.reply("Please provide a MediaFire file URL");
-
       try {
-
         let response = await fetch(`https://api.siputzx.my.id/api/d/mediafire?url=${encodeURIComponent(text)}`);
-
         let data = await response.json();
-
         if (response.status !== 200 || !data.status || !data.data) {
-
           return context.reply("Please try again later or try another command!");
-
         } else {
-
           const downloadUrl = data.data.downloadLink;
-
           const filePath = path.join(__dirname, `${data.data.fileName}.zip`);
-
           const writer = fs.createWriteStream(filePath);
-
           const fileResponse = await axios({
-
             url: downloadUrl,
-
             method: 'GET',
-
             responseType: 'stream'
-
           });
-
           fileResponse.data.pipe(writer);
-
           writer.on('finish', async () => {
-
-            
-
             await sock.sendMessage(context.chatId, {
-
               document: { url: filePath },
-
               fileName: data.data.fileName,
-
               mimetype: 'application/zip'
-
             });
-
             fs.unlinkSync(filePath);
-
           });
-
           writer.on('error', (err) => {
-
             console.error('Error downloading the file:', err);
-
             context.reply("An error occurred while downloading the file.");
-
           });
-
         }
-
       } catch (error) {
-
         console.error('Error fetching MediaFire file details:', error);
-
         context.reply("❌ Error downloading MediaFire file. Please try again later.");
-
       }
-
     }
-
   },
-     
-{
+  {
     name: "play",
     aliases: ["song"],
     category: "downloader",
@@ -737,8 +388,8 @@ execute: async (sock, message, args, context) => {
             await context.reply(errorMessage);
         }
     }
-},
-{
+  },
+  {
     name: 'tiktok',
     aliases: ['tt', 'tiktokdl', 'tiktokvideo'],
     category: 'downloader',
@@ -903,5 +554,5 @@ execute: async (sock, message, args, context) => {
             await context.reply("Command error.");
         }
     }
-}
-    
+  }
+];
