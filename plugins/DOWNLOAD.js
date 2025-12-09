@@ -1,5 +1,5 @@
 import { fetchJson, isUrl } from '../lib/myfunc.js';
-import { ttdl } from "ruhend-scraper";
+import { ttdl, igdl } from "ruhend-scraper";
 import axios from 'axios';
 import { channelInfo } from '../lib/messageConfig.js';
 import fetch from 'node-fetch';
