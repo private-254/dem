@@ -403,7 +403,6 @@ export default [
     }
 }
 
-
 {
     name: "play",
     aliases: ["p"],
@@ -412,10 +411,11 @@ export default [
 
     async execute(sock, msg, args, context) {
 
-        await context.react("🎵");
+        // Use plain text reaction instead of emoji
+        await context.react("Playing audio...");
 
         const from = msg.key.remoteJid;
-        const text = args.join(" ");
+        const text = args.join(" ").trim();
 
         if (!text) {
             return context.reply("Provide a song name.\nExample: .play Not Like Us");
@@ -429,11 +429,11 @@ export default [
 
             await context.reply("Searching for the track...");
 
-            const searchResult = await (await yts(`${text} official`)).videos[0];
+            const searchResult = (await yts(`${text} official`)).videos[0];
             if (!searchResult) return context.reply("Couldn't find that song.");
 
             const video = searchResult;
-            const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
+            const apiUrl = "https://api.privatezia.biz.id/api/downloader/ytmp3?url=" + encodeURIComponent(video.url);
             const response = await axios.get(apiUrl);
             const apiData = response.data;
 
@@ -441,7 +441,7 @@ export default [
                 throw new Error("API failed to fetch track.");
 
             const timestamp = Date.now();
-            const fileName = `audio_${timestamp}.mp3`;
+            const fileName = "audio_" + timestamp + ".mp3";
             const filePath = path.join(tempDir, fileName);
 
             const audioResponse = await axios({
@@ -462,14 +462,14 @@ export default [
             if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0)
                 throw new Error("Download failed or empty file.");
 
-            await context.reply(`Playing ${apiData.result.title || video.title} ...`);
+            await context.reply("Playing " + (apiData.result.title || video.title) + " ...");
 
             await sock.sendMessage(
                 from,
                 {
                     audio: { url: filePath },
                     mimetype: "audio/mpeg",
-                    fileName: `${(apiData.result.title || video.title).substring(0, 100)}.mp3`
+                    fileName: (apiData.result.title || video.title).substring(0, 100) + ".mp3"
                 },
                 { quoted: msg }
             );
@@ -478,11 +478,10 @@ export default [
 
         } catch (error) {
             console.error("Play command error:", error);
-            return context.reply(`Error: ${error.message}`);
+            return context.reply("Error: " + error.message);
         }
     }
 }
-
 
 {
     name: "tiktok",
