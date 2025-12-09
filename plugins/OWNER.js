@@ -229,6 +229,208 @@ Powered by DAVE-MD`;
 
   },
 
+
+
+// ============================================
+// 🔹 ANTIDELETE COMMANDS
+// ============================================
+{
+    name: 'antidelete',
+    aliases: ['antidel'],
+    category: 'owner',
+    description: 'Anti-delete message system',
+    usage: '.antidelete [on/off/status/clean]',
+    execute: async (sock, message, args, context) => {
+        const { chatId, reply, isFromOwner, senderIsSudo } = context;
+        
+        if (!isFromOwner && !senderIsSudo) {
+            return await reply('❌ Only owner/sudo can use this command!');
+        }
+        
+        const subcmd = args[1]?.toLowerCase() || 'status';
+        
+        switch(subcmd) {
+            case 'on':
+            case 'enable':
+                updateChatData(chatId, 'antidelete', true);
+                return await reply('✅ Anti-delete enabled for this chat!\n\nI will now detect when messages are deleted.');
+            
+            case 'off':
+            case 'disable':
+                updateChatData(chatId, 'antidelete', false);
+                return await reply('❌ Anti-delete disabled for this chat.');
+            
+            case 'status':
+                const isEnabled = getChatData(chatId, 'antidelete', false);
+                return await reply(`🛡️ Anti-Delete Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'detect' : 'NOT detect'} deleted messages in this chat.`);
+            
+            case 'clean':
+                if (global.featureManager?.antidelete?.cleanTemp) {
+                    const cleaned = await global.featureManager.antidelete.cleanTemp();
+                    return await reply(`🧹 Cleaned ${cleaned} temporary files!`);
+                }
+                return await reply('❌ Antidelete system not initialized.');
+            
+            default:
+                return await reply(`📋 Anti-Delete Commands:\n\n• .antidelete on - Enable for this chat\n• .antidelete off - Disable for this chat\n• .antidelete status - Check status\n• .antidelete clean - Clean temp files`);
+        }
+    }
+},
+
+// ============================================
+// 🔹 AUTO STATUS VIEWING COMMANDS
+// ============================================
+{
+    name: 'autostatus',
+    aliases: ['autostatusview', 'autoviewstatus'],
+    category: 'owner',
+    description: 'Auto view status updates',
+    usage: '.autostatus [on/off/status]',
+    execute: async (sock, message, args, context) => {
+        const { reply, isFromOwner, senderIsSudo } = context;
+        
+        if (!isFromOwner && !senderIsSudo) {
+            return await reply('❌ Only owner/sudo can use this command!');
+        }
+        
+        const subcmd = args[1]?.toLowerCase() || 'status';
+        
+        switch(subcmd) {
+            case 'on':
+            case 'enable':
+                updateSetting('autoviewstatus', true);
+                return await reply('✅ Auto status viewing enabled!\n\nI will automatically view all status updates.');
+            
+            case 'off':
+            case 'disable':
+                updateSetting('autoviewstatus', false);
+                return await reply('❌ Auto status viewing disabled.');
+            
+            case 'status':
+                const isEnabled = getSetting('autoviewstatus', true);
+                return await reply(`📱 Auto Status Viewing: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'automatically view' : 'NOT view'} status updates.`);
+            
+            default:
+                return await reply(`📋 Auto Status Commands:\n\n• .autostatus on - Enable auto viewing\n• .autostatus off - Disable auto viewing\n• .autostatus status - Check status`);
+        }
+    }
+},
+
+// ============================================
+// 🔹 STATUS REACTION COMMANDS
+// ============================================
+{
+    name: 'autostatusreact',
+    aliases: ['statusreact'],
+    category: 'owner',
+    description: 'Auto react to status updates',
+    usage: '.autostatusreact [on/off/setemoji/status]',
+    execute: async (sock, message, args, context) => {
+        const { reply, isFromOwner, senderIsSudo } = context;
+        
+        if (!isFromOwner && !senderIsSudo) {
+            return await reply('❌ Only owner/sudo can use this command!');
+        }
+        
+        const subcmd = args[1]?.toLowerCase() || 'status';
+        
+        switch(subcmd) {
+            case 'on':
+            case 'enable':
+                updateSetting('autostatusreact', true);
+                return await reply('✅ Auto status reactions enabled!\n\nI will automatically react to status updates.');
+            
+            case 'off':
+            case 'disable':
+                updateSetting('autostatusreact', false);
+                return await reply('❌ Auto status reactions disabled.');
+            
+            case 'setemoji':
+            case 'setemojis':
+                const emojis = args.slice(2).join(' ').trim();
+                if (!emojis) {
+                    const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
+                    return await reply(`📝 Current Status Emojis:\n${currentEmojis.join(' ')}\n\nUsage: .autostatusreact setemoji 😂 ❤️ 🔥 ✨`);
+                }
+                updateSetting('statusEmojis', emojis.split(/[\s,]+/).filter(Boolean));
+                return await reply(`✅ Status reaction emojis updated to:\n${emojis}`);
+            
+            case 'status':
+                const isEnabled = getSetting('autostatusreact', false);
+                const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
+                return await reply(`📱 Auto Status Reactions: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nEmojis: ${currentEmojis.join(' ')}\n\nI will ${isEnabled ? 'automatically react' : 'NOT react'} to status updates.`);
+            
+            default:
+                return await reply(`📋 Auto Status Reaction Commands:\n\n• .autostatusreact on - Enable auto reactions\n• .autostatusreact off - Disable auto reactions\n• .autostatusreact setemoji 😂 ❤️ 🔥 - Set reaction emojis\n• .autostatusreact status - Check status`);
+        }
+    }
+},
+
+// ============================================
+// 🔹 SET STATUS EMOJIS COMMAND (Alternative)
+// ============================================
+{
+    name: 'setstatusemoji',
+    aliases: ['setstatusemojis'],
+    category: 'owner',
+    description: 'Set emojis for auto status reactions',
+    usage: '.setstatusemoji 😂 ❤️ 🔥 ✨',
+    execute: async (sock, message, args, context) => {
+        const { reply, isFromOwner, senderIsSudo } = context;
+        
+        if (!isFromOwner && !senderIsSudo) {
+            return await reply('❌ Only owner/sudo can use this command!');
+        }
+        
+        const emojis = args.slice(1).join(' ').trim();
+        if (!emojis) {
+            const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
+            return await reply(`📝 Current Status Emojis:\n${currentEmojis.join(' ')}\n\nUsage: .setstatusemoji 😂 ❤️ 🔥 ✨`);
+        }
+        
+        updateSetting('statusEmojis', emojis.split(/[\s,]+/).filter(Boolean));
+        return await reply(`✅ Status reaction emojis updated to:\n${emojis}`);
+    }
+},
+
+// ============================================
+// 🔹 ANTIDELETE PM (Private Message) Command
+// ============================================
+{
+    name: 'antideletepm',
+    aliases: ['antidelpm'],
+    category: 'owner',
+    description: 'Anti-delete for private messages only',
+    usage: '.antideletepm [on/off/status]',
+    execute: async (sock, message, args, context) => {
+        const { chatId, reply, isFromOwner, senderIsSudo } = context;
+        
+        if (!isFromOwner && !senderIsSudo) {
+            return await reply('❌ Only owner/sudo can use this command!');
+        }
+        
+        const subcmd = args[1]?.toLowerCase() || 'status';
+        
+        switch(subcmd) {
+            case 'on':
+            case 'enable':
+                updateSetting('antideletepm', true);
+                return await reply('✅ Anti-delete PM enabled!\n\nI will detect when messages are deleted in private chats.');
+            
+            case 'off':
+            case 'disable':
+                updateSetting('antideletepm', false);
+                return await reply('❌ Anti-delete PM disabled.');
+            
+            case 'status':
+                const isEnabled = getSetting('antideletepm', false);
+                return await reply(`📱 Anti-Delete PM: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'detect' : 'NOT detect'} deleted messages in private chats.`);
+            
+            default:
+                return await reply(`📋 Anti-Delete PM Commands:\n\n• .antideletepm on - Enable for private chats\n• .antideletepm off - Disable for private chats\n• .antideletepm status - Check status`);
+        }
+    }
+}
   {
 
     name: 'delete',
