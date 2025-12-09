@@ -204,31 +204,88 @@ export default [
     }
   },
   {
-    name: 'instagram',
-    aliases: ['igdl'],
-    category: 'downloader',
-    execute: async (sock, message, args, context) => {
-      const text = args.slice(1).join(' ');
-      if (!text) return context.reply('*Please provide an Instagram URL!*');
-      const apiUrl = `https://api.siputzx.my.id/api/d/igdl?url=${encodeURIComponent(text)}`;
+    name: "instagram",
+    aliases: ["ig", "insta", "igdl"],
+    category: "downloader",
+    desc: "Download Instagram posts, reels, and videos",
 
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        if (!data || data.url.length === 0) return context.reply('*Failed to retrieve the video!*');
-        const videoUrl = data.url;
-        const title = `Instagram Video`;
-        await sock.sendMessage(context.chatId, {
-          video: { url: videoUrl },
-          mimetype: 'video/mp4',
-          fileName: `${title}.mp4`
-        }, { quoted: message });
-      } catch (error) {
-        console.error('Download command failed:', error);
-        context.reply("❌ Error downloading Instagram video. Please try again later.");
-      }
+    async execute(sock, msg, args, context) {
+        const from = msg.key.remoteJid;
+        const messageId = msg.key.id;
+
+        try {
+            // Prevent duplicate execution
+            if (processedMessages.has(messageId)) return;
+            processedMessages.add(messageId);
+            setTimeout(() => processedMessages.delete(messageId), 5 * 60 * 1000);
+
+            const text = args.join(" ").trim();
+            if (!text) return context.reply("Please provide an Instagram link.");
+
+            // Validate Instagram URL
+            const instagramPatterns = [
+                /https?:\/\/(?:www\.)?instagram\.com\//,
+                /https?:\/\/(?:www\.)?instagr\.am\//,
+                /https?:\/\/(?:www\.)?instagram\.com\/p\//,
+                /https?:\/\/(?:www\.)?instagram\.com\/reel\//,
+                /https?:\/\/(?:www\.)?instagram\.com\/tv\//
+            ];
+            const isValidUrl = instagramPatterns.some(p => p.test(text));
+            if (!isValidUrl) return context.reply("That is not a valid Instagram link.");
+
+            await context.react("🔄");
+
+            const downloadData = await igdl(text);
+            if (!downloadData?.data?.length) return context.reply("❌ No media found at the provided link.");
+
+            // Deduplicate media URLs
+            const uniqueMedia = [];
+            const seenUrls = new Set();
+            for (const media of downloadData.data) {
+                if (media.url && !seenUrls.has(media.url)) {
+                    seenUrls.add(media.url);
+                    uniqueMedia.push(media);
+                }
+            }
+
+            const mediaToDownload = uniqueMedia.slice(0, 20);
+            if (!mediaToDownload.length) return context.reply("❌ No valid media to download.");
+
+            // Download and send media
+            for (let i = 0; i < mediaToDownload.length; i++) {
+                const media = mediaToDownload[i];
+                const mediaUrl = media.url;
+                const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(mediaUrl) || media.type === "video" || text.includes("/reel/") || text.includes("/tv/");
+
+                try {
+                    if (isVideo) {
+                        await sock.sendMessage(from, {
+                            video: { url: mediaUrl },
+                            mimetype: "video/mp4",
+                            caption: ""
+                        }, { quoted: msg });
+                    } else {
+                        await sock.sendMessage(from, {
+                            image: { url: mediaUrl },
+                            caption: ""
+                        }, { quoted: msg });
+                    }
+
+                    // Small delay between media to prevent rate-limiting
+                    if (i < mediaToDownload.length - 1) await new Promise(r => setTimeout(r, 1000));
+
+                } catch (mediaErr) {
+                    console.error(`Error sending media #${i + 1}:`, mediaErr);
+                    continue;
+                }
+            }
+
+        } catch (err) {
+            console.error("Instagram command error:", err);
+            return context.reply("❌ An error occurred while processing the Instagram request.");
+        }
     }
-  },
+}
   {
     name: 'itunes',
     category: 'downloader',
