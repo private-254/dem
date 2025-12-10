@@ -50,6 +50,130 @@ export default [
 
 
 {
+  name: "yts",
+  aliases: ["ytsearch"],
+  category: "SEARCH MENU",
+  desc: "Search YouTube videos",
+
+  async execute(sock, msg, args, context) {
+    const { reply } = context;
+    const text = args.slice(1).join(" ").trim();
+
+    if (!text) {
+      return reply(`Example : .yts faded`);
+    }
+
+    try {
+      const yts = require("yt-search");
+      const search = await yts(text);
+      
+      if (!search.all || search.all.length === 0) {
+        return reply(`No results found for "${text}"`);
+      }
+
+      let teks = `*YouTube Search*\n\n*Results for:* ${text}\n\n`;
+      let no = 1;
+      
+      for (let i of search.all.slice(0, 10)) { // Limit to 10 results
+        teks += `❤️ *No:* ${no++}\n`;
+        teks += `❤️ *Type:* ${i.type}\n`;
+        teks += `❤️ *Title:* ${i.title}\n`;
+        teks += `❤️ *Views:* ${i.views}\n`;
+        teks += `❤️ *Duration:* ${i.timestamp}\n`;
+        teks += `❤️ *Uploaded:* ${i.ago}\n`;
+        teks += `❤️ *URL:* ${i.url}\n`;
+        teks += `─────────────────\n\n`;
+      }
+
+      await sock.sendMessage(msg.key.remoteJid, {
+        image: { url: search.all[0].thumbnail },
+        caption: teks
+      }, { quoted: msg });
+
+    } catch (error) {
+      console.error('YouTube search error:', error);
+      reply('❌ Error searching YouTube videos.');
+    }
+  }
+},
+
+{
+  name: "shorturl",
+  aliases: ["shorten", "urlshort"],
+  category: "TOOLS MENU",
+  desc: "Shorten long URLs",
+
+  async execute(sock, msg, args, context) {
+    const { reply } = context;
+    const text = args.slice(1).join(" ").trim();
+
+    if (!text) {
+      return reply('❌ Please provide a URL to shorten.\n\nExample: .shorturl https://example.com');
+    }
+
+    try {
+      // Validate URL
+      if (!text.startsWith('http://') && !text.startsWith('https://')) {
+        return reply('❌ Please provide a valid URL starting with http:// or https://');
+      }
+
+      const zlib = require('zlib');
+      const qs = require('querystring');
+      
+      const kualatshort = async (url) => {
+        const res = await axios.post(
+          'https://kua.lat/shorten',
+          qs.stringify({ url }),
+          {
+            responseType: 'arraybuffer',
+            headers: {
+              'Accept': 'application/json, text/javascript, */*; q=0.01',
+              'Accept-Encoding': 'gzip, deflate, br',
+              'Accept-Language': 'id-ID,id;q=0.9,en-AU;q=0.8,en;q=0.7,en-US;q=0.6',
+              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+              'Origin': 'https://kua.lat',
+              'Referer': 'https://kua.lat/',
+              'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          }
+        );
+
+        let decoded;
+        const encoding = res.headers['content-encoding'];
+
+        if (encoding === 'br') {
+          decoded = zlib.brotliDecompressSync(res.data);
+        } else if (encoding === 'gzip') {
+          decoded = zlib.gunzipSync(res.data);
+        } else if (encoding === 'deflate') {
+          decoded = zlib.inflateSync(res.data);
+        } else {
+          decoded = res.data;
+        }
+
+        return JSON.parse(decoded.toString());
+      };
+
+      const result = await kualatshort(text);
+
+      if (!result?.data?.shorturl) {
+        return reply('❌ Failed to create short URL. Please try again.');
+      }
+
+      await reply(`🔗 *Short URL Created*\n\n*Original:* ${text}\n*Shortened:* ${result.data.shorturl}\n\n✅ URL shortened successfully!`);
+
+    } catch (error) {
+      console.error('[SHORTURL] Error:', error);
+      reply(`❌ Error: ${error.message || 'Failed to shorten URL'}`);
+    }
+  }
+},
+
+
+
+
+{
   name: "video",
   aliases: ["ytvideo", "ytvid"],
   category: "downloader",
