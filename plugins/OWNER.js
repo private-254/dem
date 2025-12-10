@@ -60,90 +60,95 @@ async function extractMentionedJid(sock, message, chatId) {
 
 export default [
   {
-    name: 'pair',
-    aliases: ['paircode'],
-    category: 'owner',
-    execute: async (sock, message, args, context) => {
-      if (!message.key.fromMe && !context.senderIsSudo) {
-        return context.reply("This command is only for the owner.");
+  name: 'pair',
+  aliases: ['paircode'],
+  category: 'owner',
+  execute: async (sock, message, args, context) => {
+
+    if (!message.key.fromMe && !context.senderIsSudo) {
+      return context.reply("This command is only for the owner.");
+    }
+
+    const text = args.slice(1).join(' ');
+    if (!text) {
+      return context.replyPlain('Provide a phone number.\n\nExample: .pair 254701234567');
+    }
+
+    const phoneNumber = text.replace(/\D/g, '');
+
+    if (phoneNumber.length < 10) {
+      return context.replyPlain('Invalid phone number. Must include country code.\nExample: .pair 254701234567');
+    }
+
+    await context.replyPlain('Generating pairing code...');
+
+    try {
+
+      const apiUrl = `https://davexsessionpair-7f789a0c7afd.herokuapp.com/pair/code?number=${phoneNumber}`;
+
+      const response = await axios.get(apiUrl, {
+        timeout: 45000,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      const data = response.data;
+
+      let code =
+        data?.code ||
+        data?.pairingCode ||
+        data?.pair_code ||
+        data?.result ||
+        (typeof data === "string" ? data : null);
+
+      // STRICT ERROR FILTERS
+      if (
+        !code ||
+        code === "Service Unavailable" ||
+        code.toLowerCase().includes("unavailable") ||
+        code.toLowerCase().includes("error") ||
+        code.length < 3
+      ) {
+        return context.replyPlain("❌ Pairing code could not be generated. Try again in 10 seconds.");
       }
 
-      const text = args.slice(1).join(' ');
-      if (!text) {
-        return context.replyPlain('Please provide a phone number.\n\nUsage: .pair 2348012345678');
-      }
+      const pairingMessage = `
+𝐃𝐀𝐕𝐄-𝐌𝐃 𝗣𝗔𝗜𝗥𝗜𝗡𝗚 𝗖𝗢𝗗𝗘
 
-      const phoneNumber = text.replace(/[^0-9]/g, '');
+𝗖𝗼𝗱𝗲: ${code}
 
-      if (phoneNumber.length < 10) {
-        return context.replyPlain('Invalid phone number. Please provide a valid number with country code.\n\nExample: .pair 2348012345678');
-      }
+𝗡𝘂𝗺𝗯𝗲𝗿: +${phoneNumber}
 
-      await context.replyPlain('Generating pairing code...');
-
-      try {
-        const apiUrl = `https://dave-sessions.onrender.com/pair/code?number=${phoneNumber}`;
-
-        const response = await axios.get(apiUrl, {
-          timeout: 60000,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-
-        const data = response.data;
-        let code = null;
-
-        if (typeof data === 'string') {
-          code = data;
-        } else if (data && data.code) {
-          code = data.code;
-        } else if (data && data.pairingCode) {
-          code = data.pairingCode;
-        }
-
-        if (!code || code === "Service Unavailable" || code.includes("Unavailable") || code.includes("error")) {
-          return context.reply('Failed to generate pairing code. Service temporarily unavailable.');
-        }
-
-        const pairingMessage = `DAVE-MD PAIRING CODE
-
-Code: ${code}
-
-Phone: +${phoneNumber}
-
-HOW TO LINK:
-1. Open WhatsApp on your phone
-2. Tap the 3 dots at top right
-3. Select Linked Devices
-4. Tap Link a Device
-5. Tap Link with phone number instead
+𝗛𝗢𝗪 𝗧𝗢 𝗟𝗜𝗡𝗞:
+1. Open WhatsApp
+2. Tap ⋮ (3 dots)
+3. Select *Linked Devices*
+4. Tap *Link a Device*
+5. Tap *Link with phone number instead*
 6. Enter the code above
 
-Note: Code expires in 60 seconds
+⏳ Code expires in 60 seconds.
+      `;
 
-Powered by DAVE-MD`;
+      await context.replyPlain(pairingMessage);
 
-        await context.replyPlain(pairingMessage);
+    } catch (error) {
 
-      } catch (error) {
-        console.error('Pair command error:', error);
+      console.error('Pair command error:', error);
 
-        let errorMsg = 'An error occurred while generating the pairing code.';
+      let msg = "❌ Error generating pairing code.";
 
-        if (error.code === 'ECONNABORTED') {
-          errorMsg = 'Request timeout. Please try again.';
-        } else if (error.response) {
-          errorMsg = 'Server Error. Service temporarily unavailable.';
-        } else if (error.request) {
-          errorMsg = 'Cannot reach service. Check your internet connection.';
-        }
-
-        await context.reply(errorMsg);
+      if (error.code === 'ECONNABORTED') {
+        msg = "⏳ Request timed out. Please try again.";
+      } else if (error.response) {
+        msg = "⚠️ Server responded with an error. Try again later.";
+      } else if (error.request) {
+        msg = "📡 Cannot reach pairing server. Check network or server status.";
       }
+
+      await context.replyPlain(msg);
     }
-  },
+  }
+}
 
   {
     name: 'block',
