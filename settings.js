@@ -1,27 +1,24 @@
 const settings = {
 
-  botName: "DAVE-MD",
-  
-  botOwner: 'Dave', //Ur-Name
-  
-  ownerNumber: '', //👈input ur phone number in-between empty '',
+  botName: process.env.BOT_NAME || "Dave Md",
 
-  packname: 'DAVE-MD',
+  ownerNumber: process.env.OWNER_NUMBER || '',
 
-  prefix: '.',
+ botOwner: process.env.BOT_OWNER || 'davetech',
 
-  defaultReaction: '✅',  
+  packname: process.env.PACKNAME || 'DAVE-MD',
+
+  prefix: process.env.PREFIX || '.',
+
+  defaultReaction: '✅',
 
   errorReaction: '❌',
 
- watermark: "© DAVE-TECH!",
-
-  Mode: "private",
+  watermark: "©Dave Tech!",
 
   description: "This is a bot for managing group commands and automating tasks.",
 
   giphyApiKey: 'qnl7ssQChTdPjsKta2Ax2LMaGXz303tq', 
-
 };
 
 export default settings;
