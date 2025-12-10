@@ -44,6 +44,82 @@ export default [
         }
     }
 },
+
+
+{
+  name: "save",
+  aliases: ["savestatus", "savestory"],
+  category: "TOOLS MENU",
+  desc: "Save status images/videos to your chat",
+
+  async execute(sock, msg, args, context) {
+    const { reply, react } = context;
+    const quotedMessage = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+
+    try {
+      await react('💾');
+
+      // Check if user quoted a message
+      if (!quotedMessage) {
+        return reply('❌ Please reply to a status message to save it!');
+      }
+
+      // Verify it's a status message
+      if (!msg.key.remoteJid?.endsWith('@broadcast')) {
+        return reply('❌ That message is not a status! Please reply to a status message.');
+      }
+
+      // Download the media first
+      const mediaBuffer = await sock.downloadMediaMessage(msg);
+      if (!mediaBuffer || mediaBuffer.length === 0) {
+        return reply('❌ Could not download the status media. It may have expired.');
+      }
+
+      // Determine media type and prepare payload
+      let payload;
+      let mediaType;
+
+      if (quotedMessage.imageMessage) {
+        mediaType = 'image';
+        payload = {
+          image: mediaBuffer,
+          caption: quotedMessage.imageMessage.captionText || '📸 Saved status image',
+          mimetype: 'image/jpeg'
+        };
+      } 
+      else if (quotedMessage.videoMessage) {
+        mediaType = 'video';
+        payload = {
+          video: mediaBuffer,
+          caption: quotedMessage.videoMessage.caption || '🎥 Saved status video',
+          mimetype: 'video/mp4'
+        };
+      } 
+      else {
+        return reply('❌ Only image and video statuses can be saved!');
+      }
+
+      // Send to user's DM
+      await sock.sendMessage(
+        msg.key.participant || msg.key.remoteJid, 
+        payload,
+        { quoted: msg }
+      );
+
+      // Confirm in chat
+      await react('✅');
+      return reply(`✅ ${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} saved successfully!`);
+
+    } catch (error) {
+      console.error('Save error:', error);
+      await react('❌');
+      if (error.message.includes('404') || error.message.includes('not found')) {
+        return reply('❌ The status may have expired or been deleted.');
+      }
+      return reply('❌ Failed to save status: ' + error.message);
+    }
+  }
+},
  {
     name: 'calculate',
     aliases: ['solve', 'math', 'calc', 'equation'],
