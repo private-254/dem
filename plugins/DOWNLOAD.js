@@ -49,6 +49,129 @@ export default [
     }
   },
 
+{
+  name: "shazam",
+  aliases: ["identifysong", "whatsong"],
+  category: "SEARCH MENU",
+  desc: "Identify songs from audio or voice messages",
+
+  async execute(sock, msg, args, context) {
+    const { reply, react } = context;
+    const from = msg.key.remoteJid;
+    
+    try {
+      // Check if quoted message is audio/voice
+      const quotedMsg = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      const audioMsg = quotedMsg?.audioMessage || quotedMsg?.voiceMessage || 
+                       msg.message?.audioMessage || msg.message?.voiceMessage;
+
+      if (!audioMsg) {
+        return reply("🎧 Please reply to an *audio* or *voice* message to identify the song!");
+      }
+
+      await react('🔍');
+
+      // Download the audio
+      const stream = await sock.downloadMediaMessage(msg);
+      if (!stream) {
+        return reply("❌ Could not download the audio message.");
+      }
+
+      // Convert to base64 for the API
+      const audioBase64 = stream.toString('base64');
+      
+      // Try multiple Shazam APIs
+      const apis = [
+        `https://apiskeith.vercel.app/ai/shazam?audio=${encodeURIComponent(audioBase64)}`,
+        `https://api.akuari.my.id/downloader/sha`,
+        `https://api.neoxr.eu.org/api/shazam`
+      ];
+
+      let result = null;
+      let apiUsed = '';
+
+      for (const apiUrl of apis) {
+        try {
+          let res;
+          
+          if (apiUrl.includes('apiskeith')) {
+            // Keith API - send base64 in URL
+            res = await axios.get(apiUrl, { timeout: 10000 });
+          } else if (apiUrl.includes('akuari')) {
+            // Akuari API - different format
+            const formData = new FormData();
+            const audioBlob = new Blob([stream], { type: 'audio/mpeg' });
+            formData.append('audio', audioBlob, 'audio.mp3');
+            
+            res = await axios.post(apiUrl, formData, {
+              headers: formData.getHeaders(),
+              timeout: 10000
+            });
+          } else {
+            // Neoxr API
+            res = await axios.post(apiUrl, {
+              audio: audioBase64
+            }, { timeout: 10000 });
+          }
+
+          if (res.data && res.data.result) {
+            result = res.data.result;
+            apiUsed = apiUrl;
+            break;
+          }
+        } catch (apiError) {
+          console.log(`API ${apiUrl} failed:`, apiError.message);
+          continue;
+        }
+      }
+
+      if (!result) {
+        await react('❌');
+        return reply("❌ Could not recognize the song. Please try with a clearer audio clip.");
+      }
+
+      // Format response
+      let text = `🎶 *Song Recognized!*\n\n`;
+      text += `*Title:* ${result.title || result.song || "Unknown"}\n`;
+      text += `*Artist:* ${result.artist || result.singer || "Unknown"}\n`;
+      
+      if (result.album) text += `*Album:* ${result.album}\n`;
+      if (result.releaseDate) text += `*Released:* ${result.releaseDate}\n`;
+      if (result.genre) text += `*Genre:* ${result.genre}\n`;
+      if (result.duration) text += `*Duration:* ${result.duration}\n`;
+      if (result.lyrics) text += `\n*Lyrics Preview:*\n${result.lyrics.substring(0, 200)}...\n`;
+      
+      // Add streaming links if available
+      if (result.spotifyUrl) text += `\n*Spotify:* ${result.spotifyUrl}\n`;
+      if (result.youtubeUrl) text += `*YouTube:* ${result.youtubeUrl}\n`;
+      if (result.appleMusicUrl) text += `*Apple Music:* ${result.appleMusicUrl}\n`;
+      
+      // Add Shazam link
+      if (result.title && result.artist) {
+        const searchQuery = encodeURIComponent(`${result.title} ${result.artist}`);
+        text += `\n*Shazam Search:* https://www.shazam.com/search?term=${searchQuery}\n`;
+      }
+
+      text += `\n✅ Identified using ${apiUsed.split('/')[2]}`;
+
+      await reply(text);
+      await react('✅');
+
+    } catch (err) {
+      console.error("❌ Shazam Error:", err);
+      await react('❌');
+      
+      if (err.message.includes('timeout')) {
+        return reply("⏱️ Request timeout. The audio might be too long or the API is busy.");
+      } else if (err.message.includes('network') || err.message.includes('ENOTFOUND')) {
+        return reply("🌐 Network error. Please check your connection.");
+      }
+      
+      reply("❌ Failed to identify the song. Please try again with a different audio clip.");
+    }
+  }
+},
+
   {
     name: "playdoc",
     aliases: ["pdoc", "songdoc"],
