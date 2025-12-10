@@ -285,7 +285,7 @@ export default [
             return context.reply("❌ An error occurred while processing the Instagram request.");
         }
     }
-  },  // <-- ADDED THIS COMMA (was missing)
+  },
   {
     name: 'itunes',
     category: 'downloader',
@@ -401,7 +401,7 @@ export default [
             context.reply("Error downloading audio.");
         }
     }
-  },  // <-- ADDED THIS COMMA (was missing)
+  },
   {
     name: "play",
     aliases: ["p"],
@@ -409,7 +409,6 @@ export default [
     desc: "Download and send audio from YouTube",
 
     async execute(sock, msg, args, context) {
-
         // Use plain text reaction instead of emoji
         await context.react("Playing audio...");
 
@@ -421,7 +420,8 @@ export default [
         }
 
         try {
-            const tempDir = path.join(__dirname, "temp");
+            // Change from __dirname to process.cwd() to avoid the error
+            const tempDir = path.join(process.cwd(), "temp");
             if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
 
             if (text.length > 100) return context.reply("Song name too long. Maximum 100 characters.");
@@ -480,7 +480,7 @@ export default [
             return context.reply("Error: " + error.message);
         }
     }
-  },  // <-- ADDED THIS COMMA (was missing)
+  },
   {
     name: "tiktok",
     aliases: ["tt", "tik"],
