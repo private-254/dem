@@ -216,11 +216,11 @@ export default [
         const { chatId, reply, react, hasQuotedMessage } = context;
 
         if (!hasQuotedMessage) {
-            return await reply('❌ 𝐏𝐥𝐞𝐚𝐬𝐞 𝐫𝐞𝐩𝐥𝐲 𝐭𝐨 𝐚 𝐯𝐢𝐞𝐰-𝐨𝐧𝐜𝐞 𝐢𝐦𝐚𝐠𝐞 𝐨𝐫 𝐯𝐢𝐝𝐞𝐨.',{quoted: global.vv});
+            return await reply('Reply to view once image or video.',{quoted: global.vv});
         }
 
         try {
-            await react('💫');
+            await react('🎄');
 
             const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
             const quotedImage = quoted?.imageMessage;
@@ -245,14 +245,14 @@ export default [
                 await sock.sendMessage(chatId, { 
                     video: buffer, 
                     fileName: 'media.mp4', 
-                    caption: quotedVideo.caption || '𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐛𝐲 𝐆𝐢𝐟𝐭-𝐌𝐃',
+                    caption: quotedVideo.caption || 'Dave Tech',
                     ...context.channelInfo
                 },{quoted: global.vv});
             } else {
-                await reply('❌ 𝐏𝐥𝐞𝐚𝐬𝐞 𝐫𝐞𝐩𝐥𝐲 𝐭𝐨 𝐚 𝐯𝐢𝐞𝐰-𝐨𝐧𝐜𝐞 𝐢𝐦𝐚𝐠𝐞 𝐨𝐫 𝐯𝐢𝐝𝐞𝐨.',{quoted: global.vv});
+                await reply('Reply to a viewonce image or video.',{quoted: global.vv});
             }
         } catch (error) {
-            await reply('𝐅𝐚𝐢𝐥𝐞𝐝 𝐭𝐨 𝐩𝐫𝐨𝐜𝐞𝐬𝐬 𝐯𝐢𝐞𝐰-𝐨𝐧𝐜𝐞 𝐦𝐞𝐝𝐢𝐚.',{quoted: global.vv});
+            await reply('Failed to process media.',{quoted: global.vv});
         }
     }
 },
@@ -283,7 +283,7 @@ export default [
         }
 
         try {
-            await react('🔓');
+            await react('🎄');
 
             const bannedUsers = JSON.parse(fs.readFileSync('./data/banned.json'));
             const index = bannedUsers.indexOf(userToUnban);
@@ -293,7 +293,7 @@ export default [
                 fs.writeFileSync('./data/banned.json', JSON.stringify(bannedUsers, null, 2));
                 
                 await context.reply({ 
-                    text: `✅ Successfully unbanned @${userToUnban.split('@')[0]}!`,
+                    text: `Successfully unbanned @${userToUnban.split('@')[0]}!`,
                     mentions: [userToUnban],
                     ...context.channelInfo 
                 });
@@ -325,7 +325,7 @@ export default [
 
             return await sock.sendMessage(chatId, {
 
-                text: '❌ This command is only available for the owner or sudo!',
+                text: 'This command is only available for the owner or sudo!',
 
                 ...channelInfo
 
@@ -408,7 +408,7 @@ export default [
                 
 
                 await await context.reply(
-    `✅ Successfully banned @${userToBan.split('@')[0]}!`,
+    `Successfully banned @${userToBan.split('@')[0]}!`,
     { mentions: [userToBan] }
 );
 
@@ -430,7 +430,7 @@ export default [
 
             console.error('Error in ban command:', error);
 
-            await context.reply('❌ Failed to ban user!');
+            await context.reply('Failed to ban user!');
 
         }
 
@@ -453,7 +453,7 @@ export default [
 
         const { reply, replyPlain, react, hasQuotedMessage, chatId } = context;
 
-        await react('🌀');
+        await react('🎄');
 
         let imageBuffer;
 
@@ -465,7 +465,7 @@ export default [
 
             if (!quotedMessage?.imageMessage) {
 
-                return await reply('❌ Please reply to an image message');
+                return await reply('Please reply to an image message');
 
             }
 
@@ -511,7 +511,7 @@ export default [
 
         } else {
 
-            return await reply('❌ Please reply to an image or send an image with caption .blur');
+            return await reply('Please reply to an image or send an image with caption .blur');
 
         }
 
@@ -545,11 +545,11 @@ export default [
 
             });
 
-            await react('✅');
+            await react('🎄');
 
         } catch (error) {
 
-            await reply('❌ Failed to blur image. Please try again later.');
+            await reply('Failed to blur image. Please try again later.');
 
         }
 
@@ -752,7 +752,7 @@ global.prefix = finalPrefix;
 global.initializeGlobals();
                     
 
-                    await react('✅');
+                    await react('🎄');
 
                     
 
@@ -764,7 +764,7 @@ global.initializeGlobals();
 
                     
 
-                    console.log(`🔧 Prefix changed to: "${finalPrefix}" by ${senderId}`);
+                    console.log(`Prefix changed to: "${finalPrefix}" by ${senderId}`);
 
                 } else {
 
@@ -797,7 +797,7 @@ global.initializeGlobals();
 
     async execute(sock, msg,args,context) {
         try {
-            await context.react('☢️');
+            await context.react('🎄');
             if (!global.commands || !(global.commands instanceof Map)) {
                 return sock.sendMessage(msg.key.remoteJid, { text: "⚠ Commands are not loaded yet." }, { quoted: global.listcmd});
             }
@@ -834,7 +834,7 @@ global.initializeGlobals();
 
     const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
 
-    if (!quoted) return context.reply('❌ Reply to an image/video/document/audio to use this command.',{quoted: global.url});
+    if (!quoted) return context.reply('Reply to an image/video/document/audio to use this command.',{quoted: global.url});
 
     let messageType = Object.keys(quoted)[0];
 
@@ -842,11 +842,11 @@ global.initializeGlobals();
 
       const url = await handleMediaUpload(quoted, sock, messageType);
 
-      await context.reply(`✅ Uploaded Successfully!\n\n🔗 ${url}`,{quoted: global.url});
+      await context.reply(`Uploaded Successfully!\n\n🔗 ${url}`,{quoted: global.url});
 
     } catch (e) {
 
-      await context.reply(`❌ Failed to upload media: ${e.message}`,{quoted: global.url});
+      await context.reply(`Failed to upload media: ${e.message}`,{quoted: global.url});
 
     }
 
@@ -1041,7 +1041,7 @@ global.initializeGlobals();
         }
 
         try {
-            await react('🔄');
+            await react('💰');
 
             const mediaBuffer = await downloadMediaMessage(targetMessage, 'buffer', {}, { 
                 logger: undefined, 
@@ -1086,7 +1086,7 @@ global.initializeGlobals();
             const json = {
                 'sticker-pack-id': crypto.randomBytes(32).toString('hex'),
                 'sticker-pack-name': global.packname || 'DAVE-MD',
-                'emojis': ['🤖']
+                'emojis': ['🗿']
             };
 
             const exifAttr = Buffer.from([0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00]);
@@ -1134,8 +1134,8 @@ global.initializeGlobals();
                  await context.react('📄');
                     return await context.reply('❌ Please provide some text to convert to PDF!\n\nUsage: `.topdf Hello World`',{quoted: global.pdf});
                 }
-                await context.react('♻️');
-                await context.reply('📄 Creating PDF document...',{quoted: global.pdf});
+                await context.react('🌞');
+                await context.reply('Creating PDF document...',{quoted: global.pdf});
                 
                 // Ensure temp directory exists
                 const tempDir = path.join(__dirname, '../temp');
@@ -1175,15 +1175,15 @@ global.initializeGlobals();
                             fileName: `converted_${Date.now()}.pdf`,
                             ...channelInfo
                         },{quoted: global.pdf});
-                        await context.react('💚');
-                        await context.reply('✅ PDF created successfully!',{quoted: global.pdf});
+                        await context.react('🌞');
+                        await context.reply('PDF created successfully!',{quoted: global.pdf});
                         
                         // Cleanup temp file
                         fs.unlinkSync(filePath);
                         
                     } catch (sendError) {
                         console.error('PDF send error:', sendError);
-                        await context.reply('❌ Failed to send PDF file!',{quoted: global.pdf});
+                        await context.reply('Failed to send PDF file!',{quoted: global.pdf});
                         // Still cleanup the file
                         if (fs.existsSync(filePath)) {
                             fs.unlinkSync(filePath);
@@ -1193,12 +1193,12 @@ global.initializeGlobals();
                 
                 stream.on('error', async (streamError) => {
                     console.error('PDF stream error:', streamError);
-                    await context.reply('❌ Error while creating PDF stream!');
+                    await context.reply('Error while creating PDF stream!');
                 });
                 
             } catch (err) {
                 console.error('PDF command error:', err);
-                await context.reply('❌ Error while creating PDF!');
+                await context.reply('Error while creating PDF!');
             }
         }
     },
@@ -1214,7 +1214,7 @@ global.initializeGlobals();
 
         // Check if user has permission (you can adjust this)
         if (!isFromOwner && !senderIsSudo) {
-            return await reply('❌ Only owner/sudo can create groups!',{quoted: global.creategc});
+            return await reply('Only owner/sudo can create groups!',{quoted: global.creategc});
         }
 
         // Get group name
@@ -1223,9 +1223,9 @@ global.initializeGlobals();
             return await reply(`📱 Create Group Command
 
 Usage:
-🔹 .creategc <name> - Create empty group
-🔹 .creategc <name> <number1,number2> - Create with members
-🔹 Reply to VCF: .creategc <name> - Add contacts from VCF
+.creategc <name> - Create empty group
+.creategc <name> <number1,number2> - Create with members
+Reply to VCF: .creategc <name> - Add contacts from VCF
 
 Examples:
 • .creategc Isaac - Create group "Isaac"
@@ -1262,12 +1262,12 @@ Examples:
                             participants = extractedNumbers;
                             await reply(`📇 Found ${extractedNumbers.length} contacts in VCF file!`);
                         } else {
-                            await reply('⚠️ No valid phone numbers found in VCF file.');
+                            await reply('No valid phone numbers found in VCF file.');
                         }
                         
                     } catch (error) {
                         console.error('❌ VCF processing error:', error);
-                        await reply('❌ Failed to process VCF file. Creating group without members.',{quoted: global.creategc});
+                        await reply('Failed to process VCF file. Creating group without members.',{quoted: global.creategc});
                     }
                 }
             }
@@ -1314,7 +1314,7 @@ Examples:
             const groupData = await sock.groupCreate(groupName, validParticipants);
             
             if (groupData && groupData.id) {
-                await context.react('✅');
+                await context.react('🌞');
                 
                 // Get group invite link
                 let groupLink = '';
@@ -1326,12 +1326,12 @@ Examples:
                     groupLink = 'Unable to generate link';
                 }
                 
-                let successMsg = `🎉 Group Created Successfully!
+                let successMsg = `Group Created Successfully!
 
-📱 Group Name: ${groupName}
-🆔 Group ID: ${groupData.id}
-👥 Members: ${validParticipants.length + 1} (including you)
-🔗 Group Link: ${groupLink}`;
+Group Name: ${groupName}
+Group ID: ${groupData.id}
+Members: ${validParticipants.length + 1} (including you)
+Group Link: ${groupLink}`;
 
                 if (validParticipants.length > 0) {
                     successMsg += `\n📋 Added Members: ${validParticipants.length}`;
@@ -1339,7 +1339,7 @@ Examples:
                 
                 // Send success message to the new group
                 await sock.sendMessage(groupData.id, {
-                    text: `🎉 Welcome to "${groupName}"!
+                    text: `Welcome to "${groupName}"!
 
 This group was created using DAVE-MD Bot.
 Group Link: ${groupLink}`
