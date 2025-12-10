@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import yts from 'yt-search';
 import settings from '../settings.js';
+import cheerio from 'cheerio';
 
 // Prevent repeated TikTok executions
 const processedMessages = new Set();
@@ -48,473 +49,356 @@ export default [
     }
   },
 
+  {
+    name: "playdoc",
+    aliases: ["pdoc", "songdoc"],
+    category: "downloader",
+    desc: "Download and send YouTube audio as document",
 
-{
-    name: "group-vcf",
-    aliases: ["vcf", "exportcontacts", "groupcontacts"],
-    description: "Export all group members as VCF contact file with names",
-    category: "GROUP MENU",
-    usage: ".group-vcf",
-    
-    execute: async (sock, m, args, context) => {
-        const { chatId, reply, react, isGroup } = context;
-        
-        if (!isGroup) {
-            return await reply("❌ This command can only be used in groups.");
+    async execute(sock, msg, args, context) {
+      const { reply, react } = context;
+      const from = msg.key.remoteJid;
+      const text = args.slice(1).join(" ").trim();
+
+      try {
+        await react('📄');
+
+        if (!text) {
+          return reply(`❌ Provide a song name!\n\nExample: .playdoc Not Like Us`);
         }
-        
-        try {
-            await react("📇");
-            
-            // Get group metadata
-            const groupMetadata = await sock.groupMetadata(chatId);
-            const participants = groupMetadata.participants || [];
-            
-            if (participants.length === 0) {
-                return await reply("❌ No members found in this group.");
-            }
-            
-            // Send processing message
-            await reply(`⏳ Processing ${participants.length} contacts... This may take a moment.`);
-            
-            // Generate VCF content with better names
-            let vcardContent = '';
-            
-            // Function to get proper contact name
-            const getContactName = (participant) => {
-                if (participant.notify && participant.notify.trim() !== '') {
-                    return participant.notify;
-                }
-                if (participant.displayName && participant.displayName.trim() !== '') {
-                    return participant.displayName;
-                }
-                const phoneNumber = participant.id.split("@")[0];
-                return `+${phoneNumber}`;
-            };
-            
-            // Function to get contact role
-            const getContactRole = (participant) => {
-                if (participant.admin === 'superadmin') return '👑 Owner';
-                if (participant.admin === 'admin') return '⭐ Admin';
-                return '👤 Member';
-            };
-            
-            // Generate VCF entries
-            participants.forEach((participant, index) => {
-                const phoneNumber = participant.id.split("@")[0];
-                const contactName = getContactName(participant);
-                const contactRole = getContactRole(participant);
-                
-                vcardContent += `BEGIN:VCARD\n`;
-                vcardContent += `VERSION:3.0\n`;
-                vcardContent += `FN:${contactName}\n`;
-                vcardContent += `N:${contactName};;;\n`;
-                vcardContent += `TEL;type=CELL;type=VOICE;waid=${phoneNumber}:+${phoneNumber}\n`;
-                vcardContent += `NOTE:Group: ${groupMetadata.subject}\n`;
-                vcardContent += `NOTE:Role: ${contactRole}\n`;
-                vcardContent += `X-GROUP:${groupMetadata.subject}\n`;
-                vcardContent += `END:VCARD\n\n`;
-            });
-            
-            // Create temporary directory
-            const tmpDir = path.join(process.cwd(), 'tmp');
-            if (!fs.existsSync(tmpDir)) {
-                fs.mkdirSync(tmpDir, { recursive: true });
-            }
-            
-            // Create VCF file
-            const filename = `${groupMetadata.subject.replace(/[^\w\s]/gi, '')}_contacts_${Date.now()}.vcf`;
-            const filepath = path.join(tmpDir, filename);
-            
-            fs.writeFileSync(filepath, vcardContent.trim(), 'utf8');
-            
-            // Send VCF file
-            await sock.sendMessage(chatId, {
-                document: fs.readFileSync(filepath),
-                mimetype: 'text/vcard',
-                fileName: filename,
-                caption: `📇 *Group Contacts Export*\n\n` +
-                        `📋 *Group:* ${groupMetadata.subject}\n` +
-                        `👥 *Total Contacts:* ${participants.length}\n` +
-                        `👑 *Admins:* ${participants.filter(p => p.admin).length}\n` +
-                        `📅 *Exported:* ${new Date().toLocaleString()}\n\n` +
-                        `*How to use:*\n` +
-                        `1. Download this file\n` +
-                        `2. Open in Contacts app\n` +
-                        `3. Import to save all contacts\n\n` +
-                        `📱 Generated by DAVE-MD`
-            }, { quoted: m });
-            
-            // Clean up
-            try {
-                fs.unlinkSync(filepath);
-            } catch (error) {
-                console.error('[VCF] Error deleting temp file:', error.message);
-            }
-            
-            await react("✅");
-            
-        } catch (error) {
-            console.error('[VCF] Error:', error);
-            await reply(`❌ Failed to generate VCF file: ${error.message}`);
+
+        // Use process.cwd() to avoid __dirname issues
+        const tempDir = path.join(process.cwd(), "temp");
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+        if (text.length > 100) {
+          return reply('❌ Song name too long! Maximum 100 characters.');
         }
-    }
-}
 
-{
-  name: "playdoc",
-  aliases: ["pdoc", "songdoc"],
-  category: "downloader",
-  desc: "Download and send YouTube audio as document",
+        await reply("🎵 Searching for the track...");
 
-  async execute(sock, msg, args, context) {
-    const { reply, react } = context;
-    const from = msg.key.remoteJid;
-    const text = args.slice(1).join(" ").trim();
+        const searchResult = (await yts(`${text} official`)).videos[0];
+        if (!searchResult) {
+          return reply("❌ Couldn't find that song. Try another one!");
+        }
 
-    try {
-      await react('📄');
+        const video = searchResult;
+        const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
+        const response = await axios.get(apiUrl);
+        const apiData = response.data;
 
-      if (!text) {
-        return reply(`❌ Provide a song name!\n\nExample: .playdoc Not Like Us`);
-      }
+        if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
+          throw new Error("API failed to fetch track!");
+        }
 
-      // Use process.cwd() to avoid __dirname issues
-      const tempDir = path.join(process.cwd(), "temp");
-      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+        const timestamp = Date.now();
+        const fileName = `audio_${timestamp}.mp3`;
+        const filePath = path.join(tempDir, fileName);
 
-      if (text.length > 100) {
-        return reply('❌ Song name too long! Maximum 100 characters.');
-      }
+        const audioResponse = await axios({
+          method: "get",
+          url: apiData.result.downloadUrl,
+          responseType: "stream",
+          timeout: 600000
+        });
 
-      await reply("🎵 Searching for the track...");
+        const writer = fs.createWriteStream(filePath);
+        audioResponse.data.pipe(writer);
 
-      const searchResult = (await yts(`${text} official`)).videos[0];
-      if (!searchResult) {
-        return reply("❌ Couldn't find that song. Try another one!");
-      }
+        await new Promise((resolve, reject) => {
+          writer.on("finish", resolve);
+          writer.on("error", reject);
+        });
 
-      const video = searchResult;
-      const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
-      const response = await axios.get(apiUrl);
-      const apiData = response.data;
+        if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+          throw new Error("Download failed or empty file!");
+        }
 
-      if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
-        throw new Error("API failed to fetch track!");
-      }
+        const songTitle = apiData.result.title || video.title;
 
-      const timestamp = Date.now();
-      const fileName = `audio_${timestamp}.mp3`;
-      const filePath = path.join(tempDir, fileName);
+        await reply(`✅ Downloaded: ${songTitle}`);
 
-      const audioResponse = await axios({
-        method: "get",
-        url: apiData.result.downloadUrl,
-        responseType: "stream",
-        timeout: 600000
-      });
-
-      const writer = fs.createWriteStream(filePath);
-      audioResponse.data.pipe(writer);
-
-      await new Promise((resolve, reject) => {
-        writer.on("finish", resolve);
-        writer.on("error", reject);
-      });
-
-      if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
-        throw new Error("Download failed or empty file!");
-      }
-
-      const songTitle = apiData.result.title || video.title;
-      
-      await reply(`✅ Downloaded: ${songTitle}`);
-
-      await sock.sendMessage(
-        from,
-        {
-          document: { url: filePath },
-          mimetype: "audio/mpeg",
-          fileName: `${songTitle.substring(0, 100).replace(/[^\w\s.-]/gi, '')}.mp3`
-        },
-        { quoted: msg }
-      );
-
-      // Clean up temp file
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-
-      await react('✅');
-
-    } catch (error) {
-      console.error("Playdoc command error:", error);
-      await react('❌');
-      
-      let errorMessage = '❌ Download failed!';
-      if (error.message.includes('timeout')) {
-        errorMessage = '❌ Request timeout. Try again.';
-      } else if (error.message.includes('ENOTFOUND')) {
-        errorMessage = '❌ Network error. Check connection.';
-      }
-      
-      return reply(`${errorMessage}\nError: ${error.message}`);
-    }
-  }
-},
-
-
-{
-  name: "yts",
-  aliases: ["ytsearch"],
-  category: "SEARCH MENU",
-  desc: "Search YouTube videos",
-
-  async execute(sock, msg, args, context) {
-    const { reply } = context;
-    const text = args.slice(1).join(" ").trim();
-
-    if (!text) {
-      return reply(`Example : .yts faded`);
-    }
-
-    try {
-      const yts = require("yt-search");
-      const search = await yts(text);
-      
-      if (!search.all || search.all.length === 0) {
-        return reply(`No results found for "${text}"`);
-      }
-
-      let teks = `*YouTube Search*\n\n*Results for:* ${text}\n\n`;
-      let no = 1;
-      
-      for (let i of search.all.slice(0, 10)) { // Limit to 10 results
-        teks += `❤️ *No:* ${no++}\n`;
-        teks += `❤️ *Type:* ${i.type}\n`;
-        teks += `❤️ *Title:* ${i.title}\n`;
-        teks += `❤️ *Views:* ${i.views}\n`;
-        teks += `❤️ *Duration:* ${i.timestamp}\n`;
-        teks += `❤️ *Uploaded:* ${i.ago}\n`;
-        teks += `❤️ *URL:* ${i.url}\n`;
-        teks += `─────────────────\n\n`;
-      }
-
-      await sock.sendMessage(msg.key.remoteJid, {
-        image: { url: search.all[0].thumbnail },
-        caption: teks
-      }, { quoted: msg });
-
-    } catch (error) {
-      console.error('YouTube search error:', error);
-      reply('❌ Error searching YouTube videos.');
-    }
-  }
-},
-
-{
-  name: "shorturl",
-  aliases: ["shorten", "urlshort"],
-  category: "TOOLS MENU",
-  desc: "Shorten long URLs",
-
-  async execute(sock, msg, args, context) {
-    const { reply } = context;
-    const text = args.slice(1).join(" ").trim();
-
-    if (!text) {
-      return reply('❌ Please provide a URL to shorten.\n\nExample: .shorturl https://example.com');
-    }
-
-    try {
-      // Validate URL
-      if (!text.startsWith('http://') && !text.startsWith('https://')) {
-        return reply('❌ Please provide a valid URL starting with http:// or https://');
-      }
-
-      const zlib = require('zlib');
-      const qs = require('querystring');
-      
-      const kualatshort = async (url) => {
-        const res = await axios.post(
-          'https://kua.lat/shorten',
-          qs.stringify({ url }),
+        await sock.sendMessage(
+          from,
           {
-            responseType: 'arraybuffer',
-            headers: {
-              'Accept': 'application/json, text/javascript, */*; q=0.01',
-              'Accept-Encoding': 'gzip, deflate, br',
-              'Accept-Language': 'id-ID,id;q=0.9,en-AU;q=0.8,en;q=0.7,en-US;q=0.6',
-              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-              'Origin': 'https://kua.lat',
-              'Referer': 'https://kua.lat/',
-              'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36',
-              'X-Requested-With': 'XMLHttpRequest'
-            }
-          }
+            document: { url: filePath },
+            mimetype: "audio/mpeg",
+            fileName: `${songTitle.substring(0, 100).replace(/[^\w\s.-]/gi, '')}.mp3`
+          },
+          { quoted: msg }
         );
 
-        let decoded;
-        const encoding = res.headers['content-encoding'];
-
-        if (encoding === 'br') {
-          decoded = zlib.brotliDecompressSync(res.data);
-        } else if (encoding === 'gzip') {
-          decoded = zlib.gunzipSync(res.data);
-        } else if (encoding === 'deflate') {
-          decoded = zlib.inflateSync(res.data);
-        } else {
-          decoded = res.data;
+        // Clean up temp file
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
         }
 
-        return JSON.parse(decoded.toString());
-      };
+        await react('✅');
 
-      const result = await kualatshort(text);
+      } catch (error) {
+        console.error("Playdoc command error:", error);
+        await react('❌');
 
-      if (!result?.data?.shorturl) {
-        return reply('❌ Failed to create short URL. Please try again.');
+        let errorMessage = '❌ Download failed!';
+        if (error.message.includes('timeout')) {
+          errorMessage = '❌ Request timeout. Try again.';
+        } else if (error.message.includes('ENOTFOUND')) {
+          errorMessage = '❌ Network error. Check connection.';
+        }
+
+        return reply(`${errorMessage}\nError: ${error.message}`);
       }
-
-      await reply(`🔗 *Short URL Created*\n\n*Original:* ${text}\n*Shortened:* ${result.data.shorturl}\n\n✅ URL shortened successfully!`);
-
-    } catch (error) {
-      console.error('[SHORTURL] Error:', error);
-      reply(`❌ Error: ${error.message || 'Failed to shorten URL'}`);
     }
-  }
-},
+  },
 
+  {
+    name: "yts",
+    aliases: ["ytsearch"],
+    category: "SEARCH MENU",
+    desc: "Search YouTube videos",
 
+    async execute(sock, msg, args, context) {
+      const { reply } = context;
+      const text = args.slice(1).join(" ").trim();
 
-
-{
-  name: "video",
-  aliases: ["ytvideo", "ytvid"],
-  category: "downloader",
-  desc: "Download YouTube videos in MP4 format",
-
-  async execute(sock, msg, args, context) {
-    const { reply, react } = context;
-    const from = msg.key.remoteJid;
-    const text = args.slice(1).join(" ").trim();
-
-    try {
-      if (!text) return reply('❌ What video do you want to download?\n\nExample: .video <search term or YouTube URL>');
-
-      await react('🎬');
-
-      let videoUrl = '';
-      let videoTitle = '';
-      let videoThumbnail = '';
-
-      // Check if input is a URL or search term
-      if (text.startsWith('http://') || text.startsWith('https://')) {
-        videoUrl = text;
-      } else {
-        // Search for video
-        const { videos } = await yts(text);
-        if (!videos || videos.length === 0) return reply('❌ No videos found!');
-        
-        videoUrl = videos[0].url;
-        videoTitle = videos[0].title;
-        videoThumbnail = videos[0].thumbnail;
+      if (!text) {
+        return reply(`Example : .yts faded`);
       }
 
-      // Validate YouTube URL
-      const youtubeRegex = /(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi;
-      const urls = videoUrl.match(youtubeRegex);
-      if (!urls) return reply('❌ This is not a valid YouTube link!');
+      try {
+        const yts = require("yt-search");
+        const search = await yts(text);
 
-      // API configurations
-      const izumi = {
-        baseURL: "https://izumiiiiiiii.dpdns.org"
-      };
-
-      const AXIOS_DEFAULTS = {
-        timeout: 60000,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*'
+        if (!search.all || search.all.length === 0) {
+          return reply(`No results found for "${text}"`);
         }
-      };
 
-      // Retry function
-      const tryRequest = async (getter, attempts = 3) => {
-        let lastError;
-        for (let attempt = 1; attempt <= attempts; attempt++) {
-          try {
-            return await getter();
-          } catch (err) {
-            lastError = err;
-            if (attempt < attempts) {
-              await new Promise(r => setTimeout(r, 1000 * attempt));
+        let teks = `*YouTube Search*\n\n*Results for:* ${text}\n\n`;
+        let no = 1;
+
+        for (let i of search.all.slice(0, 10)) { // Limit to 10 results
+          teks += `❤️ *No:* ${no++}\n`;
+          teks += `❤️ *Type:* ${i.type}\n`;
+          teks += `❤️ *Title:* ${i.title}\n`;
+          teks += `❤️ *Views:* ${i.views}\n`;
+          teks += `❤️ *Duration:* ${i.timestamp}\n`;
+          teks += `❤️ *Uploaded:* ${i.ago}\n`;
+          teks += `❤️ *URL:* ${i.url}\n`;
+          teks += `─────────────────\n\n`;
+        }
+
+        await sock.sendMessage(msg.key.remoteJid, {
+          image: { url: search.all[0].thumbnail },
+          caption: teks
+        }, { quoted: msg });
+
+      } catch (error) {
+        console.error('YouTube search error:', error);
+        reply('❌ Error searching YouTube videos.');
+      }
+    }
+  },
+
+  {
+    name: "shorturl",
+    aliases: ["shorten", "urlshort"],
+    category: "TOOLS MENU",
+    desc: "Shorten long URLs",
+
+    async execute(sock, msg, args, context) {
+      const { reply } = context;
+      const text = args.slice(1).join(" ").trim();
+
+      if (!text) {
+        return reply('❌ Please provide a URL to shorten.\n\nExample: .shorturl https://example.com');
+      }
+
+      try {
+        // Validate URL
+        if (!text.startsWith('http://') && !text.startsWith('https://')) {
+          return reply('❌ Please provide a valid URL starting with http:// or https://');
+        }
+
+        const zlib = require('zlib');
+        const qs = require('querystring');
+
+        const kualatshort = async (url) => {
+          const res = await axios.post(
+            'https://kua.lat/shorten',
+            qs.stringify({ url }),
+            {
+              responseType: 'arraybuffer',
+              headers: {
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Accept-Language': 'id-ID,id;q=0.9,en-AU;q=0.8,en;q=0.7,en-US;q=0.6',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Origin': 'https://kua.lat',
+                'Referer': 'https://kua.lat/',
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36',
+                'X-Requested-With': 'XMLHttpRequest'
+              }
+            }
+          );
+
+          let decoded;
+          const encoding = res.headers['content-encoding'];
+
+          if (encoding === 'br') {
+            decoded = zlib.brotliDecompressSync(res.data);
+          } else if (encoding === 'gzip') {
+            decoded = zlib.gunzipSync(res.data);
+          } else if (encoding === 'deflate') {
+            decoded = zlib.inflateSync(res.data);
+          } else {
+            decoded = res.data;
+          }
+
+          return JSON.parse(decoded.toString());
+        };
+
+        const result = await kualatshort(text);
+
+        if (!result?.data?.shorturl) {
+          return reply('❌ Failed to create short URL. Please try again.');
+        }
+
+        await reply(`🔗 *Short URL Created*\n\n*Original:* ${text}\n*Shortened:* ${result.data.shorturl}\n\n✅ URL shortened successfully!`);
+
+      } catch (error) {
+        console.error('[SHORTURL] Error:', error);
+        reply(`❌ Error: ${error.message || 'Failed to shorten URL'}`);
+      }
+    }
+  },
+
+  {
+    name: "video",
+    aliases: ["ytvideo", "ytvid"],
+    category: "downloader",
+    desc: "Download YouTube videos in MP4 format",
+
+    async execute(sock, msg, args, context) {
+      const { reply, react } = context;
+      const from = msg.key.remoteJid;
+      const text = args.slice(1).join(" ").trim();
+
+      try {
+        if (!text) return reply('❌ What video do you want to download?\n\nExample: .video <search term or YouTube URL>');
+
+        await react('🎬');
+
+        let videoUrl = '';
+        let videoTitle = '';
+        let videoThumbnail = '';
+
+        // Check if input is a URL or search term
+        if (text.startsWith('http://') || text.startsWith('https://')) {
+          videoUrl = text;
+        } else {
+          // Search for video
+          const { videos } = await yts(text);
+          if (!videos || videos.length === 0) return reply('❌ No videos found!');
+
+          videoUrl = videos[0].url;
+          videoTitle = videos[0].title;
+          videoThumbnail = videos[0].thumbnail;
+        }
+
+        // Validate YouTube URL
+        const youtubeRegex = /(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi;
+        const urls = videoUrl.match(youtubeRegex);
+        if (!urls) return reply('❌ This is not a valid YouTube link!');
+
+        // API configurations
+        const izumi = {
+          baseURL: "https://izumiiiiiiii.dpdns.org"
+        };
+
+        const AXIOS_DEFAULTS = {
+          timeout: 60000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*'
+          }
+        };
+
+        // Retry function
+        const tryRequest = async (getter, attempts = 3) => {
+          let lastError;
+          for (let attempt = 1; attempt <= attempts; attempt++) {
+            try {
+              return await getter();
+            } catch (err) {
+              lastError = err;
+              if (attempt < attempts) {
+                await new Promise(r => setTimeout(r, 1000 * attempt));
+              }
             }
           }
+          throw lastError;
+        };
+
+        // Izumi API
+        const getIzumiVideoByUrl = async (youtubeUrl) => {
+          const apiUrl = `${izumi.baseURL}/downloader/youtube?url=${encodeURIComponent(youtubeUrl)}&format=720`;
+          const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
+          if (res?.data?.result?.download) return res.data.result;
+          throw new Error('Izumi video API returned no download');
+        };
+
+        // Okatsu API (fallback)
+        const getOkatsuVideoByUrl = async (youtubeUrl) => {
+          const apiUrl = `https://okatsu-rolezapiiz.vercel.app/downloader/ytmp4?url=${encodeURIComponent(youtubeUrl)}`;
+          const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
+          if (res?.data?.result?.mp4) {
+            return {
+              download: res.data.result.mp4,
+              title: res.data.result.title
+            };
+          }
+          throw new Error('Okatsu API returned no mp4');
+        };
+
+        // Get video ID for thumbnail
+        const ytId = (videoUrl.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/) || [])[1];
+        const thumb = videoThumbnail || (ytId ? `https://i.ytimg.com/vi/${ytId}/sddefault.jpg` : undefined);
+        const captionTitle = videoTitle || text;
+
+        // Send thumbnail with loading message
+        if (thumb) {
+          await sock.sendMessage(from, {
+            image: { url: thumb },
+            caption: `*${captionTitle}*\n\n🎬 Searching video data...`
+          }, { quoted: msg });
         }
-        throw lastError;
-      };
 
-      // Izumi API
-      const getIzumiVideoByUrl = async (youtubeUrl) => {
-        const apiUrl = `${izumi.baseURL}/downloader/youtube?url=${encodeURIComponent(youtubeUrl)}&format=720`;
-        const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
-        if (res?.data?.result?.download) return res.data.result;
-        throw new Error('Izumi video API returned no download');
-      };
-
-      // Okatsu API (fallback)
-      const getOkatsuVideoByUrl = async (youtubeUrl) => {
-        const apiUrl = `https://okatsu-rolezapiiz.vercel.app/downloader/ytmp4?url=${encodeURIComponent(youtubeUrl)}`;
-        const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
-        if (res?.data?.result?.mp4) {
-          return {
-            download: res.data.result.mp4,
-            title: res.data.result.title
-          };
+        // Try downloading video
+        let videoData;
+        try {
+          videoData = await getIzumiVideoByUrl(videoUrl);
+        } catch (e1) {
+          console.warn('[VIDEO] Izumi failed, trying Okatsu:', e1?.message || e1);
+          videoData = await getOkatsuVideoByUrl(videoUrl);
         }
-        throw new Error('Okatsu API returned no mp4');
-      };
 
-      // Get video ID for thumbnail
-      const ytId = (videoUrl.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/) || [])[1];
-      const thumb = videoThumbnail || (ytId ? `https://i.ytimg.com/vi/${ytId}/sddefault.jpg` : undefined);
-      const captionTitle = videoTitle || text;
-
-      // Send thumbnail with loading message
-      if (thumb) {
+        // Send the video
         await sock.sendMessage(from, {
-          image: { url: thumb },
-          caption: `*${captionTitle}*\n\n🎬 Searching video data...`
+          video: { url: videoData.download },
+          mimetype: 'video/mp4',
+          fileName: `${videoData.title || videoTitle || 'video'}.mp4`.replace(/[^\w\s.-]/gi, ''),
+          caption: `📹 *${videoData.title || videoTitle || 'Video'}*\n\n✅ Downloaded successfully!`
         }, { quoted: msg });
+
+        await react('✅');
+
+      } catch (error) {
+        console.error('[VIDEO] Command Error:', error?.message || error);
+        await react('❌');
+        reply('❌ Download failed: ' + (error?.message || 'Unknown error'));
       }
-
-      // Try downloading video
-      let videoData;
-      try {
-        videoData = await getIzumiVideoByUrl(videoUrl);
-      } catch (e1) {
-        console.warn('[VIDEO] Izumi failed, trying Okatsu:', e1?.message || e1);
-        videoData = await getOkatsuVideoByUrl(videoUrl);
-      }
-
-      // Send the video
-      await sock.sendMessage(from, {
-        video: { url: videoData.download },
-        mimetype: 'video/mp4',
-        fileName: `${videoData.title || videoTitle || 'video'}.mp4`.replace(/[^\w\s.-]/gi, ''),
-        caption: `📹 *${videoData.title || videoTitle || 'Video'}*\n\n✅ Downloaded successfully!`
-      }, { quoted: msg });
-
-      await react('✅');
-
-    } catch (error) {
-      console.error('[VIDEO] Command Error:', error?.message || error);
-      await react('❌');
-      reply('❌ Download failed: ' + (error?.message || 'Unknown error'));
     }
-  }
-},
+  },
 
   {
     name: 'download',
@@ -673,90 +557,7 @@ export default [
     }
   },
   {
-    name: "instagram",
-    aliases: ["ig", "insta", "igdl"],
-    category: "downloader",
-    desc: "Download Instagram posts, reels, and videos",
-
-    async execute(sock, msg, args, context) {
-        const from = msg.key.remoteJid;
-        const messageId = msg.key.id;
-
-        try {
-            // Prevent duplicate execution
-            if (processedMessages.has(messageId)) return;
-            processedMessages.add(messageId);
-            setTimeout(() => processedMessages.delete(messageId), 5 * 60 * 1000);
-
-            const text = args.join(" ").trim();
-            if (!text) return context.reply("Please provide an Instagram link.");
-
-            // Validate Instagram URL
-            const instagramPatterns = [
-                /https?:\/\/(?:www\.)?instagram\.com\//,
-                /https?:\/\/(?:www\.)?instagr\.am\//,
-                /https?:\/\/(?:www\.)?instagram\.com\/p\//,
-                /https?:\/\/(?:www\.)?instagram\.com\/reel\//,
-                /https?:\/\/(?:www\.)?instagram\.com\/tv\//
-            ];
-            const isValidUrl = instagramPatterns.some(p => p.test(text));
-            if (!isValidUrl) return context.reply("That is not a valid Instagram link.");
-
-            await context.react("🔄");
-
-            const downloadData = await igdl(text);
-            if (!downloadData?.data?.length) return context.reply("❌ No media found at the provided link.");
-
-            // Deduplicate media URLs
-            const uniqueMedia = [];
-            const seenUrls = new Set();
-            for (const media of downloadData.data) {
-                if (media.url && !seenUrls.has(media.url)) {
-                    seenUrls.add(media.url);
-                    uniqueMedia.push(media);
-                }
-            }
-
-            const mediaToDownload = uniqueMedia.slice(0, 20);
-            if (!mediaToDownload.length) return context.reply("❌ No valid media to download.");
-
-            // Download and send media
-            for (let i = 0; i < mediaToDownload.length; i++) {
-                const media = mediaToDownload[i];
-                const mediaUrl = media.url;
-                const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(mediaUrl) || media.type === "video" || text.includes("/reel/") || text.includes("/tv/");
-
-                try {
-                    if (isVideo) {
-                        await sock.sendMessage(from, {
-                            video: { url: mediaUrl },
-                            mimetype: "video/mp4",
-                            caption: ""
-                        }, { quoted: msg });
-                    } else {
-                        await sock.sendMessage(from, {
-                            image: { url: mediaUrl },
-                            caption: ""
-                        }, { quoted: msg });
-                    }
-
-                    // Small delay between media to prevent rate-limiting
-                    if (i < mediaToDownload.length - 1) await new Promise(r => setTimeout(r, 1000));
-
-                } catch (mediaErr) {
-                    console.error(`Error sending media #${i + 1}:`, mediaErr);
-                    continue;
-                }
-            }
-
-        } catch (err) {
-            console.error("Instagram command error:", err);
-            return context.reply("❌ An error occurred while processing the Instagram request.");
-        }
-    }
-  },
-  {
-    name: 'itunes',
+    name: "itunes",
     category: 'downloader',
     execute: async (sock, message, args, context) => {
       const text = args.slice(1).join(' ');
@@ -950,160 +751,210 @@ export default [
         }
     }
   },
+
+  // NEW: Facebook/Instagram Downloader
+  {
+    name: "fb",
+    aliases: ["facebook", "fbdl", "ig", "instagram", "igdl"],
+    category: "downloader",
+    desc: "Download Facebook or Instagram videos/photos",
+    usage: ".fb <link> or .ig <link>",
+    
+    execute: async (sock, m, args, context) => {
+      const { chatId, reply, react } = context;
+      const text = args.slice(1).join(' ').trim();
+      
+      if (!text) {
+        return reply(`🔗 Provide a Facebook or Instagram link!\n\nExample: .fb <link> or .ig <link>`);
+      }
+      
+      try {
+        await react("⏳");
+        
+        // Send initial processing message
+        await reply("⏳ Fetching media... Please wait!");
+        
+        async function fetchMedia(url) {
+          try {
+            const form = new URLSearchParams();
+            form.append("q", url);
+            form.append("vt", "home");
+            
+            const { data } = await axios.post('https://yt5s.io/api/ajaxSearch', form, {
+              headers: {
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+            });
+            
+            if (data.status !== "ok") throw new Error("Provide a valid link.");
+            const $ = cheerio.load(data.data);
+            
+            // Facebook detection
+            if (/^(https?:\/\/)?(www\.)?(facebook\.com|fb\.watch)\/.+/i.test(url)) {
+              const thumb = $('img').attr("src");
+              let links = [];
+              
+              $('table tbody tr').each((_, el) => {
+                const quality = $(el).find('.video-quality').text().trim();
+                const link = $(el).find('a.download-link-fb').attr("href");
+                if (quality && link) links.push({ quality, link });
+              });
+              
+              if (links.length > 0) return { 
+                platform: "Facebook", 
+                type: "video", 
+                thumb, 
+                media: links[0].link 
+              };
+              
+              if (thumb) return { 
+                platform: "Facebook", 
+                type: "image", 
+                media: thumb 
+              };
+              
+              throw new Error("Media is invalid.");
+              
+            // Instagram detection
+            } else if (/^(https?:\/\/)?(www\.)?(instagram\.com\/(p|reel)\/).+/i.test(url)) {
+              const video = $('a[title="Download Video"]').attr("href");
+              const image = $('img').attr("src");
+              
+              if (video) return { 
+                platform: "Instagram", 
+                type: "video", 
+                media: video 
+              };
+              
+              if (image) return { 
+                platform: "Instagram", 
+                type: "image", 
+                media: image 
+              };
+              
+              throw new Error("Media invalid.");
+            } else {
+              throw new Error("Provide a valid Facebook or Instagram URL.");
+            }
+          } catch (err) {
+            return { error: err.message };
+          }
+        }
+        
+        const res = await fetchMedia(text);
+        
+        if (res.error) {
+          await react("❌");
+          return reply(`⚠️ Error: ${res.error}`);
+        }
+        
+        await reply("⏳ Media found! Downloading now...");
+        
+        if (res.type === "video") {
+          await sock.sendMessage(chatId, { 
+            video: { url: res.media }, 
+            caption: `✅ Downloaded video from ${res.platform}!` 
+          }, { quoted: m });
+        } else if (res.type === "image") {
+          await sock.sendMessage(chatId, { 
+            image: { url: res.media }, 
+            caption: `✅ Downloaded photo from ${res.platform}!` 
+          }, { quoted: m });
+        }
+        
+        await react("✅");
+        await reply("✅ Done!");
+        
+      } catch (error) {
+        console.error('[FB/IG] Error:', error);
+        await react("❌");
+        return reply("❌ Failed to get media.");
+      }
+    }
+  },
+
+  // NEW: TikTok Downloader
   {
     name: "tiktok",
     aliases: ["tt", "tik"],
     category: "downloader",
-    desc: "Download TikTok video and audio",
-
-    async execute(sock, msg, args, context) {
-        const from = msg.key.remoteJid;
-        const messageId = msg.key.id;
-
-        try {
-            // Prevent duplicate execution
-            if (processedMessages.has(messageId)) return;
-            processedMessages.add(messageId);
-            setTimeout(() => processedMessages.delete(messageId), 5 * 60 * 1000);
-
-            const text = args.join(" ").trim();
-            if (!text) return context.reply("Please provide a TikTok link.");
-
-            const url = args.slice(0).join(" ").trim();
-            if (!url) return context.reply("Please provide a TikTok link.");
-
-            // Validate TikTok URL
-            const tiktokPatterns = [
-                /https?:\/\/(?:www\.)?tiktok\.com\//,
-                /https?:\/\/(?:vm\.)?tiktok\.com\//,
-                /https?:\/\/(?:vt\.)?tiktok\.com\//,
-                /https?:\/\/(?:www\.)?tiktok\.com\/@/,
-                /https?:\/\/(?:www\.)?tiktok\.com\/t\//
-            ];
-            const isValidUrl = tiktokPatterns.some(p => p.test(url));
-            if (!isValidUrl) return context.reply("That is not a valid TikTok link.");
-
-            await context.react("🎬");
-
-            // TikTok API fallback list
-            const apis = [
-                `https://api.princetechn.com/api/download/tiktok?apikey=prince&url=${encodeURIComponent(url)}`,
-                `https://api.princetechn.com/api/download/tiktokdlv2?apikey=prince&url=${encodeURIComponent(url)}`,
-                `https://api.princetechn.com/api/download/tiktokdlv3?apikey=prince&url=${encodeURIComponent(url)}`,
-                `https://api.princetechn.com/api/download/tiktokdlv4?apikey=prince&url=${encodeURIComponent(url)}`,
-                `https://api.dreaded.site/api/tiktok?url=${encodeURIComponent(url)}`
-            ];
-
-            let videoUrl = null;
-            let audioUrl = null;
-            let title = null;
-
-            // Try each API until one works
-            for (const apiUrl of apis) {
-                try {
-                    const response = await axios.get(apiUrl, { timeout: 10000 });
-                    const data = response.data;
-
-                    if (data?.result?.videoUrl) {
-                        videoUrl = data.result.videoUrl;
-                        audioUrl = data.result.audioUrl;
-                        title = data.result.title;
-                        break;
-                    } else if (data?.tiktok?.video) {
-                        videoUrl = data.tiktok.video;
-                        break;
-                    } else if (data?.video) {
-                        videoUrl = data.video;
-                        break;
-                    }
-                } catch (err) {
-                    continue;
-                }
-            }
-
-            // Fallback to ttdl scraper if no video URL
-            if (!videoUrl) {
-                const dl = await ttdl(url);
-                if (dl?.data?.length > 0) {
-                    for (const media of dl.data.slice(0, 20)) {
-                        const mediaUrl = media.url;
-                        const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(mediaUrl) || media.type === "video";
-
-                        if (isVideo) {
-                            await sock.sendMessage(from, {
-                                video: { url: mediaUrl },
-                                mimetype: "video/mp4",
-                                caption: ""
-                            }, { quoted: msg });
-                        } else {
-                            await sock.sendMessage(from, {
-                                image: { url: mediaUrl },
-                                caption: ""
-                            }, { quoted: msg });
-                        }
-                    }
-                    await context.react("✔️");
-                    return;
-                }
-            }
-
-            if (!videoUrl) return context.reply("❌ Failed to download TikTok video. Try another link.");
-
-            // Try direct video download as buffer
-            try {
-                const videoRes = await axios.get(videoUrl, {
-                    responseType: "arraybuffer",
-                    timeout: 30000,
-                    headers: { "User-Agent": "Mozilla/5.0" }
-                });
-                const videoBuffer = Buffer.from(videoRes.data);
-
-                await sock.sendMessage(from, {
-                    video: videoBuffer,
-                    mimetype: "video/mp4",
-                    caption: title ? `Title: ${title}` : ""
-                }, { quoted: msg });
-
-                await context.react("✔️");
-
-                // If audio URL exists, download audio
-                if (audioUrl) {
-                    try {
-                        const audioRes = await axios.get(audioUrl, {
-                            responseType: "arraybuffer",
-                            timeout: 30000,
-                            headers: { "User-Agent": "Mozilla/5.0" }
-                        });
-                        const audioBuffer = Buffer.from(audioRes.data);
-
-                        await sock.sendMessage(from, {
-                            audio: audioBuffer,
-                            mimetype: "audio/mp3",
-                            caption: "🎵 Audio from TikTok"
-                        }, { quoted: msg });
-                    } catch (audioErr) {
-                        console.log("Audio download failed:", audioErr.message);
-                    }
-                }
-
-                return;
-            } catch (bufferErr) {
-                console.log("Buffer download failed:", bufferErr.message);
-            }
-
-            // Fallback: send video URL directly
-            await sock.sendMessage(from, {
-                video: { url: videoUrl },
-                mimetype: "video/mp4",
-                caption: title ? `Title: ${title}` : ""
-            }, { quoted: msg });
-
-            await context.react("✔️");
-
-        } catch (err) {
-            console.error("TikTok command error:", err);
-            return context.reply("❌ An error occurred while downloading the TikTok video.");
+    desc: "Download TikTok videos with audio",
+    usage: ".tiktok <link>",
+    
+    execute: async (sock, m, args, context) => {
+      const { chatId, reply, react } = context;
+      const text = args.slice(1).join(' ').trim();
+      
+      if (!text) {
+        return reply(`⚠️ Provide a TikTok link.`);
+      }
+      
+      try {
+        await react("⏳");
+        await reply("⏳ Fetching TikTok data...");
+        
+        // TikTok API endpoint
+        const apiUrl = `https://api.princetechn.com/api/download/tiktok?apikey=prince&url=${encodeURIComponent(text)}`;
+        const response = await axios.get(apiUrl);
+        const data = response.data;
+        
+        if (!data.result) {
+          throw new Error("Invalid TikTok link or API error");
         }
+        
+        const json = data.result;
+        
+        // Create caption
+        let caption = `🎵 [TIKTOK DOWNLOAD]\n\n`;
+        caption += `◦ Id: ${json.id || 'N/A'}\n`;
+        caption += `◦ Username: ${json.author?.nickname || 'N/A'}\n`;
+        caption += `◦ Title: ${json.title || 'N/A'}\n`;
+        caption += `◦ Likes: ${json.digg_count || 0}\n`;
+        caption += `◦ Comments: ${json.comment_count || 0}\n`;
+        caption += `◦ Shares: ${json.share_count || 0}\n`;
+        caption += `◦ Plays: ${json.play_count || 0}\n`;
+        caption += `◦ Created: ${json.create_time || 'N/A'}\n`;
+        caption += `◦ Size: ${json.size || 'N/A'}\n`;
+        caption += `◦ Duration: ${json.duration || 'N/A'}`;
+        
+        // Handle multiple images (slideshow)
+        if (json.images && json.images.length > 0) {
+          for (const imgUrl of json.images) {
+            await sock.sendMessage(chatId, { 
+              image: { url: imgUrl },
+              caption: json.images.length > 1 ? `Part ${json.images.indexOf(imgUrl) + 1}/${json.images.length}` : caption
+            }, { quoted: m });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        } else {
+          // Send video
+          await sock.sendMessage(chatId, { 
+            video: { url: json.play }, 
+            mimetype: 'video/mp4', 
+            caption: caption 
+          }, { quoted: m });
+          
+          // Send audio separately after delay
+          if (json.music) {
+            setTimeout(async () => {
+              await sock.sendMessage(chatId, { 
+                audio: { url: json.music }, 
+                mimetype: 'audio/mpeg',
+                fileName: 'tiktok_audio.mp3'
+              }, { quoted: m });
+            }, 3000);
+          }
+        }
+        
+        await react("✅");
+        
+      } catch (error) {
+        console.error('[TIKTOK] Error:', error);
+        await react("❌");
+        return reply("❌ Failed to fetch TikTok data. Make sure the link is valid.");
+      }
     }
   }
 ];
