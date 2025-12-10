@@ -1,5 +1,5 @@
 import fs from 'fs';
-import  { jidNormalizedUser }  from '@whiskeysockets/baileys';
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
 import {
   getChatData,
   updateChatData,
@@ -7,9 +7,11 @@ import {
   updateCommandData,
   resetDatabase,
   getSudo,       
-    isSudo,     
-    addSudo,        
-    removeSudo,
+  isSudo,     
+  addSudo,        
+  removeSudo,
+  getSetting,      // ✅ Added this import
+  updateSetting    // ✅ Added this import
 } from '../lib/database.js';
 import * as db from '../lib/database.js';
 import { syncMode } from './SPECIAL.js';
@@ -25,32 +27,39 @@ import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import settings from '../settings.js';
 
 async function extractMentionedJid(sock, message, chatId) {
-     const quotedParticipant = message.message?.extendedTextMessage?.contextInfo?.participant;
-       if (quotedParticipant) {
-        return quotedParticipant;
+  const quotedParticipant = message.message?.extendedTextMessage?.contextInfo?.participant;
+  if (quotedParticipant) {
+    return quotedParticipant;
+  }
+  const mentioned = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+  if (mentioned.length > 0) {
+    let jid = mentioned[0];
+    if (jid.includes('@lid')) {
+      try {
+        const groupMetadata = await sock.groupMetadata(chatId);
+        for (const participant of groupMetadata.participants) {
+          if (participant.id === jid) {
+            return participant.phoneNumber || participant.id;
+          }
+        }
+        return null;
+      } catch (error) {
+        console.error('Error fetching group metadata:', error);
+        return null;
+      }
     }
-    const mentioned = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-        if (mentioned.length > 0) {
-        let jid = mentioned[0];
-                if (jid.includes('@lid')) {            try {
-                const groupMetadata = await sock.groupMetadata(chatId);
-                
- for (const participant of groupMetadata.participants) {
-     if (participant.id === jid) {
-             return participant.phoneNumber || participant.id;                    }     }             
-              return null;
-             } catch (error) {
- console.error('Error fetching group metadata:', error);
-                return null; } }        return jid; }
-        const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
-    const match = text.match(/\b(\d{7,15})\b/);
-        if (match) {
-        return match[1] + '@s.whatsapp.net';    }
-        return null;}
+    return jid;
+  }
+  const text = message.message?.conversation || message.message?.extendedTextMessage?.text || '';
+  const match = text.match(/\b(\d{7,15})\b/);
+  if (match) {
+    return match[1] + '@s.whatsapp.net';
+  }
+  return null;
+}
 
 export default [
-   
-{
+  {
     name: 'pair',
     aliases: ['paircode'],
     category: 'owner',
@@ -73,9 +82,8 @@ export default [
       await context.replyPlain('Generating pairing code...');
 
       try {
-        // Fixed the double slash in the URL
         const apiUrl = `https://dave-sessions.onrender.com/pair/code?number=${phoneNumber}`;
-        
+
         const response = await axios.get(apiUrl, {
           timeout: 60000,
           headers: {
@@ -116,14 +124,14 @@ HOW TO LINK:
 Note: Code expires in 60 seconds
 
 Powered by DAVE-MD`;
-        
+
         await context.replyPlain(pairingMessage);
 
       } catch (error) {
         console.error('Pair command error:', error);
-        
+
         let errorMsg = 'An error occurred while generating the pairing code.';
-        
+
         if (error.code === 'ECONNABORTED') {
           errorMsg = 'Request timeout. Please try again.';
         } else if (error.response) {
@@ -131,1098 +139,794 @@ Powered by DAVE-MD`;
         } else if (error.request) {
           errorMsg = 'Cannot reach service. Check your internet connection.';
         }
-        
+
         await context.reply(errorMsg);
       }
     }
-},
+  },
 
   {
-
     name: 'block',
-
     category: 'owner',
-
     execute: async (sock, message, args, context) => {
-
       if (!message.key.fromMe && !context.senderIsSudo) {
-
         return context.reply("This command is only for the owner!");
-
       }
-
-      
 
       const text = args.slice(1).join(' ');
-
       const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-
       const mentionedJid = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
 
-      
-
       if (!quoted && !mentionedJid[0] && !text) {
-
         return context.reply("Reply to a message or mention/user ID to block");
-
       }
-
-      const userId = mentionedJid[0] || 
-
-                    (quoted ? message.message.extendedTextMessage.contextInfo.participant : null) ||
-
-                    text.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
-
       
+      const userId = mentionedJid[0] || 
+                    (quoted ? message.message.extendedTextMessage.contextInfo.participant : null) ||
+                    text.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
 
       await sock.updateBlockStatus(userId, "block");
-
       context.reply("User blocked successfully!");
-
     }
-
   },
 
   {
-
     name: 'unblock',
-
     category: 'owner',
-
     execute: async (sock, message, args, context) => {
-
       if (!message.key.fromMe && !context.senderIsSudo) {
-
         return context.reply("This command is only for the owner!");
-
       }
-
-      
 
       const text = args.slice(1).join(' ');
-
       const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-
       const mentionedJid = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
 
-      
-
       if (!quoted && !mentionedJid[0] && !text) {
-
         return context.reply("Reply to a message or mention/user ID to unblock");
-
       }
-
+      
       const userId = mentionedJid[0] || 
-
                     (quoted ? message.message.extendedTextMessage.contextInfo.participant : null) ||
-
                     text.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
 
-      
-
       await sock.updateBlockStatus(userId, "unblock");
-
       context.reply("✅ User unblocked successfully!");
-
     }
-
   },
 
-
-
-// ============================================
-// 🔹 ANTIDELETE COMMANDS
-// ============================================
-{
+  // ============================================
+  // 🔹 ANTIDELETE COMMANDS
+  // ============================================
+  {
     name: 'antidelete',
     aliases: ['antidel'],
     category: 'owner',
     description: 'Anti-delete message system',
     usage: '.antidelete [on/off/status/clean]',
     execute: async (sock, message, args, context) => {
-        const { chatId, reply, isFromOwner, senderIsSudo } = context;
-        
-        if (!isFromOwner && !senderIsSudo) {
-            return await reply('❌ Only owner/sudo can use this command!');
-        }
-        
-        const subcmd = args[1]?.toLowerCase() || 'status';
-        
-        switch(subcmd) {
-            case 'on':
-            case 'enable':
-                updateChatData(chatId, 'antidelete', true);
-                return await reply('✅ Anti-delete enabled for this chat!\n\nI will now detect when messages are deleted.');
-            
-            case 'off':
-            case 'disable':
-                updateChatData(chatId, 'antidelete', false);
-                return await reply('❌ Anti-delete disabled for this chat.');
-            
-            case 'status':
-                const isEnabled = getChatData(chatId, 'antidelete', false);
-                return await reply(`🛡️ Anti-Delete Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'detect' : 'NOT detect'} deleted messages in this chat.`);
-            
-            case 'clean':
-                if (global.featureManager?.antidelete?.cleanTemp) {
-                    const cleaned = await global.featureManager.antidelete.cleanTemp();
-                    return await reply(`🧹 Cleaned ${cleaned} temporary files!`);
-                }
-                return await reply('❌ Antidelete system not initialized.');
-            
-            default:
-                return await reply(`📋 Anti-Delete Commands:\n\n• .antidelete on - Enable for this chat\n• .antidelete off - Disable for this chat\n• .antidelete status - Check status\n• .antidelete clean - Clean temp files`);
-        }
-    }
-},
+      const { chatId, reply, isFromOwner, senderIsSudo } = context;
 
-// ============================================
-// 🔹 AUTO STATUS VIEWING COMMANDS
-// ============================================
-{
+      if (!isFromOwner && !senderIsSudo) {
+        return await reply('❌ Only owner/sudo can use this command!');
+      }
+
+      const subcmd = args[1]?.toLowerCase() || 'status';
+
+      switch(subcmd) {
+        case 'on':
+        case 'enable':
+          updateChatData(chatId, 'antidelete', true);
+          return await reply('✅ Anti-delete enabled for this chat!\n\nI will now detect when messages are deleted.');
+
+        case 'off':
+        case 'disable':
+          updateChatData(chatId, 'antidelete', false);
+          return await reply('❌ Anti-delete disabled for this chat.');
+
+        case 'status':
+          const isEnabled = getChatData(chatId, 'antidelete', false);
+          return await reply(`🛡️ Anti-Delete Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'detect' : 'NOT detect'} deleted messages in this chat.`);
+
+        case 'clean':
+          if (global.featureManager?.antidelete?.cleanTemp) {
+            const cleaned = await global.featureManager.antidelete.cleanTemp();
+            return await reply(`🧹 Cleaned ${cleaned} temporary files!`);
+          }
+          return await reply('❌ Antidelete system not initialized.');
+
+        default:
+          return await reply(`📋 Anti-Delete Commands:\n\n• .antidelete on - Enable for this chat\n• .antidelete off - Disable for this chat\n• .antidelete status - Check status\n• .antidelete clean - Clean temp files`);
+      }
+    }
+  },
+
+  // ============================================
+  // 🔹 AUTO STATUS VIEWING COMMANDS
+  // ============================================
+  {
     name: 'autostatus',
     aliases: ['autostatusview', 'autoviewstatus'],
     category: 'owner',
     description: 'Auto view status updates',
     usage: '.autostatus [on/off/status]',
     execute: async (sock, message, args, context) => {
-        const { reply, isFromOwner, senderIsSudo } = context;
-        
-        if (!isFromOwner && !senderIsSudo) {
-            return await reply('❌ Only owner/sudo can use this command!');
-        }
-        
-        const subcmd = args[1]?.toLowerCase() || 'status';
-        
-        switch(subcmd) {
-            case 'on':
-            case 'enable':
-                updateSetting('autoviewstatus', true);
-                return await reply('✅ Auto status viewing enabled!\n\nI will automatically view all status updates.');
-            
-            case 'off':
-            case 'disable':
-                updateSetting('autoviewstatus', false);
-                return await reply('❌ Auto status viewing disabled.');
-            
-            case 'status':
-                const isEnabled = getSetting('autoviewstatus', true);
-                return await reply(`📱 Auto Status Viewing: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'automatically view' : 'NOT view'} status updates.`);
-            
-            default:
-                return await reply(`📋 Auto Status Commands:\n\n• .autostatus on - Enable auto viewing\n• .autostatus off - Disable auto viewing\n• .autostatus status - Check status`);
-        }
-    }
-},
+      const { reply, isFromOwner, senderIsSudo } = context;
 
-// ============================================
-// 🔹 STATUS REACTION COMMANDS
-// ============================================
-{
+      if (!isFromOwner && !senderIsSudo) {
+        return await reply('❌ Only owner/sudo can use this command!');
+      }
+
+      const subcmd = args[1]?.toLowerCase() || 'status';
+
+      switch(subcmd) {
+        case 'on':
+        case 'enable':
+          updateSetting('autoviewstatus', true);  // ✅ Now this function is imported
+          return await reply('✅ Auto status viewing enabled!\n\nI will automatically view all status updates.');
+
+        case 'off':
+        case 'disable':
+          updateSetting('autoviewstatus', false);  // ✅ Now this function is imported
+          return await reply('❌ Auto status viewing disabled.');
+
+        case 'status':
+          const isEnabled = getSetting('autoviewstatus', true);  // ✅ Now this function is imported
+          return await reply(`📱 Auto Status Viewing: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'automatically view' : 'NOT view'} status updates.`);
+
+        default:
+          return await reply(`📋 Auto Status Commands:\n\n• .autostatus on - Enable auto viewing\n• .autostatus off - Disable auto viewing\n• .autostatus status - Check status`);
+      }
+    }
+  },
+
+  // ============================================
+  // 🔹 STATUS REACTION COMMANDS
+  // ============================================
+  {
     name: 'autostatusreact',
     aliases: ['statusreact'],
     category: 'owner',
     description: 'Auto react to status updates',
     usage: '.autostatusreact [on/off/setemoji/status]',
     execute: async (sock, message, args, context) => {
-        const { reply, isFromOwner, senderIsSudo } = context;
-        
-        if (!isFromOwner && !senderIsSudo) {
-            return await reply('❌ Only owner/sudo can use this command!');
-        }
-        
-        const subcmd = args[1]?.toLowerCase() || 'status';
-        
-        switch(subcmd) {
-            case 'on':
-            case 'enable':
-                updateSetting('autostatusreact', true);
-                return await reply('✅ Auto status reactions enabled!\n\nI will automatically react to status updates.');
-            
-            case 'off':
-            case 'disable':
-                updateSetting('autostatusreact', false);
-                return await reply('❌ Auto status reactions disabled.');
-            
-            case 'setemoji':
-            case 'setemojis':
-                const emojis = args.slice(2).join(' ').trim();
-                if (!emojis) {
-                    const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
-                    return await reply(`📝 Current Status Emojis:\n${currentEmojis.join(' ')}\n\nUsage: .autostatusreact setemoji 😂 ❤️ 🔥 ✨`);
-                }
-                updateSetting('statusEmojis', emojis.split(/[\s,]+/).filter(Boolean));
-                return await reply(`✅ Status reaction emojis updated to:\n${emojis}`);
-            
-            case 'status':
-                const isEnabled = getSetting('autostatusreact', false);
-                const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
-                return await reply(`📱 Auto Status Reactions: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nEmojis: ${currentEmojis.join(' ')}\n\nI will ${isEnabled ? 'automatically react' : 'NOT react'} to status updates.`);
-            
-            default:
-                return await reply(`📋 Auto Status Reaction Commands:\n\n• .autostatusreact on - Enable auto reactions\n• .autostatusreact off - Disable auto reactions\n• .autostatusreact setemoji 😂 ❤️ 🔥 - Set reaction emojis\n• .autostatusreact status - Check status`);
-        }
-    }
-},
+      const { reply, isFromOwner, senderIsSudo } = context;
 
-// ============================================
-// 🔹 SET STATUS EMOJIS COMMAND (Alternative)
-// ============================================
-{
+      if (!isFromOwner && !senderIsSudo) {
+        return await reply('❌ Only owner/sudo can use this command!');
+      }
+
+      const subcmd = args[1]?.toLowerCase() || 'status';
+
+      switch(subcmd) {
+        case 'on':
+        case 'enable':
+          updateSetting('autostatusreact', true);  // ✅ Now this function is imported
+          return await reply('✅ Auto status reactions enabled!\n\nI will automatically react to status updates.');
+
+        case 'off':
+        case 'disable':
+          updateSetting('autostatusreact', false);  // ✅ Now this function is imported
+          return await reply('❌ Auto status reactions disabled.');
+
+        case 'setemoji':
+        case 'setemojis':
+          const emojis = args.slice(2).join(' ').trim();
+          if (!emojis) {
+            const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
+            return await reply(`📝 Current Status Emojis:\n${currentEmojis.join(' ')}\n\nUsage: .autostatusreact setemoji 😂 ❤️ 🔥 ✨`);
+          }
+          updateSetting('statusEmojis', emojis.split(/[\s,]+/).filter(Boolean));  // ✅ Now this function is imported
+          return await reply(`✅ Status reaction emojis updated to:\n${emojis}`);
+
+        case 'status':
+          const isEnabled = getSetting('autostatusreact', false);  // ✅ Now this function is imported
+          const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
+          return await reply(`📱 Auto Status Reactions: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nEmojis: ${currentEmojis.join(' ')}\n\nI will ${isEnabled ? 'automatically react' : 'NOT react'} to status updates.`);
+
+        default:
+          return await reply(`📋 Auto Status Reaction Commands:\n\n• .autostatusreact on - Enable auto reactions\n• .autostatusreact off - Disable auto reactions\n• .autostatusreact setemoji 😂 ❤️ 🔥 - Set reaction emojis\n• .autostatusreact status - Check status`);
+      }
+    }
+  },
+
+  // ============================================
+  // 🔹 SET STATUS EMOJIS COMMAND (Alternative)
+  // ============================================
+  {
     name: 'setstatusemoji',
     aliases: ['setstatusemojis'],
     category: 'owner',
     description: 'Set emojis for auto status reactions',
     usage: '.setstatusemoji 😂 ❤️ 🔥 ✨',
     execute: async (sock, message, args, context) => {
-        const { reply, isFromOwner, senderIsSudo } = context;
-        
-        if (!isFromOwner && !senderIsSudo) {
-            return await reply('❌ Only owner/sudo can use this command!');
-        }
-        
-        const emojis = args.slice(1).join(' ').trim();
-        if (!emojis) {
-            const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
-            return await reply(`📝 Current Status Emojis:\n${currentEmojis.join(' ')}\n\nUsage: .setstatusemoji 😂 ❤️ 🔥 ✨`);
-        }
-        
-        updateSetting('statusEmojis', emojis.split(/[\s,]+/).filter(Boolean));
-        return await reply(`✅ Status reaction emojis updated to:\n${emojis}`);
-    }
-},
+      const { reply, isFromOwner, senderIsSudo } = context;
 
-// ============================================
-// 🔹 ANTIDELETE PM (Private Message) Command
-// ============================================
-{
+      if (!isFromOwner && !senderIsSudo) {
+        return await reply('❌ Only owner/sudo can use this command!');
+      }
+
+      const emojis = args.slice(1).join(' ').trim();
+      if (!emojis) {
+        const currentEmojis = getSetting('statusEmojis', ['💙', '❤️', '🌚', '😍', '✅', '🔥', '✨', '⭐', '👍']);
+        return await reply(`📝 Current Status Emojis:\n${currentEmojis.join(' ')}\n\nUsage: .setstatusemoji 😂 ❤️ 🔥 ✨`);
+      }
+
+      updateSetting('statusEmojis', emojis.split(/[\s,]+/).filter(Boolean));  // ✅ Now this function is imported
+      return await reply(`✅ Status reaction emojis updated to:\n${emojis}`);
+    }
+  },
+
+  // ============================================
+  // 🔹 ANTIDELETE PM (Private Message) Command
+  // ============================================
+  {
     name: 'antideletepm',
     aliases: ['antidelpm'],
     category: 'owner',
     description: 'Anti-delete for private messages only',
     usage: '.antideletepm [on/off/status]',
     execute: async (sock, message, args, context) => {
-        const { chatId, reply, isFromOwner, senderIsSudo } = context;
-        
-        if (!isFromOwner && !senderIsSudo) {
-            return await reply('❌ Only owner/sudo can use this command!');
-        }
-        
-        const subcmd = args[1]?.toLowerCase() || 'status';
-        
-        switch(subcmd) {
-            case 'on':
-            case 'enable':
-                updateSetting('antideletepm', true);
-                return await reply('✅ Anti-delete PM enabled!\n\nI will detect when messages are deleted in private chats.');
-            
-            case 'off':
-            case 'disable':
-                updateSetting('antideletepm', false);
-                return await reply('❌ Anti-delete PM disabled.');
-            
-            case 'status':
-                const isEnabled = getSetting('antideletepm', false);
-                return await reply(`📱 Anti-Delete PM: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'detect' : 'NOT detect'} deleted messages in private chats.`);
-            
-            default:
-                return await reply(`📋 Anti-Delete PM Commands:\n\n• .antideletepm on - Enable for private chats\n• .antideletepm off - Disable for private chats\n• .antideletepm status - Check status`);
-        }
-    }
-}
-  {
+      const { chatId, reply, isFromOwner, senderIsSudo } = context;
 
-    name: 'delete',
-
-    aliases: ['del'],
-
-    category: 'owner',
-
-    execute: async (sock, message, args, context) => {
-
-      await context.react("🗑️");
-
-      
-
-      if (!message.key.fromMe && !context.senderIsSudo) {
-
-        return context.reply("This command is only for the owner!");
-
+      if (!isFromOwner && !senderIsSudo) {
+        return await reply('❌ Only owner/sudo can use this command!');
       }
 
-      
+      const subcmd = args[1]?.toLowerCase() || 'status';
+
+      switch(subcmd) {
+        case 'on':
+        case 'enable':
+          updateSetting('antideletepm', true);  // ✅ Now this function is imported
+          return await reply('✅ Anti-delete PM enabled!\n\nI will detect when messages are deleted in private chats.');
+
+        case 'off':
+        case 'disable':
+          updateSetting('antideletepm', false);  // ✅ Now this function is imported
+          return await reply('❌ Anti-delete PM disabled.');
+
+        case 'status':
+          const isEnabled = getSetting('antideletepm', false);  // ✅ Now this function is imported
+          return await reply(`📱 Anti-Delete PM: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n\nI will ${isEnabled ? 'detect' : 'NOT detect'} deleted messages in private chats.`);
+
+        default:
+          return await reply(`📋 Anti-Delete PM Commands:\n\n• .antideletepm on - Enable for private chats\n• .antideletepm off - Disable for private chats\n• .antideletepm status - Check status`);
+      }
+    }
+  },
+
+  {
+    name: 'delete',
+    aliases: ['del'],
+    category: 'owner',
+    execute: async (sock, message, args, context) => {
+      await context.react("🗑️");
+
+      if (!message.key.fromMe && !context.senderIsSudo) {
+        return context.reply("This command is only for the owner!");
+      }
 
       const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-
       if (!quoted) return context.reply(`Please reply to a message`);
-
+      
       try {
-
         // Delete the quoted message
-
         await sock.sendMessage(context.chatId, {
-
           delete: {
-
             remoteJid: context.chatId,
-
             fromMe: false,
-
             id: message.message.extendedTextMessage.contextInfo.stanzaId,
-
             participant: message.message.extendedTextMessage.contextInfo.participant,
-
           }
-
         });
 
         // Delete the command message
-
         await sock.sendMessage(context.chatId, {
-
           delete: {
-
             remoteJid: context.chatId,
-
             fromMe: message.key.fromMe,
-
             id: message.key.id,
-
             participant: message.key.participant,
-
           }
-
         });
-
       } catch (err) {
-
         console.error(err);
-
         context.reply("Failed to delete message.");
-
       }
-
     }
-
-          },
+  },
 
   {
-
     name: 'groupid',
-
     aliases: ['idgc'],
-
     category: 'owner',
-
     execute: async (sock, message, args, context) => {
-
       if (!message.key.fromMe && !context.senderIsSudo) {
-
         return context.reply("This command is only for the owner!");
-
       }
 
-      
-
       const text = args.slice(1).join(' ');
-
       if (!text) return context.reply('Please provide a group link!');
 
-      
-
       let linkRegex = text;
-
       let coded = linkRegex.split("https://chat.whatsapp.com/")[1];
-
       if (!coded) return context.reply("Link Invalid");
-
+      
       sock.query({
-
         tag: "iq",
-
         attrs: {
-
           type: "get",
-
           xmlns: "w:g2",
-
           to: "@g.us"
-
         },
-
         content: [{ tag: "invite", attrs: { code: coded } }]
-
       }).then(async (res) => {
-
         const tee = `${res.content[0].attrs.id ? res.content[0].attrs.id : "undefined"}`;
-
         context.reply(tee + '@g.us');
-
       });
-
     }
-
   },
 
   {
-
     name: 'join',
-
     category: 'owner',
-
     execute: async (sock, message, args, context) => {
-
       if (!message.key.fromMe && !context.senderIsSudo) {
-
         return context.reply("This command is only for the owner!");
-
       }
-
-      
 
       const text = args.slice(1).join(' ');
-
       if (!text) return context.reply("Enter group link");
 
-      
-
       if (!isUrl(text) && !text.includes("whatsapp.com")) {
-
         return context.reply("Invalid link");
-
       }
-
-      try {
-
-        const link = text.split("https://chat.whatsapp.com/")[1];
-
-        await sock.groupAcceptInvite(link);
-
-        context.reply("Joined successfully");
-
-      } catch {
-
-        context.reply("Failed to join group");
-
-      }
-
-    }
-
-  },
-
-  {
-
-    name: 'listblocked',
-
-    aliases: ['blocked'],
-
-    category: 'owner',
-
-    execute: async (sock, message, args, context) => {
-
-      if (!message.key.fromMe && !context.senderIsSudo) {
-
-        return context.reply("This command is only for the owner!");
-
-      }
-
-      try {
-
-        const blockedList = await sock.fetchBlocklist();
-
-        if (!blockedList.length) {
-
-          return context.reply('No contacts are currently blocked.');
-
-        }
-
-        let blockedUsers = blockedList.map((user, index) => `🔹 *${index + 1}.* @${user.split('@')[0]}`).join('\n');
-
-        await sock.sendMessage(context.chatId, {
-
-          text: `🚫 *My Blocked Contacts:*\n\n${blockedUsers}`,
-
-          mentions: blockedList
-
-        }, { quoted: message });
-
-      } catch (error) {
-
-        context.reply('Unable to fetch blocked contacts.');
-
-      }
-
-    }
-
-  },
-
-  {
-
-    name: 'react',
-
-    category: 'owner',
-
-    execute: async (sock, message, args, context) => {
-
-      if (!message.key.fromMe && !context.senderIsSudo) {
-
-        return context.reply("This command is only for the owner!");
-
-      }
-
       
+      try {
+        const link = text.split("https://chat.whatsapp.com/")[1];
+        await sock.groupAcceptInvite(link);
+        context.reply("Joined successfully");
+      } catch {
+        context.reply("Failed to join group");
+      }
+    }
+  },
+
+  {
+    name: 'listblocked',
+    aliases: ['blocked'],
+    category: 'owner',
+    execute: async (sock, message, args, context) => {
+      if (!message.key.fromMe && !context.senderIsSudo) {
+        return context.reply("This command is only for the owner!");
+      }
+      
+      try {
+        const blockedList = await sock.fetchBlocklist();
+        if (!blockedList.length) {
+          return context.reply('No contacts are currently blocked.');
+        }
+        
+        let blockedUsers = blockedList.map((user, index) => `🔹 *${index + 1}.* @${user.split('@')[0]}`).join('\n');
+        await sock.sendMessage(context.chatId, {
+          text: `🚫 *My Blocked Contacts:*\n\n${blockedUsers}`,
+          mentions: blockedList
+        }, { quoted: message });
+      } catch (error) {
+        context.reply('Unable to fetch blocked contacts.');
+      }
+    }
+  },
+
+  {
+    name: 'react',
+    category: 'owner',
+    execute: async (sock, message, args, context) => {
+      if (!message.key.fromMe && !context.senderIsSudo) {
+        return context.reply("This command is only for the owner!");
+      }
 
       const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-
       if (!args[1]) return context.reply(`*Reaction emoji needed*\n Example: ${global.prefix}react 🤔`);
-
       if (!quoted) return context.reply("Please reply to a message to react to it");
-
+      
       const reactionMessage = {
-
         react: {
-
           text: args[1],
-
           key: { 
-
             remoteJid: context.chatId, 
-
             fromMe: false, 
-
             id: message.message.extendedTextMessage.contextInfo.stanzaId 
-
           },
-
         },
-
       };
 
-      
-
       sock.sendMessage(context.chatId, reactionMessage);
-
     }
-
   },
 
   {
-
     name: 'restart',
-  aliases: ['update','start'],
-
+    aliases: ['update','start'],
     category: 'owner',
-
     execute: async (sock, message, args, context) => {
-
       if (!message.key.fromMe && !context.senderIsSudo) {
-
         return context.reply("This command is only for the owner!");
-
       }
-
-      
 
       context.replyPlain(`Restarting...`);
-
       await sleep(3000);
-
       process.exit(0);
-
     }
-
   },
 
   {
-
     name: 'toviewonce',
-
     aliases: ['tovo', 'tovv'],
-
     category: 'owner',
-
     execute: async (sock, message, args, context) => {
-
       if (!message.key.fromMe && !context.senderIsSudo) {
-
         return context.reply("This command is only for the owner!");
-
       }
-
-      
 
       const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-
       if (!quoted) return context.reply(`Reply to an Image, Video, or Audio`);
-
       const messageType = Object.keys(quoted)[0];
 
-      
-
       try {
-
         if (messageType === 'imageMessage') {
-
           const stream = await downloadContentFromMessage(quoted[messageType], 'image');
-
           let buffer = Buffer.from([]);
-
           for await (const chunk of stream) {
-
             buffer = Buffer.concat([buffer, chunk]);
-
           }
 
-          
-
           await sock.sendMessage(
-
             context.chatId,
-
             {
-
               image: buffer,
-
               caption: "Converted to view once",
-
               viewOnce: true
-
             },
-
             { quoted: message }
-
           );
-
         } else if (messageType === 'videoMessage') {
-
           const stream = await downloadContentFromMessage(quoted[messageType], 'video');
-
           let buffer = Buffer.from([]);
-
           for await (const chunk of stream) {
-
             buffer = Buffer.concat([buffer, chunk]);
-
           }
-
-          
 
           await sock.sendMessage(
-
             context.chatId,
-
             {
-
               video: buffer,
-
               caption: "Converted to view once",
-
               viewOnce: true
-
             },
-
             { quoted: message }
-
           );
-
         } else if (messageType === 'audioMessage') {
-
           const stream = await downloadContentFromMessage(quoted[messageType], 'audio');
-
           let buffer = Buffer.from([]);
-
           for await (const chunk of stream) {
-
             buffer = Buffer.concat([buffer, chunk]);
-
           }
-
-          
 
           await sock.sendMessage(context.chatId, {
-
             audio: buffer,
-
             mimetype: "audio/mpeg",
-
             ptt: true,
-
             viewOnce: true
-
           });
-
         } else {
-
           context.reply("Please reply to an image, video, or audio message");
-
         }
-
       } catch (error) {
-
         console.error(error);
-
         context.reply("Failed to convert to view once");
+      }
+    }
+  },
 
+  {
+    name: 'mode',
+    aliases: ['botmode'],
+    category: 'owner',
+    description: 'Toggle bot access mode between public and private',
+    usage: '.mode [public/private] or .mode (to check status)',
+    execute: async (sock, message, args, context) => {
+      const { chatId, channelInfo, reply, senderIsSudo } = context;
+
+      if (!senderIsSudo) {
+        return await reply('This command is only available for the owner or sudo users!');
       }
 
-    }
+      // If no arguments provided, show current status
+      if (args.length === 1) {
+        const isPublic = db.getSetting('mode') === 'public';
+        const currentMode = isPublic ? 'Public' : 'Private';
+        const statusIcon = isPublic ? '🎄' : '👾';
+        const description = isPublic 
+          ? 'Anyone can use the bot' 
+          : 'Only owner and sudo users can use the bot';
 
+        return await reply(`${statusIcon} Bot Access Mode\n\nCurrent Mode: ${currentMode}\nDescription: ${description}\n\nUsage:\n• .mode public - Allow everyone to use bot\n• .mode private - Restrict to owner/sudo only\n• .mode - Check current mode`);
+      }
+
+      // Handle mode change
+      const newMode = args[1].toLowerCase();
+
+      if (newMode === 'public' || newMode === 'pub') {
+        db.updateSetting('mode', 'public');
+
+        try {
+          syncMode();
+          console.log('✅ Mode synced: public');
+        } catch (error) {
+          console.error('❌ Error syncing mode:', error);
+        }
+
+        await reply('Bot Mode Changed\n\nBot is now in Public Mode.');
+
+      } else if (newMode === 'private' || newMode === 'priv') {
+        db.updateSetting('mode', 'private');
+
+        try {
+          syncMode();
+          console.log('✅ Mode synced: private');
+        } catch (error) {
+          console.error('❌ Error syncing mode:', error);
+        }
+
+        await reply('Bot Mode Changed\n\nBot is now in Private Mode');
+
+      } else {
+        return await reply('Invalid mode! Use:\n• .mode public - Enable public access\n• .mode private - Enable private access\n• .mode - Check current status');
+      }
+    }
   },
-    {
 
-    name: 'mode',
-
-    aliases: ['botmode'],
-
-    category: 'owner',
-
-    description: 'Toggle bot access mode between public and private',
-
-    usage: '.mode [public/private] or .mode (to check status)',
-
-    execute: async (sock, message, args, context) => {
-
-        const { chatId, channelInfo, reply, senderIsSudo } = context; // 👈 DESTRUCTURE senderIsSudo
-
-        // 🎯 USE DESTRUCTURED senderIsSudo - SAME AS WORKING COMMANDS!
-
-        if (!senderIsSudo) {
-
-            return await reply('This command is only available for the owner or sudo users!');
-
-        }
-
-        // If no arguments provided, show current status
-
-        if (args.length === 1) {
-
-            const isPublic = db.getSetting('mode') === 'public';
-
-            const currentMode = isPublic ? 'Public' : 'Private';
-
-            const statusIcon = isPublic ? '🎄' : '👾';
-
-            const description = isPublic 
-
-                ? 'Anyone can use the bot' 
-
-                : 'Only owner and sudo users can use the bot';
-
-            
-
-            return await reply(`${statusIcon} Bot Access Mode\n\nCurrent Mode: ${currentMode}\nDescription: ${description}\n\nUsage:\n• .mode public - Allow everyone to use bot\n• .mode private - Restrict to owner/sudo only\n• .mode - Check current mode`);
-
-        }
-
-        
-
-        // Handle mode change
-
-        const newMode = args[1].toLowerCase();
-
-        
-
-        if (newMode === 'public' || newMode === 'pub') {
-
-            db.updateSetting('mode', 'public');
-
-            
-
-            try {
-
-                syncMode();
-
-                console.log('✅ Mode synced: public');
-
-            } catch (error) {
-
-                console.error('❌ Error syncing mode:', error);
-
-            }
-
-            
-
-            await reply('Bot Mode Changed\n\nBot is now in Public Mode.');
-            
-
-        } else if (newMode === 'private' || newMode === 'priv') {
-
-            db.updateSetting('mode', 'private');
-
-            
-
-            try {
-
-                syncMode();
-
-                console.log('✅ Mode synced: private');
-
-            } catch (error) {
-
-                console.error('❌ Error syncing mode:', error);
-
-            }
-
-            
-
-            await reply('Bot Mode Changed\n\nBot is now in Private Mode');
-            
-
-        } else {
-
-            return await reply('Invalid mode! Use:\n• .mode public - Enable public access\n• .mode private - Enable private access\n• .mode - Check current status');
-
-        }
-
-    }
-
-},
-    
-{
+  {
     name: "lyrics",
     description: "Get lyrics for any song",
     category: "SEARCH MENU",
     usage: ".lyrics <song name> - <artist>",
-    
     async execute(sock, m, args, context) {
-        try {
-            const chatId = m.key.remoteJid;
-            //const query = args.join(' ');
-            const query = args.slice(1).join(' ').trim();
-            
-            if (!query) {
-                await context.react('✅');
-                return await context.replyPlain( {
-                    text: 'Please provide a song name.\n\nExample: .lyrics Shape of You - Ed Sheeran'
-                }, { quoted: m });
-            }
-await context.react('⭐');
-            await context.replyPlain( { text: '🎵 Searching for lyrics...' }, { quoted: m });
+      try {
+        const chatId = m.key.remoteJid;
+        const query = args.slice(1).join(' ').trim();
 
-            const response = await axios.get(`https://lyricsapi.fly.dev/api/lyrics?q=${encodeURIComponent(query)}`);
-            const result = response.data;
-
-            if (!result.status || !result.result) {
-                return await context.replyPlain( {
-                    text: 'Lyrics not found. Please check the song name and try again.'
-                }, { quoted: m });
-            }
-
-            const lyricsData = result.result;
-            let lyricsText = `🎵 ${lyricsData.title}\n`;
-            lyricsText += `👤 Artist: ${lyricsData.artist}\n\n`;
-            lyricsText += `📝 Lyrics:\n\n${lyricsData.lyrics}`;
-
-            // Split lyrics if too long
-            if (lyricsText.length > 4000) {
-                const parts = lyricsText.match(/.{1,3900}/g);
-                for (let i = 0; i < parts.length && i < 3; i++) {
-                    await context.replyPlain( {
-                        text: i === 0 ? parts[i] : `Continued...\n\n${parts[i]}`
-                    }, { quoted: m });
-                }
-            } else {
-                await context.replyPlain({
-                    text: lyricsText
-                }, { quoted: m });
-            }
-
-        } catch (error) {
-            console.error('❌ Lyrics Command Error:', error);
-            await context.replyPlain({
-                text: 'Failed to fetch lyrics. Please try again later.'
-            }, { quoted: m });
+        if (!query) {
+          await context.react('✅');
+          return await context.replyPlain({
+            text: 'Please provide a song name.\n\nExample: .lyrics Shape of You - Ed Sheeran'
+          }, { quoted: m });
         }
+        
+        await context.react('⭐');
+        await context.replyPlain({ text: '🎵 Searching for lyrics...' }, { quoted: m });
+
+        const response = await axios.get(`https://lyricsapi.fly.dev/api/lyrics?q=${encodeURIComponent(query)}`);
+        const result = response.data;
+
+        if (!result.status || !result.result) {
+          return await context.replyPlain({
+            text: 'Lyrics not found. Please check the song name and try again.'
+          }, { quoted: m });
+        }
+
+        const lyricsData = result.result;
+        let lyricsText = `🎵 ${lyricsData.title}\n`;
+        lyricsText += `👤 Artist: ${lyricsData.artist}\n\n`;
+        lyricsText += `📝 Lyrics:\n\n${lyricsData.lyrics}`;
+
+        // Split lyrics if too long
+        if (lyricsText.length > 4000) {
+          const parts = lyricsText.match(/.{1,3900}/g);
+          for (let i = 0; i < parts.length && i < 3; i++) {
+            await context.replyPlain({
+              text: i === 0 ? parts[i] : `Continued...\n\n${parts[i]}`
+            }, { quoted: m });
+          }
+        } else {
+          await context.replyPlain({
+            text: lyricsText
+          }, { quoted: m });
+        }
+
+      } catch (error) {
+        console.error('❌ Lyrics Command Error:', error);
+        await context.replyPlain({
+          text: 'Failed to fetch lyrics. Please try again later.'
+        }, { quoted: m });
+      }
     }
-},
+  },
+
   {
     name: 'sudo',
     category: 'owner',
     description: 'Manage sudo users',
     usage: '.sudo add/del/list [@user|number|reply]',
     execute: async (sock, message, args, context) => {
-        const { chatId, reply, replyPlain, react, senderIsSudo } = context;
-        const senderJid = message.key.participant || message.key.remoteJid;
-        const ownerJid = settings.ownerNumber + '@s.whatsapp.net';
-        const isOwner = message.key.fromMe || senderJid === ownerJid;
+      const { chatId, reply, replyPlain, react, senderIsSudo } = context;
+      const senderJid = message.key.participant || message.key.remoteJid;
+      const ownerJid = settings.ownerNumber + '@s.whatsapp.net';
+      const isOwner = message.key.fromMe || senderJid === ownerJid;
 
-        // Remove command name if included in args
-        const cleanArgs = args[0] === 'sudo' ? args.slice(1) : args;
+      // Remove command name if included in args
+      const cleanArgs = args[0] === 'sudo' ? args.slice(1) : args;
 
-        if (cleanArgs.length < 1) {
-            return await reply('Usage:\n.sudo add <user|number|@mention|reply>\n.sudo del <user|number|@mention|reply>\n.sudo list');
+      if (cleanArgs.length < 1) {
+        return await reply('Usage:\n.sudo add <user|number|@mention|reply>\n.sudo del <user|number|@mention|reply>\n.sudo list');
+      }
+
+      const sub = cleanArgs[0].toLowerCase();
+
+      if (!['add', 'del', 'remove', 'list'].includes(sub)) {
+        return await replyPlain('Usage:\n.sudo add <user|number|@mention|reply>\n.sudo del <user|number|@mention|reply>\n.sudo list');
+      }
+
+      if (sub === 'list') {
+        await react('🌚');
+        const list = getSudo();
+
+        if (list.length === 0) {
+          return await replyPlain('No additional sudo users set.\n\nNote: Owner has permanent sudo privileges.');
         }
 
-        const sub = cleanArgs[0].toLowerCase();
+        const text = list.map((j, i) => `${i + 1}. @${j.split('@')[0]}`).join('\n');
 
-        if (!['add', 'del', 'remove', 'list'].includes(sub)) {
-            return await replyPlain('Usage:\n.sudo add <user|number|@mention|reply>\n.sudo del <user|number|@mention|reply>\n.sudo list');
+        return await replyPlain(
+          `Sudo Users:\n\n${text}\n\nNote: Owner (@${settings.ownerNumber}) has permanent privileges.`,
+          { mentions: list }
+        );
+      }
+      
+      if (!senderIsSudo) {
+        await react('☺️');
+        return await reply('Only owner can add/remove sudo users. Use .sudo list to view.');
+      }
+
+      // For add/del commands
+      await react('🐛');
+
+      // Try all 3 methods: reply, mention, manual number
+      let targetJid = await extractMentionedJid(sock, message, chatId);
+
+      // If no target found and user provided a number manually
+      if (!targetJid && cleanArgs.length >= 2) {
+        const phoneNumber = cleanArgs[1].replace(/\D/g, '');
+        if (phoneNumber && phoneNumber.length >= 7) {
+          targetJid = phoneNumber + '@s.whatsapp.net';
+        }
+      }
+
+      if (!targetJid) {
+        return await replyPlain(
+          '❌ Operation aborted\n\ncould not identify user.\n' +
+          'Instructions:\n' +
+          '1. Reply to their message: .sudo add\n' +
+          '2. Mention them: .sudo add @user\n' +
+          '3. Use phone number: .sudo add 254104260236'
+        );
+      }
+
+      if (sub === 'add') {
+        await react('➕');
+
+        if (targetJid === ownerJid) {
+          return await replyPlain('Owner already has permanent sudo privileges.');
         }
 
-        if (sub === 'list') {
-            await react('🌚');
-            const list = getSudo();
-            
-            if (list.length === 0) {
-                return await replyPlain('No additional sudo users set.\n\nNote: Owner has permanent sudo privileges.');
-            }
-
-            const text = list.map((j, i) => `${i + 1}. @${j.split('@')[0]}`).join('\n');
-
-                return await replyPlain(
-        `Sudo Users:\n\n${text}\n\nNote: Owner (@${settings.ownerNumber}) has permanent privileges.`,
-        { mentions: list }
-    );
-}
-        if (!senderIsSudo) {
-            await react('☺️');
-            return await reply('Only owner can add/remove sudo users. Use .sudo list to view.');
+        // ✅ Check if user is already in sudo list
+        const currentSudoList = getSudo();
+        if (currentSudoList.includes(targetJid)) {
+          const phoneNumber = targetJid.split('@')[0];
+          return await replyPlain(
+            `ℹ️ Operation aborted: @${phoneNumber} is already registered as sudo!`,
+            { mentions: [targetJid] }
+          );
         }
 
-        // For add/del commands
-        await react('🐛');
-        
-        // Try all 3 methods: reply, mention, manual number
-        let targetJid = await extractMentionedJid(sock, message, chatId);
-        
-        // If no target found and user provided a number manually
-        if (!targetJid && cleanArgs.length >= 2) {
-            const phoneNumber = cleanArgs[1].replace(/\D/g, '');
-            if (phoneNumber && phoneNumber.length >= 7) {
-                targetJid = phoneNumber + '@s.whatsapp.net';
-            }
+        const ok = addSudo(targetJid);
+        const phoneNumber = targetJid.split('@')[0];
+
+        if (ok) {
+          return await replyPlain(
+            `User: @${phoneNumber} has been added to the sudo registry.`,
+            { mentions: [targetJid] }
+          );
+        } else {
+          return await reply('❌ Failed to add sudo user. Please try again.');
+        }
+      }
+
+      if (sub === 'del' || sub === 'remove') {
+        await react('➖');
+
+        if (targetJid === ownerJid) {
+          return await replyPlain('Owner cannot be removed from sudo privileges.');
         }
 
-        if (!targetJid) {
-            return await replyPlain(
-                '❌ Operation aborted\n\ncould not identify user.\n' +
-                'Instructions:\n' +
-                '1. Reply to their message: .sudo add\n' +
-                '2. Mention them: .sudo add @user\n' +
-                '3. Use phone number: .sudo add 254104260236'
-            );
+        // ✅ Check if user is in sudo list before removing
+        const currentSudoList = getSudo();
+        if (!currentSudoList.includes(targetJid)) {
+          const phoneNumber = targetJid.split('@')[0];
+          return await replyPlain(
+            `Operation aborted: User: @${phoneNumber} not found in sudo registry.`,
+            { mentions: [targetJid] }
+          );
         }
 
-        if (sub === 'add') {
-            await react('➕');
-            
-            if (targetJid === ownerJid) {
-                return await replyPlain('Owner already has permanent sudo privileges.');
-            }
-            
-            // ✅ Check if user is already in sudo list
-            const currentSudoList = getSudo();
-            if (currentSudoList.includes(targetJid)) {
-                const phoneNumber = targetJid.split('@')[0];
-                return await replyPlain(
-                    `ℹ️ Operation aborted: @${phoneNumber} is already registered as sudo!`,
-                    { mentions: [targetJid] }
-                );
-            }
-            
-            const ok = addSudo(targetJid);
-            const phoneNumber = targetJid.split('@')[0];
-            
-            if (ok) {
-                return await replyPlain(
-                    `User: @${phoneNumber} has been added to the sudo registry.`,
-                    { mentions: [targetJid] }
-                );
-            } else {
-                return await reply('❌ Failed to add sudo user. Please try again.');
-            }
+        const ok = removeSudo(targetJid);
+        const phoneNumber = targetJid.split('@')[0];
+
+        if (ok) {
+          return await replyPlain(
+            `User: @${phoneNumber} has been removed from the sudo registry.`,
+            { mentions: [targetJid] }
+          );
+        } else {
+          return await replyPlain('Failed to remove sudo user. Please try again.');
         }
-
-        if (sub === 'del' || sub === 'remove') {
-            await react('➖');
-            
-            if (targetJid === ownerJid) {
-                return await replyPlain('Owner cannot be removed from sudo privileges.');
-            }
-
-            // ✅ Check if user is in sudo list before removing
-            const currentSudoList = getSudo();
-            if (!currentSudoList.includes(targetJid)) {
-                const phoneNumber = targetJid.split('@')[0];
-                return await replyPlain(
-                    `Operation aborted: User: @${phoneNumber} not found in sudo registry.`,
-                    { mentions: [targetJid] }
-                );
-            }
-
-            const ok = removeSudo(targetJid);
-            const phoneNumber = targetJid.split('@')[0];
-            
-            if (ok) {
-                return await replyPlain(
-                    `User: @${phoneNumber} has been removed from the sudo registry.`,
-                    { mentions: [targetJid] }
-                );
-            } else {
-                return await replyPlain('Failed to remove sudo user. Please try again.');
-            }
-        }
+      }
     }
-},
-{
+  },
+
+  {
     name: 'broadcast',
     description: 'Send message to all group members individually via DM',
     aliases: ['bc'],
     category: 'owner',
     usage: '.broadcast <message>',
-    
     async execute(sock, message, args, context) {
+      try {
+        const { reply, senderIsSudo, chatId, isGroup } = context;
+
+        // Only owner/sudo can use this command
+        if (!message.key.fromMe && !senderIsSudo) {
+          return await reply('This command is only available for the owner or sudo users!');
+        }
+
+        // Must be used in a group
+        if (!isGroup) {
+          return await reply('This command can only be used in groups!');
+        }
+
+        // Get message to broadcast
+        const broadcastMsg = args.slice(1).join(' ');
+
+        if (!broadcastMsg) {
+          return await reply(`Please provide a message to broadcast!\n\nUsage: ${global.prefix}broadcast <your message>`);
+        }
+
+        if (broadcastMsg.length > 500) {
+          return await reply('Message is too long! Please keep it under 500 characters.');
+        }
+
         try {
-            const { reply, senderIsSudo, chatId, isGroup } = context;
-            
-            // Only owner/sudo can use this command
-            if (!message.key.fromMe && !senderIsSudo) {
-                return await reply('This command is only available for the owner or sudo users!');
-            }
-            
-            // Must be used in a group
-            if (!isGroup) {
-                return await reply('This command can only be used in groups!');
-            }
-            
-            // Get message to broadcast
-            const broadcastMsg = args.slice(1).join(' ');
-            
-            if (!broadcastMsg) {
-                return await reply(`Please provide a message to broadcast!\n\nUsage: ${global.prefix}broadcast <your message>`);
-            }
-            
-            if (broadcastMsg.length > 500) {
-                return await reply('Message is too long! Please keep it under 500 characters.');
-            }
-            
+          // Get group metadata and participants
+          const groupMetadata = await sock.groupMetadata(chatId);
+          const participants = groupMetadata.participants;
+          const groupName = groupMetadata.subject;
+
+          await reply(`Starting broadcast to ${participants.length} members...\n\nThis may take a few minutes to avoid spam detection.`);
+
+          let successCount = 0;
+          let failCount = 0;
+
+          // Message each participant individually
+          for (const participant of participants) {
+            const userJid = jidNormalizedUser(participant.phoneNumber)  // 🔥 normalize here
+
+            // Skip the bot itself
+            if (userJid === sock.user.id) continue
+
             try {
-                // Get group metadata and participants
-                const groupMetadata = await sock.groupMetadata(chatId);
-                const participants = groupMetadata.participants;
-                const groupName = groupMetadata.subject;
-                
-                await reply(`Starting broadcast to ${participants.length} members...\n\nThis may take a few minutes to avoid spam detection.`);
-                
-                let successCount = 0;
-                let failCount = 0;
-                
-                // Message each participant individually
-                
-                
-for (const participant of participants) {
-    const userJid = jidNormalizedUser(participant.phoneNumber)  // 🔥 normalize here
-
-    
-
-    // Skip the bot itself
-
-    if (userJid === sock.user.id) continue
-
-    try {
-
-        const personalizedMsg = `BROADCAST MESSAGE
+              const personalizedMsg = `BROADCAST MESSAGE
 
 From Group: ${groupName}
 
@@ -1230,181 +934,166 @@ ${broadcastMsg}
 
 This message was sent individually to all group members.`;
 
-        await sock.sendMessage(userJid, {
+              await sock.sendMessage(userJid, {
+                text: personalizedMsg,
+                ...channelInfo
+              })
+              successCount++
+              console.log(`📤 Broadcast sent to: ${userJid}`)
 
-            text: personalizedMsg,
+              await new Promise(resolve => setTimeout(resolve, Math.random() * 4000 + 10000))
+            } catch (error) {
+              failCount++
+              console.log(`❌ Failed to message ${userJid}:`, error.message)
+            }
+          }
 
-            ...channelInfo
-
-        })
-
-        successCount++
-
-        console.log(`📤 Broadcast sent to: ${userJid}`)
-
-        
-
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 4000 + 10000))
-
-    } catch (error) {
-
-        failCount++
-
-        console.log(`❌ Failed to message ${userJid}:`, error.message)
-
-    }
-
-}
-                
-                
-                // Send completion report
-                const reportMsg = `BROADCAST COMPLETED
+          // Send completion report
+          const reportMsg = `BROADCAST COMPLETED
                 
 Total Members: ${participants.length}
 Successfully Sent: ${successCount}
 Failed: ${failCount}`;
-                
-                await reply(reportMsg);
-                
-            } catch (error) {
-                console.error('Error getting group metadata:', error);
-                await reply('Failed to get group information. Make sure the bot is still in the group.');
-            }
-            
+
+          await reply(reportMsg);
+
         } catch (error) {
-            console.error('Error in broadcast command:', error);
-            await reply('An error occurred while broadcasting the message.');
+          console.error('Error getting group metadata:', error);
+          await reply('Failed to get group information. Make sure the bot is still in the group.');
         }
+
+      } catch (error) {
+        console.error('Error in broadcast command:', error);
+        await reply('An error occurred while broadcasting the message.');
+      }
     }
-},
+  },
+
   {
-        name: 'clearsession',
-        description: 'Clear WhatsApp session and restart bot',
-        usage: 'clearsession',
-        category: 'system',
-        ownerOnly: true,
+    name: 'clearsession',
+    description: 'Clear WhatsApp session and restart bot',
+    usage: 'clearsession',
+    category: 'system',
+    ownerOnly: true,
+    async execute(sock, message, args, context) {
+      const { reply, isFromOwner, senderIsSudo, react } = context;
 
-        async execute(sock, message, args, context) {
-            const { reply, isFromOwner, senderIsSudo, react } = context;
+      if (!isFromOwner && !senderIsSudo) {
+        return await reply('Only owner/sudo can clear sessions!');
+      }
 
-            if (!isFromOwner && !senderIsSudo) {
-                return await reply('Only owner/sudo can clear sessions!');
+      try {
+        await react('⭐');
+        await reply('Clearing WhatsApp session...\n\nThe Bot will restart automatically.');
+
+        // Clear session files
+        const sessionPaths = ['./data/session'];
+        let clearedFiles = 0;
+        
+        sessionPaths.forEach(sessionPath => {
+          try {
+            if (fs.existsSync(sessionPath)) {
+              if (fs.lstatSync(sessionPath).isDirectory()) {
+                fs.rmSync(sessionPath, { recursive: true, force: true });
+              } else {
+                fs.unlinkSync(sessionPath);
+              }
+              clearedFiles++;
+              console.log(`✅ Cleared: ${sessionPath}`);
             }
+          } catch (error) {
+            console.error(`Failed to clear ${sessionPath}:`, error.message);
+          }
+        });
 
-            try {
-                await react('⭐');
-                await reply('Clearing WhatsApp session...\n\nThe Bot will restart automatically.');
+        await react('✅');
+        console.log(`Session cleared! ${clearedFiles} files/folders removed`);
 
-                // Clear session files
-                const sessionPaths = ['./data/session'];
+        // Exit process to trigger restart
+        setTimeout(() => {
+          process.exit(0);
+        }, 2000);
 
-                let clearedFiles = 0;
-                sessionPaths.forEach(sessionPath => {
-                    try {
-                        if (fs.existsSync(sessionPath)) {
-                            if (fs.lstatSync(sessionPath).isDirectory()) {
-                                fs.rmSync(sessionPath, { recursive: true, force: true });
-                            } else {
-                                fs.unlinkSync(sessionPath);
-                            }
-                            clearedFiles++;
-                            console.log(`✅ Cleared: ${sessionPath}`);
-                        }
-                    } catch (error) {
-                        console.error(`Failed to clear ${sessionPath}:`, error.message);
-                    }
-                });
+      } catch (error) {
+        await react('❌');
+        console.error('Clear session error:', error);
+        await reply(`Failed to clear session!\n\nError: ${error.message}`);
+      }
+    }
+  },
 
-                await react('✅');
-                console.log(`Session cleared! ${clearedFiles} files/folders removed`);
-
-                // Exit process to trigger restart
-                setTimeout(() => {
-                    process.exit(0);
-                }, 2000);
-
-            } catch (error) {
-                await react('❌');
-                console.error('Clear session error:', error);
-                await reply(`Failed to clear session!\n\nError: ${error.message}`);
-            }
-        }
-    },
-    
   {
-        name: 'cleartmp',
-        aliases: ['cleartemp'],
-        description: 'Clear WhatsApp session and restart bot',
-        usage: 'clearsession',
-        category: 'system',
-        ownerOnly: true,
+    name: 'cleartmp',
+    aliases: ['cleartemp'],
+    description: 'Clear temp files and restart bot',
+    usage: 'cleartmp',
+    category: 'system',
+    ownerOnly: true,
+    async execute(sock, message, args, context) {
+      const { reply, isFromOwner, senderIsSudo, react } = context;
 
-        async execute(sock, message, args, context) {
-            const { reply, isFromOwner, senderIsSudo, react } = context;
+      if (!isFromOwner && !senderIsSudo) {
+        return await reply('Only owner/sudo can clear temp files!');
+      }
 
-            if (!isFromOwner && !senderIsSudo) {
-                return await reply('Only owner/sudo can clear sessions!');
+      try {
+        await react('⭐');
+        await reply('Clearing temp/tmp..\n\nBot will restart automatically.');
+
+        // Clear temp files
+        const tempPaths = ['./tmp','./temp'];
+        let clearedFiles = 0;
+        
+        tempPaths.forEach(tempPath => {
+          try {
+            if (fs.existsSync(tempPath)) {
+              if (fs.lstatSync(tempPath).isDirectory()) {
+                fs.rmSync(tempPath, { recursive: true, force: true });
+              } else {
+                fs.unlinkSync(tempPath);
+              }
+              clearedFiles++;
+              console.log(`✅ Cleared: ${tempPath}`);
             }
+          } catch (error) {
+            console.error(`Failed to clear ${tempPath}:`, error.message);
+          }
+        });
 
-            try {
-                await react('⭐');
-                await reply('Clearing temp/tmp..\n\nBot will restart automatically.');
+        await react('✅');
+        console.log(`🔄 temp/tmp cleared! ${clearedFiles}`);
 
-                // Clear session files
-                const sessionPaths = ['./tmp','./temp'];
+        // Exit process to trigger restart
+        setTimeout(() => {
+          process.exit(0);
+        }, 2000);
 
-                let clearedFiles = 0;
-                sessionPaths.forEach(sessionPath => {
-                    try {
-                        if (fs.existsSync(sessionPath)) {
-                            if (fs.lstatSync(sessionPath).isDirectory()) {
-                                fs.rmSync(sessionPath, { recursive: true, force: true });
-                            } else {
-                                fs.unlinkSync(sessionPath);
-                            }
-                            clearedFiles++;
-                            console.log(`✅ Cleared: ${sessionPath}`);
-                        }
-                    } catch (error) {
-                        console.error(`Failed to clear ${sessionPath}:`, error.message);
-                    }
-                });
+      } catch (error) {
+        await react('❌');
+        console.error('Clear temp error:', error);
+        await reply(`Failed to clear temp!\n\nError: ${error.message}`);
+      }
+    }
+  },
 
-                await react('✅');
-                console.log(`🔄 temp/tmp cleared! ${clearedFiles}`);
+  {
+    name: 'resetdatabase',
+    aliases: ['resetdb', 'dbdefault'],
+    description: 'Reset database to default settings',
+    usage: 'resetdatabase [confirm]',
+    category: 'system',
+    ownerOnly: true,
+    async execute(sock, message, args, context) {
+      const { reply, isFromOwner, senderIsSudo, react } = context;
 
-                // Exit process to trigger restart
-                setTimeout(() => {
-                    process.exit(0);
-                }, 2000);
+      if (!isFromOwner && !senderIsSudo) {
+        return await reply('Only owner/sudo can reset database!');
+      }
 
-            } catch (error) {
-                await react('❌');
-                console.error('Clear session error:', error);
-                await reply(`Failed to clear temp!\n\nError: ${error.message}`);
-            }
-        }
-    },
-            
-   {
-        name: 'resetdatabase',
-        aliases: ['resetdb', 'dbdefault'],
-        description: 'Reset database to default settings',
-        usage: 'resetdatabase [confirm]',
-        category: 'system',
-        ownerOnly: true,
+      const confirm = args[1]?.toLowerCase();
 
-        async execute(sock, message, args, context) {
-            const { reply, isFromOwner, senderIsSudo, react } = context;
-
-            if (!isFromOwner && !senderIsSudo) {
-                return await reply('Only owner/sudo can reset database!');
-            }
-
-            const confirm = args[1]?.toLowerCase();
-
-            if (confirm !== 'confirm') {
-                return await reply(`DATABASE RESET WARNING
+      if (confirm !== 'confirm') {
+        return await reply(`DATABASE RESET WARNING
 
 🚨 This will permanently delete ALL:
 • Chat settings and configurations
@@ -1418,85 +1107,85 @@ This action CANNOT be undone!
 To proceed, use: .resetdatabase confirm
 
 Be sure bfore continuing!`);
+      }
+
+      try {
+        await react('⭐');
+        await reply('Resetting database to default...');
+
+        // Get database file paths
+        const dbPaths = [
+          './data/database.json',
+          './database.json',
+          './lib/database.json',
+          './data/chats.json',
+          './data/commands.json',
+          './data/settings.json'
+        ];
+
+        let resetCount = 0;
+
+        // Method 1: Use resetDatabase function if available
+        if (typeof resetDatabase === 'function') {
+          await resetDatabase();
+          resetCount++;
+          console.log('✅ Database reset using resetDatabase()');
+        } else {
+          // Method 2: Manual file deletion
+          dbPaths.forEach(dbPath => {
+            if (fs.existsSync(dbPath)) {
+              try {
+                fs.unlinkSync(dbPath);
+                resetCount++;
+                console.log(`✅ Deleted: ${dbPath}`);
+              } catch (error) {
+                console.error(`Failed to delete ${dbPath}:`, error.message);
+              }
             }
+          });
+        }
 
+        // Clear data directories
+        const dataDirs = [
+          './data/plugins',
+          './data/chats',
+          './data/commands'
+        ];
+
+        dataDirs.forEach(dir => {
+          if (fs.existsSync(dir)) {
             try {
-                await react('⭐');
-                await reply('Resetting database to default...');
+              const files = fs.readdirSync(dir);
+              files.forEach(file => {
+                const filePath = path.join(dir, file);
+                fs.unlinkSync(filePath);
+              });
+              console.log(`✅ Cleared data directory: ${dir}`);
+            } catch (error) {
+              console.error(`❌ Error clearing ${dir}:`, error.message);
+            }
+          }
+        });
 
-                // Get database file paths
-                const dbPaths = [
-                    './data/database.json',
-                    './database.json',
-                    './lib/database.json',
-                    './data/chats.json',
-                    './data/commands.json',
-                    './data/settings.json'
-                ];
-
-                let resetCount = 0;
-
-                // Method 1: Use resetDatabase function if available
-                if (typeof resetDatabase === 'function') {
-                    await resetDatabase();
-                    resetCount++;
-                    console.log('✅ Database reset using resetDatabase()');
-                } else {
-                    // Method 2: Manual file deletion
-                    dbPaths.forEach(dbPath => {
-                        if (fs.existsSync(dbPath)) {
-                            try {
-                                fs.unlinkSync(dbPath);
-                                resetCount++;
-                                console.log(`✅ Deleted: ${dbPath}`);
-                            } catch (error) {
-                                console.error(`Failed to delete ${dbPath}:`, error.message);
-                            }
-                        }
-                    });
-                }
-
-                // Clear data directories
-                const dataDirs = [
-                    './data/plugins',
-                    './data/chats',
-                    './data/commands'
-                ];
-
-                dataDirs.forEach(dir => {
-                    if (fs.existsSync(dir)) {
-                        try {
-                            const files = fs.readdirSync(dir);
-                            files.forEach(file => {
-                                const filePath = path.join(dir, file);
-                                fs.unlinkSync(filePath);
-                            });
-                            console.log(`✅ Cleared data directory: ${dir}`);
-                        } catch (error) {
-                            console.error(`❌ Error clearing ${dir}:`, error.message);
-                        }
-                    }
-                });
-
-                await react('✅');
-                await reply(`Database reset completed!
+        await react('✅');
+        await reply(`Database reset completed!
 
 Files reset: ${resetCount}
 Data directories cleared
 All settings restored to default
 
-Bot will restart to apply the  changes...`);
+Bot will restart to apply the changes...`);
 
-                // Restart bot to reinitialize with default settings
-                setTimeout(() => {
-                    process.exit(0);
-                }, 3000);
+        // Restart bot to reinitialize with default settings
+        setTimeout(() => {
+          process.exit(0);
+        }, 3000);
 
-            } catch (error) {
-                await react('❌');
-                console.error('Database reset error:', error);
-                await reply(`Failed to reset database!\n\nError: ${error.message}\n\nPlease check console for details.`);
-            }
-        }
+      } catch (error) {
+        await react('❌');
+        console.error('Database reset error:', error);
+        await reply(`Failed to reset database!\n\nError: ${error.message}\n\nPlease check console for details.`);
+      }
     }
+  }
 ];
