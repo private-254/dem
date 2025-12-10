@@ -42,17 +42,6 @@ const {
 } = Baileys;
 
 import baileysPkg from '@whiskeysockets/baileys/package.json' with { type: "json" };
-import NodeCache from "node-cache";
-import pino from "pino";
-import readline from "readline";
-import { parsePhoneNumber } from "libphonenumber-js";
-// Remove the problematic PHONENUMBER_MCC import
-import { rmSync, existsSync } from 'fs';
-import { join } from 'path';
-import store from './lib/lightweight.js';
-import os from 'os';
-import dotenv from "dotenv";
-dotenv.config();
 console.log(chalk.cyan.bold('\n\n[Gift-X] conecting to [Gift-md] zip space....'));
 console.log(chalk.cyan('transfering..\n.         [Dave-Tech].......>[DAVE-MD]..'));
 console.log(chalk.cyan('\n[DABE-MD] ✅ Connected\n'));
