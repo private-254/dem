@@ -47,6 +47,136 @@ export default [
       }
     }
   },
+
+
+{
+  name: "video",
+  aliases: ["ytvideo", "ytvid"],
+  category: "downloader",
+  desc: "Download YouTube videos in MP4 format",
+
+  async execute(sock, msg, args, context) {
+    const { reply, react } = context;
+    const from = msg.key.remoteJid;
+    const text = args.slice(1).join(" ").trim();
+
+    try {
+      if (!text) return reply('❌ What video do you want to download?\n\nExample: .video <search term or YouTube URL>');
+
+      await react('🎬');
+
+      let videoUrl = '';
+      let videoTitle = '';
+      let videoThumbnail = '';
+
+      // Check if input is a URL or search term
+      if (text.startsWith('http://') || text.startsWith('https://')) {
+        videoUrl = text;
+      } else {
+        // Search for video
+        const { videos } = await yts(text);
+        if (!videos || videos.length === 0) return reply('❌ No videos found!');
+        
+        videoUrl = videos[0].url;
+        videoTitle = videos[0].title;
+        videoThumbnail = videos[0].thumbnail;
+      }
+
+      // Validate YouTube URL
+      const youtubeRegex = /(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi;
+      const urls = videoUrl.match(youtubeRegex);
+      if (!urls) return reply('❌ This is not a valid YouTube link!');
+
+      // API configurations
+      const izumi = {
+        baseURL: "https://izumiiiiiiii.dpdns.org"
+      };
+
+      const AXIOS_DEFAULTS = {
+        timeout: 60000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*'
+        }
+      };
+
+      // Retry function
+      const tryRequest = async (getter, attempts = 3) => {
+        let lastError;
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+          try {
+            return await getter();
+          } catch (err) {
+            lastError = err;
+            if (attempt < attempts) {
+              await new Promise(r => setTimeout(r, 1000 * attempt));
+            }
+          }
+        }
+        throw lastError;
+      };
+
+      // Izumi API
+      const getIzumiVideoByUrl = async (youtubeUrl) => {
+        const apiUrl = `${izumi.baseURL}/downloader/youtube?url=${encodeURIComponent(youtubeUrl)}&format=720`;
+        const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
+        if (res?.data?.result?.download) return res.data.result;
+        throw new Error('Izumi video API returned no download');
+      };
+
+      // Okatsu API (fallback)
+      const getOkatsuVideoByUrl = async (youtubeUrl) => {
+        const apiUrl = `https://okatsu-rolezapiiz.vercel.app/downloader/ytmp4?url=${encodeURIComponent(youtubeUrl)}`;
+        const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
+        if (res?.data?.result?.mp4) {
+          return {
+            download: res.data.result.mp4,
+            title: res.data.result.title
+          };
+        }
+        throw new Error('Okatsu API returned no mp4');
+      };
+
+      // Get video ID for thumbnail
+      const ytId = (videoUrl.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/) || [])[1];
+      const thumb = videoThumbnail || (ytId ? `https://i.ytimg.com/vi/${ytId}/sddefault.jpg` : undefined);
+      const captionTitle = videoTitle || text;
+
+      // Send thumbnail with loading message
+      if (thumb) {
+        await sock.sendMessage(from, {
+          image: { url: thumb },
+          caption: `*${captionTitle}*\n\n🎬 Searching video data...`
+        }, { quoted: msg });
+      }
+
+      // Try downloading video
+      let videoData;
+      try {
+        videoData = await getIzumiVideoByUrl(videoUrl);
+      } catch (e1) {
+        console.warn('[VIDEO] Izumi failed, trying Okatsu:', e1?.message || e1);
+        videoData = await getOkatsuVideoByUrl(videoUrl);
+      }
+
+      // Send the video
+      await sock.sendMessage(from, {
+        video: { url: videoData.download },
+        mimetype: 'video/mp4',
+        fileName: `${videoData.title || videoTitle || 'video'}.mp4`.replace(/[^\w\s.-]/gi, ''),
+        caption: `📹 *${videoData.title || videoTitle || 'Video'}*\n\n✅ Downloaded successfully!`
+      }, { quoted: msg });
+
+      await react('✅');
+
+    } catch (error) {
+      console.error('[VIDEO] Command Error:', error?.message || error);
+      await react('❌');
+      reply('❌ Download failed: ' + (error?.message || 'Unknown error'));
+    }
+  }
+},
+
   {
     name: 'download',
     category: 'downloader',
