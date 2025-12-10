@@ -48,6 +48,108 @@ export default [
     }
   },
 
+{
+  name: "playdoc",
+  aliases: ["pdoc", "songdoc"],
+  category: "downloader",
+  desc: "Download and send YouTube audio as document",
+
+  async execute(sock, msg, args, context) {
+    const { reply, react } = context;
+    const from = msg.key.remoteJid;
+    const text = args.slice(1).join(" ").trim();
+
+    try {
+      await react('📄');
+
+      if (!text) {
+        return reply(`❌ Provide a song name!\n\nExample: .playdoc Not Like Us`);
+      }
+
+      // Use process.cwd() to avoid __dirname issues
+      const tempDir = path.join(process.cwd(), "temp");
+      if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+      if (text.length > 100) {
+        return reply('❌ Song name too long! Maximum 100 characters.');
+      }
+
+      await reply("🎵 Searching for the track...");
+
+      const searchResult = (await yts(`${text} official`)).videos[0];
+      if (!searchResult) {
+        return reply("❌ Couldn't find that song. Try another one!");
+      }
+
+      const video = searchResult;
+      const apiUrl = `https://api.privatezia.biz.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
+      const response = await axios.get(apiUrl);
+      const apiData = response.data;
+
+      if (!apiData.status || !apiData.result || !apiData.result.downloadUrl) {
+        throw new Error("API failed to fetch track!");
+      }
+
+      const timestamp = Date.now();
+      const fileName = `audio_${timestamp}.mp3`;
+      const filePath = path.join(tempDir, fileName);
+
+      const audioResponse = await axios({
+        method: "get",
+        url: apiData.result.downloadUrl,
+        responseType: "stream",
+        timeout: 600000
+      });
+
+      const writer = fs.createWriteStream(filePath);
+      audioResponse.data.pipe(writer);
+
+      await new Promise((resolve, reject) => {
+        writer.on("finish", resolve);
+        writer.on("error", reject);
+      });
+
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+        throw new Error("Download failed or empty file!");
+      }
+
+      const songTitle = apiData.result.title || video.title;
+      
+      await reply(`✅ Downloaded: ${songTitle}`);
+
+      await sock.sendMessage(
+        from,
+        {
+          document: { url: filePath },
+          mimetype: "audio/mpeg",
+          fileName: `${songTitle.substring(0, 100).replace(/[^\w\s.-]/gi, '')}.mp3`
+        },
+        { quoted: msg }
+      );
+
+      // Clean up temp file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      await react('✅');
+
+    } catch (error) {
+      console.error("Playdoc command error:", error);
+      await react('❌');
+      
+      let errorMessage = '❌ Download failed!';
+      if (error.message.includes('timeout')) {
+        errorMessage = '❌ Request timeout. Try again.';
+      } else if (error.message.includes('ENOTFOUND')) {
+        errorMessage = '❌ Network error. Check connection.';
+      }
+      
+      return reply(`${errorMessage}\nError: ${error.message}`);
+    }
+  }
+},
+
 
 {
   name: "yts",
