@@ -148,13 +148,13 @@ export default [
 
     usage: ".add 254104260263,079787654321,555666777",
 
-    
+
 
     execute: async (sock, message, args, context) => {
 
         const { chatId, reply, react, senderIsSudo, isGroup, isSenderAdmin, isBotAdmin } = context;
 
-        
+
 
         if (!isGroup) {
 
@@ -210,7 +210,7 @@ export default [
 
             const numbers = args.join(' ').split(',').map(num => num.trim());
 
-            
+
 
             if (numbers.length === 0) {
 
@@ -232,7 +232,7 @@ export default [
 
                     const cleanNumber = number.replace(/[^\d]/g, '');
 
-                    
+
 
                     if (cleanNumber.length < 10) {
 
@@ -246,7 +246,7 @@ export default [
 
                     const jid = cleanNumber + '@s.whatsapp.net';
 
-                    
+
 
                     // Check if user exists on WhatsApp
 
@@ -266,7 +266,7 @@ export default [
 
                     const response = await sock.groupParticipantsUpdate(chatId, [jid], 'add');
 
-                    
+
 
                     if (response[0]?.status === '200') {
 
@@ -322,7 +322,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
     usage: ".close",
 
-    
+
 
     async execute(sock, m, args, context) {
 
@@ -338,7 +338,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
                 { text: "This command is for groups only!" } 
 
-               
+
 
             );
 
@@ -354,7 +354,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
                 .map(p => p.id);
 
-            
+
 
             const sender = m.key.participant || m.key.remoteJid;
 
@@ -362,7 +362,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             const isAdmin = groupAdmins.includes(sender);
 
-            
+
 
             if (!isOwner && !isAdmin) {
 
@@ -378,7 +378,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             await sock.groupSettingUpdate(from, 'announcement');
 
-            
+
 
             await context.reply({
 
@@ -417,7 +417,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
     usage: ".open",
 
-    
+
 
     async execute(sock, m, args, context) {
 
@@ -449,7 +449,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
                 .map(p => p.id);
 
-            
+
 
             const sender = m.key.participant || m.key.remoteJid;
 
@@ -457,7 +457,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             const isAdmin = groupAdmins.includes(sender);
 
-            
+
 
             if (!isOwner && !isAdmin) {
 
@@ -473,7 +473,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             await sock.groupSettingUpdate(from, 'not_announcement');
 
-            
+
 
             await context.reply( {
 
@@ -536,7 +536,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
         let usersToKick = [];
 
-        
+
 
         if (mentions.length > 0) {
 
@@ -548,7 +548,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
         }
 
-        
+
 
         if (usersToKick.length === 0) {
 
@@ -570,7 +570,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             await sock.groupParticipantsUpdate(chatId, usersToKick, "remove");
 
-            
+
 
             const usernames = await Promise.all(usersToKick.map(async jid => {
 
@@ -578,7 +578,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             }));
 
-            
+
 
             await sock.sendMessage(chatId, { 
 
@@ -609,7 +609,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
     usage: ".link",
 
-    
+
 
     async execute(sock, m, args, context) {
 
@@ -641,7 +641,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
                 .map(p => p.id);
 
-            
+
 
             const sender = m.key.participant || m.key.remoteJid;
 
@@ -649,7 +649,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             const isAdmin = groupAdmins.includes(sender);
 
-            
+
 
             if (!isOwner && !isAdmin) {
 
@@ -667,7 +667,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             const inviteLink = `https://chat.whatsapp.com/${inviteCode}`;
 
-            
+
 
             await context.reply( {
 
@@ -693,7 +693,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
     description: "Get information about the current group",
     category: "GROUP MENU",
     usage: ".groupinfo",
-    
+
     async execute(sock, m, args, context) {
         try {
             const chatId = m.key.remoteJid;
@@ -743,7 +743,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
     description: "Demote a group admin to member",
     category: "GROUP MENU",
     usage: ".demote @user",
-    
+
     execute: async (sock, m, args, context) => {
         try {
 const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, chatId } = context;
@@ -753,7 +753,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
                     'This command can only be used in groups.'
                 );
             }
-      
+
             const groupMetadata = await sock.groupMetadata(chatId);
             const groupAdmins = groupMetadata.participants.filter(p => p.admin === 'admin' || p.admin === 'superadmin').map(p => p.id);
             const senderNumber = m.key.participant || m.key.remoteJid;
@@ -774,7 +774,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 'Please mention or reply to the user you want to demote.\n\nExample: .demote @user'
                 );
             }
-       
+
             if (!groupAdmins.includes(targetUser)) {
                 return await reply(
                     'User is not an admin.'
@@ -783,11 +783,11 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
             try {
                 await sock.groupParticipantsUpdate(chatId, [targetUser], 'demote');
-                
+
                 const userName = targetUser.split('@')[0];
                 const groupName = groupMetadata.subject || 'Unknown Group';
                 const currentTime = new Date().toLocaleString();
-                
+
                                 const demoteMessage = `User Demoted\n\nGroup: ${groupName}\nUser: @${userName}\nRole: Member\nTime: ${currentTime}\n\nDAVE-MD`;
 
                 await context.reply(demoteMessage, {
@@ -796,13 +796,13 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
             } catch (demoteError) {
                 let errorMsg = 'Failed to demote user.';
-                
+
                 if (demoteError.message.includes('forbidden')) {
                     errorMsg = 'I don\'t have permission to demote users in this group.';
                 } else if (demoteError.message.includes('not-authorized')) {
                     errorMsg = 'I need admin privileges to demote users.';
                 }
-                
+
                 await context.reply( {
                     text: errorMsg + '\n\nDave Md'
                 }, { quoted: m });
@@ -837,7 +837,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
                    'This command can only be used in groups.'
                 );
             }
-        
+
         if (!isBotAdmin) {
 
             return await reply('Please make the bot an admin first.');
@@ -852,7 +852,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
         let userToPromote = [];
 
-        
+
 
         if (mentions.length > 0) {
 
@@ -864,7 +864,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
         }
 
-        
+
 
         if (userToPromote.length === 0) {
 
@@ -878,7 +878,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
             await sock.groupParticipantsUpdate(chatId, userToPromote, "promote");
 
-            
+
 
             // Get group metadata for group name
 
@@ -888,7 +888,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
             const currentTime = new Date().toLocaleString();
 
-            
+
 
             // Handle multiple users (but use the fancy format for each)
 
@@ -896,7 +896,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
                 const userName = user.split('@')[0];
 
-                
+
 
                                 const promotionMessage = `User Promoted\n\nGroup: ${groupName}\nUser: @${userName}\nRole: Admin\nTime: ${currentTime}\n\nDAVE-MD`;
 
@@ -928,7 +928,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
     usage: ".gjid",
 
-    
+
 
     async execute(sock, m, args, context) {
 
@@ -936,7 +936,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
         const isGroup = from.endsWith("@g.us");
 
-        
+
 
         if (!isGroup) {
 
@@ -954,7 +954,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
             const groupMetadata = await sock.groupMetadata(from);
 
-            
+
 
                         await context.reply({
                 text: `Group Information\n\nName: ${groupMetadata.subject}\nJID: ${from}\nMembers: ${groupMetadata.participants.length}\nCreated: ${new Date(groupMetadata.creation * 1000).toLocaleDateString()}\n\nDAVE-MD`
@@ -1008,7 +1008,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
         const durationInMilliseconds = durationInMinutes * 60 * 1000;
 
-        
+
 
         try {
 
@@ -1182,9 +1182,9 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
             }
 
             const customMessage = rawText.split(' ').slice(1).join(' ').trim();
-            
+
             let message = customMessage ? `📢 Announcement:\n${customMessage}` : '🔊 Group Members:\n';
-            
+
             participants.forEach(participant => {
                 message += `@${participant.id.split('@')[0]}\n`;
             });
@@ -1229,7 +1229,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
             const participants = groupMetadata.participants || [];
 
             const nonAdmins = participants.filter(p => !p.admin).map(p => p.id);
-            
+
             if (nonAdmins.length === 0) {
                 await react('👾');
                 return await reply('No non-admin members to tag.');
@@ -1315,8 +1315,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
             await reply('Failed to tag admin members.');
         }
     }
-},
-
+},  // <-- ADDED THIS COMMA (was missing)
 {
     name: 'setgpp',
     aliases: ['setgphoto'],
@@ -1342,7 +1341,7 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
 
         const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         const imageMessage = quoted?.imageMessage || quoted?.stickerMessage;
-        
+
         if (!imageMessage) {
             return await reply('Reply to an image or sticker with .setgpp');
         }
@@ -1361,9 +1360,9 @@ const { reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, cha
             fs.writeFileSync(imgPath, buffer);
 
             await sock.updateProfilePicture(chatId, { url: imgPath });
-            
+
             try { fs.unlinkSync(imgPath); } catch (_) {}
-            
+
             await react('✅');
             await reply('Group profile photo updated successfully!');
         } catch (e) {
@@ -1397,7 +1396,7 @@ const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = c
         }
 
         const name = args.slice(1).join(' ').trim();
-        
+
         if (!name) {
             return await reply('Usage: .setgname <new name>\n\nExample: .setgname Cool Squad 2025');
         }
@@ -1438,7 +1437,7 @@ const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = c
         }
 
         const desc = args.slice(1).join(' ').trim();
-        
+
         if (!desc) {
             return await reply('Usage: .setgdesc <description>\n\nExample: .setgdesc Welcome to our amazing group!');
         }
@@ -1521,13 +1520,13 @@ const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = c
         }
 
         const [questionPart, optionsPart] = text.split('|').map(t => t.trim());
-        
+
         if (!questionPart || !optionsPart) {
             return await reply('Invalid format.\n\n📊 Example: .poll "Favorite color?" | Red, Blue, Green');
         }
 
         const options = optionsPart.split(',').map(opt => opt.trim()).filter(opt => opt.length);
-        
+
         if (options.length < 2) {
             return await reply('Please provide at least 2 options.');
         }
