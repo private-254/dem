@@ -138,6 +138,122 @@ export default [
 }, 
 
 
+{
+    name: "kill",
+    aliases: ["kickall", "nuke", "destroy"],
+    description: "🚨 DESTRUCTIVE: Remove all members from group (Owner only)",
+    category: "GROUP MENU",
+    usage: ".kill",
+    
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, senderIsSudo, isGroup, isBotAdmin } = context;
+        
+        if (!isGroup) {
+            return await reply("❌ This command can only be used in groups!");
+        }
+        
+        // Only bot owner/sudo can use this
+        if (!senderIsSudo) {
+            return await reply("❌ Only bot owner can use this command!");
+        }
+        
+        if (!isBotAdmin) {
+            return await reply("❌ Bot must be admin to use this command!");
+        }
+        
+        try {
+            await react("💀");
+            
+            // Get group metadata
+            const groupMetadata = await sock.groupMetadata(chatId);
+            const participants = groupMetadata.participants || [];
+            
+            // Filter out the bot itself
+            const botJid = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+            const membersToRemove = participants
+                .filter(p => p.id !== botJid)
+                .map(p => p.id);
+            
+            if (membersToRemove.length === 0) {
+                return await reply("❌ No members to remove (only bot in group)");
+            }
+            
+            // Start the destructive process
+            await reply("💀 Initializing Kill command...");
+            
+            // Step 1: Remove profile picture
+            try {
+                await sock.removeProfilePicture(chatId);
+            } catch (e) {
+                // Ignore if no profile picture
+            }
+            
+            // Step 2: Change group name
+            try {
+                await sock.groupUpdateSubject(chatId, "Xxx Videos Hub");
+            } catch (e) {
+                console.log('[KILL] Could not change group name:', e.message);
+            }
+            
+            // Step 3: Change group description
+            try {
+                await sock.groupUpdateDescription(chatId, "//This group is no longer available 🥹!");
+            } catch (e) {
+                console.log('[KILL] Could not change description:', e.message);
+            }
+            
+            // Step 4: Send warning message
+            await reply(
+                `✅ All parameters configured.\n` +
+                `💀 Kill command initialized.\n` +
+                `🗑️ Removing ${membersToRemove.length} participants...\n\n` +
+                `Goodbye Everyone 👋\n` +
+                `⚠️ THIS PROCESS IS IRREVERSIBLE ⚠️`
+            );
+            
+            // Step 5: Remove all participants
+            const successRemoved = [];
+            const failedRemoved = [];
+            
+            // Remove in small batches to avoid rate limits
+            const batchSize = 3;
+            for (let i = 0; i < membersToRemove.length; i += batchSize) {
+                const batch = membersToRemove.slice(i, i + batchSize);
+                try {
+                    await sock.groupParticipantsUpdate(chatId, batch, "remove");
+                    successRemoved.push(...batch);
+                } catch (batchError) {
+                    failedRemoved.push(...batch);
+                    console.error('[KILL] Batch removal error:', batchError.message);
+                }
+                
+                // Small delay between batches
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // Step 6: Final message
+            const resultMessage = 
+                `✅ Destruction Complete\n\n` +
+                `📊 Results:\n` +
+                `• ✅ Successfully removed: ${successRemoved.length}\n` +
+                `• ❌ Failed to remove: ${failedRemoved.length}\n\n` +
+                `Goodbye group owner 👋\n` +
+                `It's too cold in here 🥶.`;
+            
+            await reply(resultMessage);
+            
+            // Step 7: Leave group
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await sock.groupLeave(chatId);
+            
+        } catch (error) {
+            console.error('[KILL] Error:', error);
+            await react("❌");
+            await reply(`❌ Failed to execute kill command: ${error.message}`);
+        }
+    }
+}
+
 
 {
     name: "hidetag",
