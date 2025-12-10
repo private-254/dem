@@ -42,8 +42,8 @@ import os from 'os';
 import dotenv from "dotenv";
 dotenv.config();
 console.log(chalk.cyan.bold('\n\n[Gift-X] conecting to [Gift-md] zip space....'));
-console.log(chalk.cyan('transfering..\n.         [Gift-X].......>[GIFT-MD]..'));
-console.log(chalk.cyan('\n[GIFT-MD] ✅ Connected\n'));
+console.log(chalk.cyan('transfering..\n.         [Dave-Tech].......>[DAVE-MD]..'));
+console.log(chalk.cyan('\n[DABE-MD] ✅ Connected\n'));
 const envPath = path.resolve(process.cwd(), '.env');
 
     function loadEnvSession() {
@@ -58,12 +58,12 @@ const envPath = path.resolve(process.cwd(), '.env');
 
     // Session already exists - don't overwrite
     if (fs.existsSync(credsPath)) {
-        console.log(chalk.cyan('[GIFT-MD] ✅ Existing session found'));
+        console.log(chalk.cyan('[DAVE-MD] ✅ Existing session found'));
         return true;
     }
 
-    console.log(chalk.yellow('[GIFT-MD] 📥 Session found in .env!'));
-    console.log(chalk.cyan('[GIFT-MD] 🔄 Loading session from .env...'));
+    console.log(chalk.yellow('[DAVE-MD] 📥 Session found in .env!'));
+    console.log(chalk.cyan('[DAVE-MD] 🔄 Loading session from .env...'));
 
     // Ensure directory
     if (!fs.existsSync(sessionDir)) {
@@ -78,12 +78,12 @@ const envPath = path.resolve(process.cwd(), '.env');
         // STEP 1: Remove ANY known prefix
         // =====================================
   const allPrefixes = [
-            'GIFT-MD~','JUNE-MD:~'];
+            'DAVE-AI~','JUNE-MD:~'];
 
         for (const prefix of allPrefixes) {
             if (sessionString.toUpperCase().startsWith(prefix.toUpperCase())) {
                 sessionString = sessionString.slice(prefix.length).trim();
-                console.log(chalk.gray(`[GIFT-MD] 🔍 Removed prefix: ${prefix}`));
+                console.log(chalk.gray(`[DAVE-MD] 🔍 Removed prefix: ${prefix}`));
                 break;
             }
         }
@@ -94,17 +94,17 @@ const envPath = path.resolve(process.cwd(), '.env');
 
         // Attempt 1: Already valid JSON object
         if (sessionString.startsWith('{') && sessionString.endsWith('}')) {
-            console.log(chalk.cyan('[GIFT-MD] 📋 Format: Raw JSON'));
+            console.log(chalk.cyan('[DAVE-MD] 📋 Format: Raw JSON'));
             try {
                 parsedSession = JSON.parse(sessionString);
             } catch (e) {
-                console.log(chalk.yellow('[GIFT-MD] ⚠️ JSON parse failed, trying base64...'));
+                console.log(chalk.yellow('[DAVE-MD] ⚠️ JSON parse failed, trying base64...'));
             }
         }
 
         // Attempt 2: Base64 encoded
         if (!parsedSession) {
-            console.log(chalk.cyan('[GIFT-MD] 🔐 Format: Base64'));
+            console.log(chalk.cyan('[DAVE-MD] 🔐 Format: Base64'));
             try {
                 // Try standard base64 decode
                 const decoded = Buffer.from(sessionString, 'base64').toString('utf8');
@@ -116,13 +116,13 @@ const envPath = path.resolve(process.cwd(), '.env');
                     throw new Error('Decoded content is not JSON');
                 }
             } catch (e) {
-                console.log(chalk.yellow(`[GIFT-MD] ⚠️ Base64 decode failed: ${e.message}`));
+                console.log(chalk.yellow(`[DAVE-MD] ⚠️ Base64 decode failed: ${e.message}`));
             }
         }
 
         // Attempt 3: URL-safe base64
         if (!parsedSession) {
-            console.log(chalk.cyan('[GIFT-MD] 🔐 Format: URL-safe Base64'));
+            console.log(chalk.cyan('[DAVE-MD] 🔐 Format: URL-safe Base64'));
             try {
                 // Replace URL-safe chars
                 const urlSafe = sessionString.replace(/-/g, '+').replace(/_/g, '/');
@@ -138,7 +138,7 @@ const envPath = path.resolve(process.cwd(), '.env');
 
         // Attempt 4: Hex encoded
         if (!parsedSession) {
-            console.log(chalk.cyan('[GIFT-MD] 🔐 Format: Hex'));
+            console.log(chalk.cyan('[DAVE-MD] 🔐 Format: Hex'));
             try {
                 const decoded = Buffer.from(sessionString, 'hex').toString('utf8');
 
@@ -146,13 +146,13 @@ const envPath = path.resolve(process.cwd(), '.env');
                     parsedSession = JSON.parse(decoded);
                 }
             } catch (e) {
-                console.log(chalk.yellow('[GIFT-MD] ⚠️ Hex decode failed'));
+                console.log(chalk.yellow('[DAVE-MD] ⚠️ Hex decode failed'));
             }
         }
 
         // Attempt 5: Extract JSON from string
         if (!parsedSession) {
-            console.log(chalk.cyan('[GIFT-MD] 🔍 Format: Extracting JSON...'));
+            console.log(chalk.cyan('[DAVE-MD] 🔍 Format: Extracting JSON...'));
             try {
                 // Try to find JSON object in the string
                 const match = sessionString.match(/\{[\s\S]*\}/);
@@ -160,7 +160,7 @@ const envPath = path.resolve(process.cwd(), '.env');
                     parsedSession = JSON.parse(match[0]);
                 }
             } catch (e) {
-                console.log(chalk.yellow('[GIFT-MD] ⚠️ JSON extraction failed'));
+                console.log(chalk.yellow('[DAVE-MD] ⚠️ JSON extraction failed'));
             }
         }
 
@@ -168,8 +168,8 @@ const envPath = path.resolve(process.cwd(), '.env');
         // STEP 3: Validate parsed session
         // =====================================
         if (!parsedSession) {
-            console.log(chalk.red('[GIFT-MD] ❌ Could not parse session in any format'));
-            console.log(chalk.yellow('[GIFT-MD] 💡 Session should be either:'));
+            console.log(chalk.red('[DAVE-MD] ❌ Could not parse session in any format'));
+            console.log(chalk.yellow('[DAVE-MD] 💡 Session should be either:'));
             console.log(chalk.yellow('   - Raw JSON: {"noiseKey":...}'));
             console.log(chalk.yellow('   - Base64: eyJub2lzZUtleSI6...'));
             return false;
@@ -180,8 +180,8 @@ const envPath = path.resolve(process.cwd(), '.env');
         const missingKeys = requiredKeys.filter(key => !parsedSession[key]);
 
         if (missingKeys.length > 0) {
-            console.log(chalk.red(`[GIFT-MD] ❌ Session missing required keys: ${missingKeys.join(', ')}`));
-            console.log(chalk.yellow('[GIFT-MD] 💡 This might not be a valid Baileys session'));
+            console.log(chalk.red(`[DAVE-MD] ❌ Session missing required keys: ${missingKeys.join(', ')}`));
+            console.log(chalk.yellow('[DAVE-MD] 💡 This might not be a valid Baileys session'));
             return false;
         }
 
@@ -189,14 +189,14 @@ const envPath = path.resolve(process.cwd(), '.env');
         // STEP 4: Save to file
         // =====================================
         fs.writeFileSync(credsPath, JSON.stringify(parsedSession, null, 2));
-        console.log(chalk.green('[GIFT-MD] ✅ Session loaded and validated successfully!'));
-        console.log(chalk.gray(`[GIFT-MD] 📝 Saved to: ${credsPath}`));
+        console.log(chalk.green('[DAVE-MD] ✅ Session loaded and validated successfully!'));
+        console.log(chalk.gray(`[DAVE-MD] 📝 Saved to: ${credsPath}`));
 
         return true;
 
     } catch (error) {
-        console.log(chalk.red('[GIFT-MD] ❌ Unexpected error loading session:'), error.message);
-        console.log(chalk.yellow('[GIFT-MD] 💡 Please check your SESSION_ID format in .env'));
+        console.log(chalk.red('[DAVE-MD] ❌ Unexpected error loading session:'), error.message);
+        console.log(chalk.yellow('[DAVE-MD] 💡 Please check your SESSION_ID format in .env'));
         return false;
     }
 }
@@ -206,7 +206,7 @@ const file = path.resolve(process.argv[1]); // current file path
 
 function restartBot() {
 
-  console.log(chalk.blue('[GIFT-MD] 🔁 Restarting...'));
+  console.log(chalk.blue('[DAVE-MD] 🔁 Restarting...'));
 
   spawn(process.argv[0], [file], {
 
@@ -231,7 +231,7 @@ function checkEnvStatus() {
         fs.watch(envPath, { persistent: false }, (eventType, filename) => {
             if (filename && eventType === 'change') {
                 console.log(chalk.bgRed.black('================================================='));
-                console.log(chalk.white.bgRed('[GIFT-MD] 🚨 .env file change detected!'));
+                console.log(chalk.white.bgRed('[DAVE-MD] 🚨 .env file change detected!'));
                 console.log(chalk.white.bgRed('Restarting bot to apply new configuration (e.g., SESSION_ID).'));
                 console.log(chalk.red.bgBlack('================================================='));
 
