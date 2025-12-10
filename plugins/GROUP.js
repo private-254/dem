@@ -139,6 +139,79 @@ export default [
 
 
 {
+    name: "listgc",
+    aliases: ["grouplist", "groups", "allgroups"],
+    description: "List all groups the bot is in",
+    category: "GROUP MENU",
+    usage: ".listgc",
+    
+    execute: async (sock, m, args, context) => {
+        const { reply, react, senderIsSudo } = context;
+        
+        // Only bot owner/sudo can use this
+        if (!senderIsSudo) {
+            return await reply("Only bot owner can use this command!");
+        }
+        
+        try {
+            await react("📋");
+            
+            // Fetch all groups the bot participates in
+            const getGroups = await sock.groupFetchAllParticipating();
+            const groups = Object.values(getGroups);
+            
+            if (!groups || groups.length === 0) {
+                return await reply("❌ The bot is not in any groups.");
+            }
+            
+            // Create the list message
+            let text = `⬣ *GROUP LIST DAVE-MD*\n`;
+            text += `📊 Total Groups: ${groups.length}\n\n`;
+            
+            groups.forEach((g, i) => {
+                const groupId = g.id;
+                const groupName = g.subject || "Unnamed Group";
+                const memberCount = g.participants?.length || 0;
+                const isAnnouncement = g.announce === true ? "🔒 Locked" : "🔓 Open";
+                const adminsCount = g.participants?.filter(p => p.admin).length || 0;
+                
+                // Format creation date (if available)
+                let createdDate = "Unknown";
+                if (g.creation) {
+                    try {
+                        // Using basic date formatting without moment.js
+                        const date = new Date(g.creation * 1000);
+                        createdDate = date.toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+                    } catch (e) {
+                        createdDate = "Unknown";
+                    }
+                }
+                
+                text += `*${i + 1}. ${groupName}*\n`;
+                text += `🆔 ID: ${groupId}\n`;
+                text += `👥 Members: ${memberCount}\n`;
+                text += `👑 Admins: ${adminsCount}\n`;
+                text += `🔐 Status: ${isAnnouncement}\n`;
+                text += `📅 Created: ${createdDate}\n\n`;
+            });
+            
+            // Add footer
+            text += `📝 Total: ${groups.length} groups`;
+            
+            await reply(text);
+            
+        } catch (error) {
+            console.error('[LISTGC] Error:', error);
+            await reply(`❌ Failed to fetch group data: ${error.message}`);
+        }
+    }
+}
+
+{
     name: "disp-90",
     aliases: ["disappear90", "ephemeral90"],
     description: "Set disappearing messages for 90 days",
