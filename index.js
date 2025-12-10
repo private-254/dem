@@ -14,7 +14,6 @@ import awesomePhoneNumber from 'awesome-phonenumber';
 import PhoneNumber from 'awesome-phonenumber';
 import { imageToWebp, videoToWebp, writeExifImg, writeExifVid } from './lib/exif.js';
 import { smsg, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep, reSize,isUrl, getCurrentTime, getCurrentTimezone } from './lib/myfunc.js';
-// === FIXED Baileys IMPORT ===
 import Baileys from '@whiskeysockets/baileys';
 const { 
     default: makeWASocket,
@@ -45,9 +44,9 @@ import store from './lib/lightweight.js';
 import os from 'os';
 import dotenv from "dotenv";
 dotenv.config();
-console.log(chalk.cyan.bold('\n\n[Gift-X] conecting to [Gift-md] zip space....'));
+console.log(chalk.cyan.bold('\n\n[Gift-X] conecting to [Dave-md] zip space....'));
 console.log(chalk.cyan('transfering..\n.         [Dave-Tech].......>[DAVE-MD]..'));
-console.log(chalk.cyan('\n[DABE-MD] ✅ Connected\n'));
+console.log(chalk.cyan('\n[DAVE-MD] ✅ Connected\n'));
 const envPath = path.resolve(process.cwd(), '.env');
 
     function loadEnvSession() {
@@ -82,7 +81,7 @@ const envPath = path.resolve(process.cwd(), '.env');
         // STEP 1: Remove ANY known prefix
         // =====================================
   const allPrefixes = [
-            'DAVE-AI~','JUNE-MD:~'];
+            'DAVE-AI:~','JUNE-MD:~'];
 
         for (const prefix of allPrefixes) {
             if (sessionString.toUpperCase().startsWith(prefix.toUpperCase())) {
