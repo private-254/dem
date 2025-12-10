@@ -285,7 +285,7 @@ export default [
             return context.reply("❌ An error occurred while processing the Instagram request.");
         }
     }
-}
+  },  // <-- ADDED THIS COMMA (was missing)
   {
     name: 'itunes',
     category: 'downloader',
@@ -401,9 +401,8 @@ export default [
             context.reply("Error downloading audio.");
         }
     }
-}
-
-{
+  },  // <-- ADDED THIS COMMA (was missing)
+  {
     name: "play",
     aliases: ["p"],
     category: "downloader",
@@ -481,9 +480,8 @@ export default [
             return context.reply("Error: " + error.message);
         }
     }
-}
-
-{
+  },  // <-- ADDED THIS COMMA (was missing)
+  {
     name: "tiktok",
     aliases: ["tt", "tik"],
     category: "downloader",
@@ -638,6 +636,5 @@ export default [
             return context.reply("❌ An error occurred while downloading the TikTok video.");
         }
     }
-}
-  
+  }
 ];
