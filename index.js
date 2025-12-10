@@ -1,27 +1,19 @@
 import { spawn } from 'child_process';
-import path, { join } from 'path';
-import fs, { rmSync, existsSync } from 'fs';
-import chalk from 'chalk';
+import path from 'path';
+import fs from 'fs';
+import chalk from 'chalk';  
+//=========== BOT MODE==========//
 import settings from './settings.js';
 import { getSetting } from './lib/database.js';
 import { channelInfo } from './lib/messageConfig.js';
 import { Boom } from '@hapi/boom';
 import FileType from 'file-type';
 import axios from 'axios';
-import { handleMessages, handleGroupParticipantUpdate, handleStatus, restorePresenceSettings, initializeCallHandler } from './main.js';
+import { handleMessages, handleGroupParticipantUpdate, handleStatus, restorePresenceSettings, initializeCallHandler} from './main.js';
 import awesomePhoneNumber from 'awesome-phonenumber';
 import PhoneNumber from 'awesome-phonenumber';
 import { imageToWebp, videoToWebp, writeExifImg, writeExifVid } from './lib/exif.js';
-import { smsg, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep, reSize, isUrl, getCurrentTime, getCurrentTimezone } from './lib/myfunc.js';
-import NodeCache from 'node-cache';
-import pino from 'pino';
-import readline from 'readline';
-import { parsePhoneNumber } from 'libphonenumber-js';
-import store from './lib/lightweight.js';
-import os from 'os';
-import dotenv from 'dotenv';
-dotenv.config();
-
+import { smsg, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep, reSize,isUrl, getCurrentTime, getCurrentTimezone } from './lib/myfunc.js';
 // === FIXED Baileys IMPORT ===
 import Baileys from '@whiskeysockets/baileys';
 const { 
@@ -42,6 +34,17 @@ const {
 } = Baileys;
 
 import baileysPkg from '@whiskeysockets/baileys/package.json' with { type: "json" };
+import NodeCache from "node-cache";
+import pino from "pino";
+import readline from "readline";
+import { parsePhoneNumber } from "libphonenumber-js";
+// Remove the problematic PHONENUMBER_MCC import
+import { rmSync, existsSync } from 'fs';
+import { join } from 'path';
+import store from './lib/lightweight.js';
+import os from 'os';
+import dotenv from "dotenv";
+dotenv.config();
 console.log(chalk.cyan.bold('\n\n[Gift-X] conecting to [Gift-md] zip space....'));
 console.log(chalk.cyan('transfering..\n.         [Dave-Tech].......>[DAVE-MD]..'));
 console.log(chalk.cyan('\n[DABE-MD] ✅ Connected\n'));
