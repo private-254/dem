@@ -138,6 +138,80 @@ export default [
 }, 
 
 
+
+{
+    name: "hidetag",
+    aliases: ["h", "hidemsg", "invisibletag", "hiddentag"],
+    description: "Send a hidden tag message (mentions all without showing tag)",
+    category: "GROUP MENU",
+    usage: ".hidetag [message] or reply to a message",
+    
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, senderIsSudo, isGroup, rawText } = context;
+        
+        if (!isGroup) {
+            return await reply("This command can only be used in groups!");
+        }
+        
+        // Only bot owner/sudo can use this
+        if (!senderIsSudo) {
+            return await reply("Only bot owner can use this command!");
+        }
+        
+        try {
+            await react("👻");
+            
+            // Get group metadata and participants
+            const groupMetadata = await sock.groupMetadata(chatId);
+            const participants = groupMetadata.participants || [];
+            
+            if (participants.length === 0) {
+                return await reply("No participants found in this group.");
+            }
+            
+            // Check if message is quoted/replied
+            const isQuoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+            
+            if (isQuoted) {
+                // Forward the quoted message with hidden mentions
+                const quotedMsg = m.message.extendedTextMessage.contextInfo;
+                
+                await sock.sendMessage(chatId, {
+                    forward: {
+                        key: {
+                            remoteJid: quotedMsg.participant,
+                            id: quotedMsg.stanzaId,
+                            fromMe: false
+                        },
+                        message: quotedMsg.quotedMessage
+                    },
+                    mentions: participants.map(p => p.id)
+                });
+                
+            } else {
+                // Send text message with hidden mentions
+                const messageText = rawText.split(' ').slice(1).join(' ').trim();
+                
+                if (!messageText) {
+                    return await reply("Please provide a message!\n\nUsage: .hidetag [message] or reply to a message");
+                }
+                
+                await sock.sendMessage(chatId, {
+                    text: messageText,
+                    mentions: participants.map(p => p.id)
+                }, { quoted: m });
+            }
+            
+            await react("✅");
+            
+        } catch (error) {
+            console.error('[HIDETAG] Error:', error);
+            await reply(`❌ Failed to send hidden tag: ${error.message}`);
+        }
+    }
+}
+
+
 {
     name: "listgc",
     aliases: ["grouplist", "groups", "allgroups"],
