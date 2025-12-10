@@ -135,7 +135,203 @@ export default [
             await reply(`❌ Error removing members: ${error.message}\n\n⚠️ Make sure bot is admin!`);
         }
     }
-},  
+}, 
+
+
+{
+    name: "disp-90",
+    aliases: ["disappear90", "ephemeral90"],
+    description: "Set disappearing messages for 90 days",
+    category: "GROUP MENU",
+    usage: ".disp-90",
+    
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, isSenderAdmin, isBotAdmin, isGroup } = context;
+        
+        if (!isGroup) {
+            return await reply("This command is for groups only!");
+        }
+        
+        if (!isSenderAdmin) {
+            return await reply("Only group admins can set disappearing messages!");
+        }
+        
+        if (!isBotAdmin) {
+            return await reply("Bot must be admin to set disappearing messages!");
+        }
+        
+        try {
+            await react("⏳");
+            await sock.groupToggleEphemeral(chatId, 90 * 24 * 3600);
+            await reply("Disappearing messages successfully turned on for 90 days!");
+        } catch (error) {
+            await reply(`❌ Error: ${error.message}`);
+        }
+    }
+},
+{
+    name: "disp-off",
+    aliases: ["disappear-off", "ephemeral-off"],
+    description: "Turn off disappearing messages",
+    category: "GROUP MENU",
+    usage: ".disp-off",
+    
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, isSenderAdmin, isBotAdmin, isGroup } = context;
+        
+        if (!isGroup) {
+            return await reply("This command is for groups only!");
+        }
+        
+        if (!isSenderAdmin) {
+            return await reply("Only group admins can change disappearing messages!");
+        }
+        
+        if (!isBotAdmin) {
+            return await reply("Bot must be admin to change disappearing messages!");
+        }
+        
+        try {
+            await react("🚫");
+            await sock.groupToggleEphemeral(chatId, 0);
+            await reply("Disappearing messages successfully turned off!");
+        } catch (error) {
+            await reply(`❌ Error: ${error.message}`);
+        }
+    }
+},
+{
+    name: "disp-1",
+    aliases: ["disappear24", "ephemeral24"],
+    description: "Set disappearing messages for 24 hours",
+    category: "GROUP MENU",
+    usage: ".disp-1",
+    
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, isSenderAdmin, isBotAdmin, isGroup } = context;
+        
+        if (!isGroup) {
+            return await reply("This command is for groups only!");
+        }
+        
+        if (!isSenderAdmin) {
+            return await reply("Only group admins can set disappearing messages!");
+        }
+        
+        if (!isBotAdmin) {
+            return await reply("Bot must be admin to set disappearing messages!");
+        }
+        
+        try {
+            await react("⏳");
+            await sock.groupToggleEphemeral(chatId, 24 * 3600);
+            await reply("Disappearing messages successfully turned on for 24 hours!");
+        } catch (error) {
+            await reply(`❌ Error: ${error.message}`);
+        }
+    }
+},
+{
+    name: "disp-7",
+    aliases: ["disappear7", "ephemeral7"],
+    description: "Set disappearing messages for 7 days",
+    category: "GROUP MENU",
+    usage: ".disp-7",
+    
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, isSenderAdmin, isBotAdmin, isGroup } = context;
+        
+        if (!isGroup) {
+            return await reply("This command is for groups only!");
+        }
+        
+        if (!isSenderAdmin) {
+            return await reply("Only group admins can set disappearing messages!");
+        }
+        
+        if (!isBotAdmin) {
+            return await reply("Bot must be admin to set disappearing messages!");
+        }
+        
+        try {
+            await react("⏳");
+            await sock.groupToggleEphemeral(chatId, 7 * 24 * 3600);
+            await reply("Disappearing messages successfully turned on for 7 days!");
+        } catch (error) {
+            await reply(`❌ Error: ${error.message}`);
+        }
+    }
+},
+{
+    name: "joingc",
+    aliases: ["join", "join-group"],
+    description: "Join a WhatsApp group using invite link",
+    category: "GROUP MENU",
+    usage: ".joingc <invite-link>",
+    
+    execute: async (sock, m, args, context) => {
+        const { reply, react, senderIsSudo, rawText } = context;
+        
+        // Only bot owner/sudo can use this
+        if (!senderIsSudo) {
+            return await reply("Only bot owner can use this command!");
+        }
+        
+        if (!rawText || rawText.split(' ').length < 2) {
+            return await reply("Where's the group link?\n\nUsage: .joingc https://chat.whatsapp.com/INVITE_CODE");
+        }
+        
+        const text = rawText.split(' ').slice(1).join(' ');
+        
+        if (!text.includes("chat.whatsapp.com")) {
+            return await reply("Invalid WhatsApp group link!");
+        }
+        
+        try {
+            await react("👥");
+            const inviteCode = text.split('https://chat.whatsapp.com/')[1];
+            
+            if (!inviteCode) {
+                return await reply("Invalid invite code format!");
+            }
+            
+            const groupId = await sock.groupAcceptInvite(inviteCode);
+            await reply(`✅ Successfully joined group!\n\nGroup ID: ${groupId}`);
+        } catch (error) {
+            await reply(`❌ Failed to join group: ${error.message}`);
+        }
+    }
+},
+{
+    name: "leavegc",
+    aliases: ["leave", "leave-group", "out"],
+    description: "Leave current group",
+    category: "GROUP MENU",
+    usage: ".leavegc",
+    
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, senderIsSudo, isGroup } = context;
+        
+        if (!isGroup) {
+            return await reply("This command is for groups only!");
+        }
+        
+        // Only bot owner/sudo can use this
+        if (!senderIsSudo) {
+            return await reply("Only bot owner can use this command!");
+        }
+        
+        try {
+            await react("👋");
+            await sock.groupLeave(chatId);
+            // This message may not send since bot leaves group immediately
+            await reply("Leaving group... Goodbye!");
+        } catch (error) {
+            await reply(`❌ Failed to leave group: ${error.message}`);
+        }
+    }
+}
+ 
     {
 
     name: "add",
