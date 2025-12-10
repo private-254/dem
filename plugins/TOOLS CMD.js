@@ -234,7 +234,7 @@ export default [
            await context.replyPlain({ 
                     image: buffer, 
                     fileName: 'media.jpg', 
-                    caption: quotedImage.caption || '𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐛𝐲 𝐆𝐢𝐟𝐭-𝐌𝐃',
+                    caption: quotedImage.caption || 'Dave Tech',
                     ...context.channelInfo
                 },{quoted: global.vv});
             } else if (quotedVideo && quotedVideo.viewOnce) {
