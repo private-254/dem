@@ -274,7 +274,7 @@ export default [
 },
 
 {
-    name: 'kick',
+    name: "kick",
     aliases: ['remove'],
     category: 'GROUP MENU',
     description: 'Remove users from the group',
@@ -495,7 +495,7 @@ export default [
 },
 
 {
-    name: 'promote',
+    name: "promote",
     aliases: ['pmt'],
     category: 'GROUP MENU',
     description: 'Promote users to admin',
@@ -581,7 +581,7 @@ export default [
 },
 
 {
-    name: 'mute',
+    name: "mute",
     aliases: ['silence'],
     category: 'GROUP MENU',
     description: 'Mute the group for specified minutes',
@@ -1125,5 +1125,5 @@ export default [
             await reply('Failed to create poll.');
         }
     }
-}
+},
 ];
