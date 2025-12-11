@@ -949,13 +949,13 @@ export default [
 },
 
 {
-    name: "setgname",
-    aliases: [],
+    name: 'setgname',
+    aliases: ['updategroupname'],
     category: 'GROUP',
     description: 'Change group name (Admin only)',
     usage: '.setgname <new name>',
     execute: async (sock, message, args, context) => {
-        const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = context;
+const { isSenderAdmin, isBotAdmin, chatId, senderId, reply, react, isGroup } = context;
 
         if (!isGroup) {
             return await reply('This command can only be used in groups.');
@@ -967,31 +967,32 @@ export default [
         }
 
         if (!isSenderAdmin) {
-            await react('🚫');
+            await react('🎁');
             return await reply('Only group admins can use this command.');
         }
 
         const name = args.slice(1).join(' ').trim();
         
         if (!name) {
-            return await reply('Usage: .setgname <new name>\n\nExample: .setgname Cool Squad 2025');
+            return await reply('🏷️ Usage: .setgname <new name>\n\nExample: .setgname Cool Squad 2025');
         }
 
         try {
             await react('⏳');
             await sock.groupUpdateSubject(chatId, name);
             await react('✅');
-            await reply(`Group name updated to: ${name}`);
+            await reply(`Group name updated to: *${name}*`);
         } catch (e) {
             console.error('[SETGNAME] Error:', e.message);
-            await react('❌');
+            await react('🎁');
             await reply('Failed to update group name.');
         }
     }
 },
 
-{
-    name: "setgdesc",
+
+ {
+    name: 'setgdesc',
     aliases: ['setdesc', 'gdesc'],
     category: 'GROUP',
     description: 'Change group description (Admin only)',
@@ -1004,12 +1005,12 @@ export default [
         }
 
         if (!isBotAdmin) {
-            await react('❌');
+            await react('🎄');
             return await reply('Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
-            await react('🚫');
+            await react('🎄');
             return await reply('Only group admins can use this command.');
         }
 
@@ -1022,36 +1023,37 @@ export default [
         try {
             await react('⏳');
             await sock.groupUpdateDescription(chatId, desc);
-            await react('✅');
-            await reply('Group description updated successfully!');
+            await react('🎄');
+            await reply('✅ Group description updated successfully!');
         } catch (e) {
             console.error('[SETGDESC] Error:', e.message);
-            await react('❌');
+            await react('🎄');
             await reply('Failed to update group description.');
         }
     }
 },
+ 
 
 {
-    name: "resetlink",
+    name: 'resetlink',
     aliases: ['revoke', 'newlink'],
     category: 'GROUP',
     description: 'Reset group invite link (Admin only)',
     usage: '.resetlink',
     execute: async (sock, message, args, context) => {
-        const { chatId, senderId, reply, isSenderAdmin, isBotAdmin, react, isGroup } = context;
+        const { chatId, senderId, reply, isSenderAdmin, isBotAdmin,react, isGroup } = context;
 
         if (!isGroup) {
             return await reply('This command can only be used in groups.');
         }
 
         if (!isBotAdmin) {
-            await react('❌');
+            await react('🎄');
             return await reply('Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
-            await react('🚫');
+            await react('🎄');
             return await reply('Only group admins can use this command.');
         }
 
@@ -1060,7 +1062,7 @@ export default [
             await sock.groupRevokeInvite(chatId);
             const code = await sock.groupInviteCode(chatId);
             await react('✅');
-            await reply(`New group invite link:\n\nhttps://chat.whatsapp.com/${code}\n\nPrevious link has been revoked!`);
+            await reply(`🔗 *New group invite link:*\n\nhttps://chat.whatsapp.com/${code}\n\n_Previous link has been revoked!_`);
         } catch (e) {
             console.error('[RESETLINK] Error:', e.message);
             await react('❌');
@@ -1070,44 +1072,44 @@ export default [
 },
 
 {
-    name: "poll",
+    name: 'poll',
     aliases: ['createpoll', 'vote'],
     category: 'GROUP',
     description: 'Create a poll in the group (Admin only)',
     usage: '.poll "Question?" | Option1, Option2, Option3',
     execute: async (sock, message, args, context) => {
-        const { chatId, senderId, reply, react, isSenderAdmin, isBotAdmin, isGroup } = context;
+        const { chatId, senderId, reply, react,isSenderAdmin, isBotAdmin, isGroup } = context;
 
         if (!isGroup) {
-            return await reply('This command can only be used in groups.');
+            return await reply('❌ This command can only be used in groups.');
         }
 
         if (!isBotAdmin) {
             await react('❌');
-            return await reply('Please make the bot an admin first.');
+            return await reply('❌ Please make the bot an admin first.');
         }
 
         if (!isSenderAdmin) {
             await react('🚫');
-            return await reply('Only group admins can use this command.');
+            return await reply('🚫 Only group admins can use this command.');
         }
 
         const text = args.slice(1).join(' ').trim();
 
         if (!text) {
-            return await reply('Usage: .poll "Question?" | Option1, Option2, Option3\n\nExample: .poll "Favorite color?" | Red, Blue, Green');
+            return await reply('📊 Usage: .poll "Question?" | Option1, Option2, Option3\n\nExample: .poll "Favorite color?" | Red, Blue, Green');
         }
 
         const [questionPart, optionsPart] = text.split('|').map(t => t.trim());
         
         if (!questionPart || !optionsPart) {
-            return await reply('Invalid format.\n\nExample: .poll "Favorite color?" | Red, Blue, Green');
+            return await reply('❌ Invalid format.\n\n📊 Example: .poll "Favorite color?" | Red, Blue, Green');
         }
 
         const options = optionsPart.split(',').map(opt => opt.trim()).filter(opt => opt.length);
         
         if (options.length < 2) {
-            return await reply('Please provide at least 2 options.');
+            return await reply('❌ Please provide at least 2 options.');
         }
 
         try {
@@ -1119,12 +1121,12 @@ export default [
                 }
             });
             await react('✅');
-            await reply('Poll created successfully!');
+            await reply('✅ Poll created successfully!');
         } catch (e) {
             console.error('[POLL] Error:', e.message);
             await react('❌');
-            await reply('Failed to create poll.');
+            await reply('❌ Failed to create poll.');
         }
     }
-},
-];
+}
+    ];
