@@ -853,124 +853,123 @@ export default [
   },
 
   {
-    name: "fb",
-    aliases: ["facebook", "fbdl", "ig", "instagram", "igdl"],
-    category: "downloader",
-    desc: "Download Facebook or Instagram videos/photos",
-    usage: ".fb <link> or .ig <link>",
+  name: "fb",
+  aliases: ["facebook", "fbdl", "ig", "instagram", "igdl"],
+  category: "downloader",
+  desc: "Download Facebook or Instagram videos/photos",
+  usage: ".fb <link> or .ig <link>",
 
-    execute: async (sock, m, args, context) {
-      const { chatId, reply, react } = context;
-      const text = args.slice(1).join(' ').trim();
+  execute: async (sock, m, args, context) => {  // Fixed: Added =>
+    const { chatId, reply, react } = context;
+    const text = args.slice(1).join(' ').trim();
 
-      if (!text) {
-        return reply(`Provide a Facebook or Instagram link!\n\nExample: .fb <link> or .ig <link>`);
-      }
+    if (!text) {
+      return reply(`Provide a Facebook or Instagram link!\n\nExample: .fb <link> or .ig <link>`);
+    }
 
-      try {
-        await react("⏳");
+    try {
+      await react("⏳");
 
-        await reply("Fetching media... Please wait!");
+      await reply("Fetching media... Please wait!");
 
-        async function fetchMedia(url) {
-          try {
-            const form = new URLSearchParams();
-            form.append("q", url);
-            form.append("vt", "home");
+      async function fetchMedia(url) {
+        try {
+          const form = new URLSearchParams();
+          form.append("q", url);
+          form.append("vt", "home");
 
-            const { data } = await axios.post('https://yt5s.io/api/ajaxSearch', form, {
-              headers: {
-                "Accept": "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-                "Content-Type": "application/x-www-form-urlencoded",
-              },
+          const { data } = await axios.post('https://yt5s.io/api/ajaxSearch', form, {
+            headers: {
+              "Accept": "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          });
+
+          if (data.status !== "ok") throw new Error("Provide a valid link.");
+          const $ = cheerio.load(data.data);
+
+          if (/^(https?:\/\/)?(www\.)?(facebook\.com|fb\.watch)\/.+/i.test(url)) {
+            const thumb = $('img').attr("src");
+            let links = [];
+
+            $('table tbody tr').each((_, el) => {
+              const quality = $(el).find('.video-quality').text().trim();
+              const link = $(el).find('a.download-link-fb').attr("href");
+              if (quality && link) links.push({ quality, link });
             });
 
-            if (data.status !== "ok") throw new Error("Provide a valid link.");
-            const $ = cheerio.load(data.data);
+            if (links.length > 0) return {
+              platform: "Facebook",
+              type: "video",
+              thumb,
+              media: links[0].link
+            };
 
-            if (/^(https?:\/\/)?(www\.)?(facebook\.com|fb\.watch)\/.+/i.test(url)) {
-              const thumb = $('img').attr("src");
-              let links = [];
+            if (thumb) return {
+              platform: "Facebook",
+              type: "image",
+              media: thumb
+            };
 
-              $('table tbody tr').each((_, el) => {
-                const quality = $(el).find('.video-quality').text().trim();
-                const link = $(el).find('a.download-link-fb').attr("href");
-                if (quality && link) links.push({ quality, link });
-              });
+            throw new Error("Media is invalid.");
 
-              if (links.length > 0) return {
-                platform: "Facebook",
-                type: "video",
-                thumb,
-                media: links[0].link
-              };
+          } else if (/^(https?:\/\/)?(www\.)?(instagram\.com\/(p|reel)\/).+/i.test(url)) {
+            const video = $('a[title="Download Video"]').attr("href");
+            const image = $('img').attr("src");
 
-              if (thumb) return {
-                platform: "Facebook",
-                type: "image",
-                media: thumb
-              };
+            if (video) return {
+              platform: "Instagram",
+              type: "video",
+              media: video
+            };
 
-              throw new Error("Media is invalid.");
+            if (image) return {
+              platform: "Instagram",
+              type: "image",
+              media: image
+            };
 
-            } else if (/^(https?:\/\/)?(www\.)?(instagram\.com\/(p|reel)\/).+/i.test(url)) {
-              const video = $('a[title="Download Video"]').attr("href");
-              const image = $('img').attr("src");
-
-              if (video) return {
-                platform: "Instagram",
-                type: "video",
-                media: video
-              };
-
-              if (image) return {
-                platform: "Instagram",
-                type: "image",
-                media: image
-              };
-
-              throw new Error("Media invalid.");
-            } else {
-              throw new Error("Provide a valid Facebook or Instagram URL.");
-            }
-          } catch (err) {
-            return { error: err.message };
+            throw new Error("Media invalid.");
+          } else {
+            throw new Error("Provide a valid Facebook or Instagram URL.");
           }
+        } catch (err) {
+          return { error: err.message };
         }
-
-        const res = await fetchMedia(text);
-
-        if (res.error) {
-          await react("❌");
-          return reply(`Error: ${res.error}`);
-        }
-
-        await reply("Media found! Downloading now...");
-
-        if (res.type === "video") {
-          await sock.sendMessage(chatId, {
-            video: { url: res.media },
-            caption: `Downloaded video from ${res.platform}!`
-          }, { quoted: m });
-        } else if (res.type === "image") {
-          await sock.sendMessage(chatId, {
-            image: { url: res.media },
-            caption: `Downloaded photo from ${res.platform}!`
-          }, { quoted: m });
-        }
-
-        await react("✅");
-        await reply("Done!");
-
-      } catch (error) {
-        console.error('[FB/IG] Error:', error);
-        await react("❌");
-        return reply("Failed to get media.");
       }
-    }
-  },
 
+      const res = await fetchMedia(text);
+
+      if (res.error) {
+        await react("❌");
+        return reply(`Error: ${res.error}`);
+      }
+
+      await reply("Media found! Downloading now...");
+
+      if (res.type === "video") {
+        await sock.sendMessage(chatId, {
+          video: { url: res.media },
+          caption: `Downloaded video from ${res.platform}!`
+        }, { quoted: m });
+      } else if (res.type === "image") {
+        await sock.sendMessage(chatId, {
+          image: { url: res.media },
+          caption: `Downloaded photo from ${res.platform}!`
+        }, { quoted: m });
+      }
+
+      await react("✅");
+      await reply("Done!");
+
+    } catch (error) {
+      console.error('[FB/IG] Error:', error);
+      await react("❌");
+      return reply("Failed to get media.");
+    }
+  }
+},
   {
   name: "tiktok",
   aliases: ["tt", "tik"],
