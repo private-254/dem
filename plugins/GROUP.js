@@ -275,7 +275,7 @@ export default [
 
 {
     name: "kick",
-    aliases: ['remove'],
+    aliases: ['kickuser'],
     category: 'GROUP MENU',
     description: 'Remove users from the group',
     usage: '.kick @user or reply to message',
@@ -545,11 +545,12 @@ export default [
                     mentions: [user]
                 });
             }
-        } catch (error) {
+       } catch (error) {
             await reply('Failed to promote user(s)!');
         }
     }
-},
+}
+
 
 {
     name: "gjid",
