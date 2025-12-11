@@ -8,10 +8,7 @@ import path from 'path';
 import yts from 'yt-search';
 import settings from '../settings.js';
 import * as cheerio from 'cheerio';
-
-// Prevent repeated TikTok executions
 const processedMessages = new Set();
-
 export default [
   {
     name: 'apk',
