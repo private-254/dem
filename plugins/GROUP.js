@@ -726,7 +726,7 @@ export default [
 },
 
 {
-    name: 'tagall',
+    name: "tagall",
     aliases: ['everyone', 'all'],
     category: 'GROUP MENU',
     description: 'Tag all group members',
@@ -776,7 +776,7 @@ export default [
 },
 
 {
-    name: 'tagnotadmin',
+    name: "tagnotadmin",
     aliases: [],
     category: 'GROUP',
     description: 'Tag all non-admin members in the group',
@@ -831,7 +831,7 @@ export default [
 },
 
 {
-    name: 'tagadmin',
+    name: "tagadmin",
     aliases: [],
     category: 'GROUP',
     description: 'Tag all admin members in the group',
@@ -891,7 +891,7 @@ export default [
 },
 
 {
-    name: 'setgpp',
+    name: "setgpp",
     aliases: ['setgphoto'],
     category: 'GROUP',
     description: 'Change group profile picture (Admin only)',
@@ -948,7 +948,7 @@ export default [
 },
 
 {
-    name: 'setgname',
+    name: "setgname",
     aliases: [],
     category: 'GROUP',
     description: 'Change group name (Admin only)',
@@ -990,7 +990,7 @@ export default [
 },
 
 {
-    name: 'setgdesc',
+    name: "setgdesc",
     aliases: ['setdesc', 'gdesc'],
     category: 'GROUP',
     description: 'Change group description (Admin only)',
@@ -1032,7 +1032,7 @@ export default [
 },
 
 {
-    name: 'resetlink',
+    name: "resetlink",
     aliases: ['revoke', 'newlink'],
     category: 'GROUP',
     description: 'Reset group invite link (Admin only)',
@@ -1069,7 +1069,7 @@ export default [
 },
 
 {
-    name: 'poll',
+    name: "poll",
     aliases: ['createpoll', 'vote'],
     category: 'GROUP',
     description: 'Create a poll in the group (Admin only)',
