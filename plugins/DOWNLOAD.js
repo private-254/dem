@@ -60,7 +60,6 @@ export default [
       const from = msg.key.remoteJid;
 
       try {
-        // Check if quoted message is audio/voice
         const quotedMsg = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         const audioMsg = quotedMsg?.audioMessage || quotedMsg?.voiceMessage ||
           msg.message?.audioMessage || msg.message?.voiceMessage;
@@ -71,16 +70,13 @@ export default [
 
         await react('🔍');
 
-        // Download the audio
         const stream = await sock.downloadMediaMessage(msg);
         if (!stream) {
           return reply("Could not download the audio message.");
         }
 
-        // Convert to base64 for the API
         const audioBase64 = stream.toString('base64');
 
-        // Try multiple Shazam APIs
         const apis = [
           `https://apiskeith.vercel.app/ai/shazam?audio=${encodeURIComponent(audioBase64)}`,
           `https://api.akuari.my.id/downloader/sha`,
@@ -95,10 +91,8 @@ export default [
             let res;
 
             if (apiUrl.includes('apiskeith')) {
-              // Keith API - send base64 in URL
               res = await axios.get(apiUrl, { timeout: 10000 });
             } else if (apiUrl.includes('akuari')) {
-              // Akuari API - different format
               const formData = new FormData();
               const audioBlob = new Blob([stream], { type: 'audio/mpeg' });
               formData.append('audio', audioBlob, 'audio.mp3');
@@ -108,7 +102,6 @@ export default [
                 timeout: 10000
               });
             } else {
-              // Neoxr API
               res = await axios.post(apiUrl, {
                 audio: audioBase64
               }, { timeout: 10000 });
@@ -130,7 +123,6 @@ export default [
           return reply("Could not recognize the song. Please try with a clearer audio clip.");
         }
 
-        // Format response
         let text = `Song Recognized!\n\n`;
         text += `Title: ${result.title || result.song || "Unknown"}\n`;
         text += `Artist: ${result.artist || result.singer || "Unknown"}\n`;
@@ -141,12 +133,10 @@ export default [
         if (result.duration) text += `Duration: ${result.duration}\n`;
         if (result.lyrics) text += `\nLyrics Preview:\n${result.lyrics.substring(0, 200)}...\n`;
 
-        // Add streaming links if available
         if (result.spotifyUrl) text += `\nSpotify: ${result.spotifyUrl}\n`;
         if (result.youtubeUrl) text += `YouTube: ${result.youtubeUrl}\n`;
         if (result.appleMusicUrl) text += `Apple Music: ${result.appleMusicUrl}\n`;
 
-        // Add Shazam link
         if (result.title && result.artist) {
           const searchQuery = encodeURIComponent(`${result.title} ${result.artist}`);
           text += `\nShazam Search: https://www.shazam.com/search?term=${searchQuery}\n`;
@@ -190,7 +180,6 @@ export default [
           return reply(`Provide a song name!\n\nExample: .playdoc Not Like Us`);
         }
 
-        // Use process.cwd() to avoid __dirname issues
         const tempDir = path.join(process.cwd(), "temp");
         if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
@@ -251,7 +240,6 @@ export default [
           { quoted: msg }
         );
 
-        // Clean up temp file
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }
@@ -337,7 +325,6 @@ export default [
       }
 
       try {
-        // Validate URL
         if (!text.startsWith('http://') && !text.startsWith('https://')) {
           return reply('Please provide a valid URL starting with http:// or https://');
         }
@@ -415,11 +402,9 @@ export default [
         let videoTitle = '';
         let videoThumbnail = '';
 
-        // Check if input is a URL or search term
         if (text.startsWith('http://') || text.startsWith('https://')) {
           videoUrl = text;
         } else {
-          // Search for video
           const { videos } = await yts(text);
           if (!videos || videos.length === 0) return reply('No videos found!');
 
@@ -428,12 +413,10 @@ export default [
           videoThumbnail = videos[0].thumbnail;
         }
 
-        // Validate YouTube URL
         const youtubeRegex = /(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?)([a-zA-Z0-9_-]{11})/gi;
         const urls = videoUrl.match(youtubeRegex);
         if (!urls) return reply('This is not a valid YouTube link!');
 
-        // API configurations
         const izumi = {
           baseURL: "https://izumiiiiiiii.dpdns.org"
         };
@@ -446,7 +429,6 @@ export default [
           }
         };
 
-        // Retry function
         const tryRequest = async (getter, attempts = 3) => {
           let lastError;
           for (let attempt = 1; attempt <= attempts; attempt++) {
@@ -462,7 +444,6 @@ export default [
           throw lastError;
         };
 
-        // Izumi API
         const getIzumiVideoByUrl = async (youtubeUrl) => {
           const apiUrl = `${izumi.baseURL}/downloader/youtube?url=${encodeURIComponent(youtubeUrl)}&format=720`;
           const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
@@ -470,7 +451,6 @@ export default [
           throw new Error('Izumi video API returned no download');
         };
 
-        // Okatsu API (fallback)
         const getOkatsuVideoByUrl = async (youtubeUrl) => {
           const apiUrl = `https://okatsu-rolezapiiz.vercel.app/downloader/ytmp4?url=${encodeURIComponent(youtubeUrl)}`;
           const res = await tryRequest(() => axios.get(apiUrl, AXIOS_DEFAULTS));
@@ -483,12 +463,10 @@ export default [
           throw new Error('Okatsu API returned no mp4');
         };
 
-        // Get video ID for thumbnail
         const ytId = (videoUrl.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/) || [])[1];
         const thumb = videoThumbnail || (ytId ? `https://i.ytimg.com/vi/${ytId}/sddefault.jpg` : undefined);
         const captionTitle = videoTitle || text;
 
-        // Send thumbnail with loading message
         if (thumb) {
           await sock.sendMessage(from, {
             image: { url: thumb },
@@ -496,7 +474,6 @@ export default [
           }, { quoted: msg });
         }
 
-        // Try downloading video
         let videoData;
         try {
           videoData = await getIzumiVideoByUrl(videoUrl);
@@ -505,7 +482,6 @@ export default [
           videoData = await getOkatsuVideoByUrl(videoUrl);
         }
 
-        // Send the video
         await sock.sendMessage(from, {
           video: { url: videoData.download },
           mimetype: 'video/mp4',
@@ -571,6 +547,7 @@ export default [
       }
     }
   },
+
   {
     name: 'gdrive',
     category: 'downloader',
@@ -611,6 +588,7 @@ export default [
       }
     }
   },
+
   {
     name: 'gitclone',
     category: 'downloader',
@@ -651,6 +629,7 @@ export default [
       }
     }
   },
+
   {
     name: 'image',
     aliases: ['img', 'pinterest'],
@@ -679,6 +658,7 @@ export default [
       }
     }
   },
+
   {
     name: "itunes",
     category: 'downloader',
@@ -709,6 +689,7 @@ export default [
       }
     }
   },
+
   {
     name: 'mediafire',
     category: 'downloader',
@@ -749,6 +730,7 @@ export default [
       }
     }
   },
+
   {
     name: "song",
     aliases: ["mp3"],
@@ -794,6 +776,7 @@ export default [
       }
     }
   },
+
   {
     name: "play",
     aliases: ["p"],
@@ -890,7 +873,6 @@ export default [
       try {
         await react("⏳");
 
-        // Send initial processing message
         await reply("Fetching media... Please wait!");
 
         async function fetchMedia(url) {
@@ -910,7 +892,6 @@ export default [
             if (data.status !== "ok") throw new Error("Provide a valid link.");
             const $ = cheerio.load(data.data);
 
-            // Facebook detection
             if (/^(https?:\/\/)?(www\.)?(facebook\.com|fb\.watch)\/.+/i.test(url)) {
               const thumb = $('img').attr("src");
               let links = [];
@@ -936,7 +917,6 @@ export default [
 
               throw new Error("Media is invalid.");
 
-              // Instagram detection
             } else if (/^(https?:\/\/)?(www\.)?(instagram\.com\/(p|reel)\/).+/i.test(url)) {
               const video = $('a[title="Download Video"]').attr("href");
               const image = $('img').attr("src");
@@ -1013,7 +993,6 @@ export default [
         await react("⏳");
         await reply("Fetching TikTok data...");
 
-        // TikTok API endpoint
         const apiUrl = `https://api.princetechn.com/api/download/tiktok?apikey=prince&url=${encodeURIComponent(text)}`;
         const response = await axios.get(apiUrl);
         const data = response.data;
@@ -1024,7 +1003,6 @@ export default [
 
         const json = data.result;
 
-        // Create caption
         let caption = `TikTok Download\n\n`;
         caption += `Id: ${json.id || 'N/A'}\n`;
         caption += `Username: ${json.author?.nickname || 'N/A'}\n`;
@@ -1037,7 +1015,6 @@ export default [
         caption += `Size: ${json.size || 'N/A'}\n`;
         caption += `Duration: ${json.duration || 'N/A'}`;
 
-        // Handle multiple images (slideshow)
         if (json.images && json.images.length > 0) {
           for (const imgUrl of json.images) {
             await sock.sendMessage(chatId, {
@@ -1047,14 +1024,12 @@ export default [
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
         } else {
-          // Send video
           await sock.sendMessage(chatId, {
             video: { url: json.play },
             mimetype: 'video/mp4',
             caption: caption
           }, { quoted: m });
 
-          // Send audio separately after delay
           if (json.music) {
             setTimeout(async () => {
               await sock.sendMessage(chatId, {
