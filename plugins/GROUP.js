@@ -15,15 +15,15 @@ export default [
         const { chatId, reply, react, senderIsSudo, isGroup, isSenderAdmin, isBotAdmin } = context;
 
         if (!isGroup) {
-            return await reply("❌ This command is for groups only!");
+            return await reply("This command is for groups only!");
         }
 
         if (!isBotAdmin) {
-            return await reply("❌ Bot must be admin to remove members!");
+            return await reply("Bot must be admin to remove members!");
         }
 
         if (!isSenderAdmin && !senderIsSudo) {
-            return await reply("❌ Only group admins can remove members!");
+            return await reply("Only group admins can remove members!");
         }
 
         await react("❄️");
@@ -53,7 +53,7 @@ export default [
 
            /** if (targetsToRemove.length === 0) {
                 return await reply(
-                    `📜 Remove Members Usage\n\n` +
+                    `Remove Members Usage\n\n` +
                     `Method 1: Reply to a message → .remove\n` +
                     `Method 2: Mention users → .remove @user1 @user2\n` +
                     `Method 3: Use numbers → .remove 234123456789,234987654321\n\n` +
@@ -97,7 +97,7 @@ export default [
                     // 3. Check if user is in group
                     const isInGroup = groupMetadata.participants.some(p => p.id === targetJid);
                     if (!isInGroup) {
-                        results.push(`❌ ${targetNumber} - Not in this group`);
+                        results.push(`${targetNumber} - Not in this group`);
                         failCount++;
                         continue;
                     }
@@ -109,13 +109,13 @@ export default [
                         results.push(`✅ ${targetNumber} - Removed successfully`);
                         successCount++;
                     } else {
-                        results.push(`❌ ${targetNumber} - ${response[0]?.status || "Failed to remove"}`);
+                        results.push(`${targetNumber} - ${response[0]?.status || "Failed to remove"}`);
                         failCount++;
                     }
 
                 } catch (error) {
                     const targetNumber = targetJid.split("@")[0];
-                    results.push(`❌ ${targetNumber} - ${error.message}`);
+                    results.push(`${targetNumber} - ${error.message}`);
                     failCount++;
                 }
 
@@ -166,13 +166,13 @@ export default [
 
             return await reply(
 
-                `📝 Add Members Usage\n\n` +
+                `Add Members Usage\n\n` +
 
-                `Format: .add number1,number2,number3\n\n` +
+                `Format: .add 12345,456789,12367\n\n` +
 
-                `Example: .add 2341234567890,2340987654321\n\n` +
+                `Example: .add 254104260236,254104260236\n\n` +
 
-                `⚠️ Notes:\n` +
+                `Simple guide:\n` +
 
                 `• Separate numbers with commas\n` +
 
@@ -190,7 +190,7 @@ export default [
 
         if (!isBotAdmin) {
 
-            return await reply("❌ Bot must be admin to add members!");
+            return await reply("Bot must be admin to add members!");
 
         }
 
@@ -198,7 +198,7 @@ export default [
 
         if (!isSenderAdmin && !senderIsSudo) {
 
-            return await reply("❌ Only group admins can add members!");
+            return await reply("Only group admins can add members!");
 
         }
 
@@ -214,7 +214,7 @@ export default [
 
             if (numbers.length === 0) {
 
-                return await reply("❌ No valid phone numbers provided!");
+                return await reply("No valid phone numbers provided!");
 
             }
 
@@ -236,7 +236,7 @@ export default [
 
                     if (cleanNumber.length < 10) {
 
-                        results.push(`❌ ${number} - Invalid number format`);
+                        results.push(`${number} - Invalid number format`);
 
                         failCount++;
 
@@ -276,7 +276,7 @@ export default [
 
                     } else {
 
-                        results.push(`⚠️ ${cleanNumber} - ${response[0]?.status || 'Failed to add'}`);
+                        results.push(`${cleanNumber} - ${response[0]?.status || 'Failed to add'}`);
 
                         failCount++;
 
@@ -284,7 +284,7 @@ export default [
 
                 } catch (error) {
 
-                    results.push(`❌ ${number} - ${error.message}`);
+                    results.push(`${number} - ${error.message}`);
 
                     failCount++;
 
@@ -297,13 +297,13 @@ export default [
             }
 
            /** const resultText = `
-Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n❌ Failed: ${failCount}\n\n📝 Details:\n${results.join('\n')}\n\Members added by GIFT-MD BOT 🤖`;
+Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n❌ Failed: ${failCount}\n\n📝 Details:\n${results.join('\n')}\n\Members added by Dave-Ai`;
 
             await reply(resultText);*/
 
         } catch (error) {
 
-            await reply(`❌ Error adding members: ${error.message}\n\n⚠️ Make sure bot is admin!`);
+            await reply(`Error adding members: ${error.message}\n\n🤷Make sure bot is admin!`);
 
         }
 
@@ -330,13 +330,13 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
         const isGroup = from.endsWith("@g.us");
 
-        await context.react('📪')
+        await context.react('🤷')
 
         if (!isGroup) {
 
             return await context.reply(
 
-                { text: "❌ This command is for groups only!" } 
+                { text: "This command is for groups only!" } 
 
                
 
@@ -382,7 +382,7 @@ Add Members Results\n\n📊 Summary:\n✅ Successfully added: ${successCount}\n�
 
             await context.reply({
 
-                text: `🔒 Group Closed!\n\n` +
+                text: `Group Closed!\n\n` +
 
                       `⚠️ Only admins can send messages now\n` +
 
