@@ -972,79 +972,80 @@ export default [
   },
 
   {
-    name: "tiktok",
-    aliases: ["tt", "tik"],
-    category: "downloader",
-    desc: "Download TikTok videos with audio",
-    usage: ".tiktok <link>",
+  name: "tiktok",
+  aliases: ["tt", "tik"],
+  category: "downloader",
+  desc: "Download TikTok videos with audio",
+  usage: ".tiktok <link>",
 
-    execute: async (sock, m, args, context) {
-      const { chatId, reply, react } = context;
-      const text = args.slice(1).join(' ').trim();
+  execute: async (sock, m, args, context) => {  // Fixed: Added =>
+    const { chatId, reply, react } = context;
+    const text = args.slice(1).join(' ').trim();
 
-      if (!text) {
-        return reply(`Provide a TikTok link.`);
+    if (!text) {
+      return reply(`Provide a TikTok link.`);
+    }
+
+    try {
+      await react("⏳");
+      await reply("Fetching TikTok data...");
+
+      const apiUrl = `https://api.princetechn.com/api/download/tiktok?apikey=prince&url=${encodeURIComponent(text)}`;
+      const response = await axios.get(apiUrl);  // Need: import axios from 'axios';
+      const data = response.data;
+
+      if (!data.result) {
+        throw new Error("Invalid TikTok link or API error");
       }
 
-      try {
-        await react("⏳");
-        await reply("Fetching TikTok data...");
+      const json = data.result;
 
-        const apiUrl = `https://api.princetechn.com/api/download/tiktok?apikey=prince&url=${encodeURIComponent(text)}`;
-        const response = await axios.get(apiUrl);
-        const data = response.data;
+      let caption = `TikTok Download\n\n`;
+      caption += `Id: ${json.id || 'N/A'}\n`;
+      caption += `Username: ${json.author?.nickname || 'N/A'}\n`;
+      caption += `Title: ${json.title || 'N/A'}\n`;
+      caption += `Likes: ${json.digg_count || 0}\n`;
+      caption += `Comments: ${json.comment_count || 0}\n`;
+      caption += `Shares: ${json.share_count || 0}\n`;
+      caption += `Plays: ${json.play_count || 0}\n`;
+      caption += `Created: ${json.create_time || 'N/A'}\n`;
+      caption += `Size: ${json.size || 'N/A'}\n`;
+      caption += `Duration: ${json.duration || 'N/A'}`;
 
-        if (!data.result) {
-          throw new Error("Invalid TikTok link or API error");
-        }
-
-        const json = data.result;
-
-        let caption = `TikTok Download\n\n`;
-        caption += `Id: ${json.id || 'N/A'}\n`;
-        caption += `Username: ${json.author?.nickname || 'N/A'}\n`;
-        caption += `Title: ${json.title || 'N/A'}\n`;
-        caption += `Likes: ${json.digg_count || 0}\n`;
-        caption += `Comments: ${json.comment_count || 0}\n`;
-        caption += `Shares: ${json.share_count || 0}\n`;
-        caption += `Plays: ${json.play_count || 0}\n`;
-        caption += `Created: ${json.create_time || 'N/A'}\n`;
-        caption += `Size: ${json.size || 'N/A'}\n`;
-        caption += `Duration: ${json.duration || 'N/A'}`;
-
-        if (json.images && json.images.length > 0) {
-          for (const imgUrl of json.images) {
-            await sock.sendMessage(chatId, {
-              image: { url: imgUrl },
-              caption: json.images.length > 1 ? `Part ${json.images.indexOf(imgUrl) + 1}/${json.images.length}` : caption
-            }, { quoted: m });
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        } else {
+      if (json.images && json.images.length > 0) {
+        for (const imgUrl of json.images) {
           await sock.sendMessage(chatId, {
-            video: { url: json.play },
-            mimetype: 'video/mp4',
-            caption: caption
+            image: { url: imgUrl },
+            caption: json.images.length > 1 ? `Part ${json.images.indexOf(imgUrl) + 1}/${json.images.length}` : caption
           }, { quoted: m });
-
-          if (json.music) {
-            setTimeout(async () => {
-              await sock.sendMessage(chatId, {
-                audio: { url: json.music },
-                mimetype: 'audio/mpeg',
-                fileName: 'tiktok_audio.mp3'
-              }, { quoted: m });
-            }, 3000);
-          }
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
+      } else {
+        await sock.sendMessage(chatId, {
+          video: { url: json.play },
+          mimetype: 'video/mp4',
+          caption: caption
+        }, { quoted: m });
 
-        await react("✅");
-
-      } catch (error) {
-        console.error('[TIKTOK] Error:', error);
-        await react("❌");
-        return reply("Failed to fetch TikTok data. Make sure the link is valid.");
+        if (json.music) {
+          setTimeout(async () => {
+            await sock.sendMessage(chatId, {
+              audio: { url: json.music },
+              mimetype: 'audio/mpeg',
+              fileName: 'tiktok_audio.mp3'
+            }, { quoted: m });
+          }, 3000);
+        }
       }
+
+      await react("✅");
+
+    } catch (error) {
+      console.error('[TIKTOK] Error:', error);
+      await react("❌");
+      return reply("Failed to fetch TikTok data. Make sure the link is valid.");
     }
   }
+},
+
 ];
