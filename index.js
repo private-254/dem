@@ -1,28 +1,19 @@
 import { spawn } from 'child_process';
-import path, { join } from 'path';
-import fs, { rmSync, existsSync } from 'fs';
-import chalk from 'chalk';
+import path from 'path';
+import fs from 'fs';
+import chalk from 'chalk';  
+//=========== BOT MODE==========//
 import settings from './settings.js';
 import { getSetting } from './lib/database.js';
 import { channelInfo } from './lib/messageConfig.js';
 import { Boom } from '@hapi/boom';
 import FileType from 'file-type';
 import axios from 'axios';
-import { handleMessages, handleGroupParticipantUpdate, handleStatus, restorePresenceSettings, initializeCallHandler } from './main.js';
+import { handleMessages, handleGroupParticipantUpdate, handleStatus, restorePresenceSettings, initializeCallHandler} from './main.js';
 import awesomePhoneNumber from 'awesome-phonenumber';
 import PhoneNumber from 'awesome-phonenumber';
 import { imageToWebp, videoToWebp, writeExifImg, writeExifVid } from './lib/exif.js';
-import { smsg, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep, reSize, isUrl, getCurrentTime, getCurrentTimezone } from './lib/myfunc.js';
-import NodeCache from 'node-cache';
-import pino from 'pino';
-import readline from 'readline';
-import { parsePhoneNumber } from 'libphonenumber-js';
-import store from './lib/lightweight.js';
-import os from 'os';
-import dotenv from 'dotenv';
-dotenv.config();
-
-// === FIXED Baileys IMPORT ===
+import { smsg, generateMessageTag, getBuffer, getSizeMedia, fetchJson, sleep, reSize,isUrl, getCurrentTime, getCurrentTimezone } from './lib/myfunc.js';
 import Baileys from '@whiskeysockets/baileys';
 const { 
     default: makeWASocket,
@@ -42,7 +33,20 @@ const {
 } = Baileys;
 
 import baileysPkg from '@whiskeysockets/baileys/package.json' with { type: "json" };
-
+import NodeCache from "node-cache";
+import pino from "pino";
+import readline from "readline";
+import { parsePhoneNumber } from "libphonenumber-js";
+// Remove the problematic PHONENUMBER_MCC import
+import { rmSync, existsSync } from 'fs';
+import { join } from 'path';
+import store from './lib/lightweight.js';
+import os from 'os';
+import dotenv from "dotenv";
+dotenv.config();
+console.log(chalk.cyan.bold('\n\n[Gift-X] conecting to [Dave-md] zip space....'));
+console.log(chalk.cyan('transfering..\n.         [Dave-Tech].......>[DAVE-MD]..'));
+console.log(chalk.cyan('\n[DAVE-MD] ✅ Connected\n'));
 const envPath = path.resolve(process.cwd(), '.env');
 
     function loadEnvSession() {
@@ -77,7 +81,7 @@ const envPath = path.resolve(process.cwd(), '.env');
         // STEP 1: Remove ANY known prefix
         // =====================================
   const allPrefixes = [
-            'DAVE-MD~','DAVE-AI:~'];
+            'DAVE-AI:~','JUNE-MD:~'];
 
         for (const prefix of allPrefixes) {
             if (sessionString.toUpperCase().startsWith(prefix.toUpperCase())) {
@@ -107,7 +111,7 @@ const envPath = path.resolve(process.cwd(), '.env');
             try {
                 // Try standard base64 decode
                 const decoded = Buffer.from(sessionString, 'base64').toString('utf8');
-                
+
                 // Check if decoded result looks like JSON
                 if (decoded.includes('{') && decoded.includes('}')) {
                     parsedSession = JSON.parse(decoded);
@@ -126,12 +130,12 @@ const envPath = path.resolve(process.cwd(), '.env');
                 // Replace URL-safe chars
                 const urlSafe = sessionString.replace(/-/g, '+').replace(/_/g, '/');
                 const decoded = Buffer.from(urlSafe, 'base64').toString('utf8');
-                
+
                 if (decoded.includes('{') && decoded.includes('}')) {
                     parsedSession = JSON.parse(decoded);
                 }
             } catch (e) {
-                console.log(chalk.yellow('[DAVE-MD] ⚠️ URL-safe base64 failed'));
+                console.log(chalk.yellow('[GIFT-MD] ⚠️ URL-safe base64 failed'));
             }
         }
 
@@ -140,7 +144,7 @@ const envPath = path.resolve(process.cwd(), '.env');
             console.log(chalk.cyan('[DAVE-MD] 🔐 Format: Hex'));
             try {
                 const decoded = Buffer.from(sessionString, 'hex').toString('utf8');
-                
+
                 if (decoded.includes('{') && decoded.includes('}')) {
                     parsedSession = JSON.parse(decoded);
                 }
@@ -190,7 +194,7 @@ const envPath = path.resolve(process.cwd(), '.env');
         fs.writeFileSync(credsPath, JSON.stringify(parsedSession, null, 2));
         console.log(chalk.green('[DAVE-MD] ✅ Session loaded and validated successfully!'));
         console.log(chalk.gray(`[DAVE-MD] 📝 Saved to: ${credsPath}`));
-        
+
         return true;
 
     } catch (error) {
@@ -199,7 +203,7 @@ const envPath = path.resolve(process.cwd(), '.env');
         return false;
     }
 }
-            
+
 
 const file = path.resolve(process.argv[1]); // current file path
 
@@ -233,7 +237,7 @@ function checkEnvStatus() {
                 console.log(chalk.white.bgRed('[DAVE-MD] 🚨 .env file change detected!'));
                 console.log(chalk.white.bgRed('Restarting bot to apply new configuration (e.g., SESSION_ID).'));
                 console.log(chalk.red.bgBlack('================================================='));
-                
+
             restartBot()    // triggers auto restart
             }
         });
@@ -245,7 +249,7 @@ function checkEnvStatus() {
 checkEnvStatus(); 
 // Create a store object with required methods
 console.log(chalk.cyan('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'))
-console.log(chalk.cyan('┃') + chalk.white.bold('        🤖 DAVE-MD BOT STARTING...') +chalk.cyan('      ┃'))
+console.log(chalk.cyan('┃') + chalk.white.bold('        🤖 GIFT MD BOT STARTING...') +chalk.cyan('      ┃'))
 console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'))
 function detectHost() {
     const env = process.env;
@@ -278,11 +282,11 @@ setInterval(() => store.writeToFile(), 10000);
 // ✅ FIXED VERSION
 function deleteSessionFolder() {
   const sessionPath = path.join(process.cwd(), 'data', 'session', 'auth.db');  // Use process.cwd()
-  
+
   if (fs.existsSync(sessionPath)) {
     try {
       fs.rmSync(sessionPath, { recursive: true, force: true });
-      console.log(chalk.green('[DAVE-MD] ✅ Session folder deleted successfully.'));
+      console.log(chalk.green('[GIFT-MD] ✅ Session folder deleted successfully.'));
     } catch (err) {
       console.error(chalk.red('❌ Error deleting session folder:'), err);
     }
@@ -291,8 +295,8 @@ function deleteSessionFolder() {
   }
 }
 
-                    
-let phoneNumber = "254104260236"
+
+let phoneNumber = "911234567890"
 let owner = JSON.parse(fs.readFileSync('./data/database.json')).settings.User;
 import db from './lib/database.js';
 // NEW - Use database settings first, fallback to settings.js
@@ -303,12 +307,12 @@ global.packname = getSetting('packname', settings.packname);
 global.botName = getSetting('botName', settings.botName);
 global.botOwner = getSetting('botOwner', settings.botOwner);
 global.version = getSetting('version', settings.version);
-global.author = "DAVE";
+global.author = "Dave Tech";
 global.channelLink = "https://whatsapp.com/channel/0029VbApvFQ2Jl84lhONkc3k";
 global.dev = "254104260236";
 global.devgit = "https://github.com/gifteddevsmd/DAVE-MD2";
 global.devyt = "@davlodavlo19";
-global.ytch = "Davke";
+global.ytch = "Davetech";
 global.getCurrentTime = getCurrentTime;
 global.getCurrentTimezone = getCurrentTimezone;
 global.channelLid = '120363400480173280';
@@ -331,36 +335,36 @@ const question = (text) => {
 // ✅ SMART SESSION PARSER - Handles ANY session format
 function parseAndSaveSession(sessionInput) {
     const sessionDir = path.join(process.cwd(), 'data', 'session', 'auth.db');
-    
+
     try {
         // Ensure session directory exists
         if (!fs.existsSync(sessionDir)) {
             fs.mkdirSync(sessionDir, { recursive: true });
         }
-        
+
         let sessionData = sessionInput.trim();
-        
+
         // Step 1: Remove any known prefixes
         const knownPrefixes = [
-            "DAVE-MD:", "DAVE-AI:", "SESSION:", "MD:", 
-            "DAVE-MD:", "DAVE-AI:", "SESSION_ID:", 
-            "Dave~", "Dave-", "BAILEYS:"
+            "GIFT-MD:", "JUNE-MD:", "SESSION:", "MD:", 
+            "GIFT_MD:", "JUNE_MD:", "SESSION_ID:", 
+            "Gifted~", "Gifted-", "BAILEYS:"
         ];
-        
+
         for (const prefix of knownPrefixes) {
             if (sessionData.startsWith(prefix)) {
                 sessionData = sessionData.replace(prefix, "").trim();
-                console.log(chalk.cyan(`[DAVE-MD] 🔍 Detected prefix: ${prefix}`));
+                console.log(chalk.cyan(`[GIFT-MD] 🔍 Detected prefix: ${prefix}`));
                 break;
             }
         }
-        
+
         // Step 2: Try to detect format
         let credsJson = null;
-        
+
         // Check if it's already valid JSON
         if (sessionData.startsWith('{') && sessionData.endsWith('}')) {
-            console.log(chalk.cyan('[DAVE-MD] 📋 Format detected: Raw JSON'));
+            console.log(chalk.cyan('[GIFT-MD] 📋 Format detected: Raw JSON'));
             try {
                 credsJson = JSON.parse(sessionData);
             } catch (e) {
@@ -377,30 +381,30 @@ function parseAndSaveSession(sessionInput) {
                 throw new Error('Invalid base64 or JSON: ' + e.message);
             }
         }
-        
+
         // Step 3: Validate session structure
         if (!credsJson || typeof credsJson !== 'object') {
             throw new Error('Session data is not a valid object');
         }
-        
+
         // Check for essential Baileys properties
         const requiredKeys = ['noiseKey', 'signedIdentityKey', 'signedPreKey', 'registrationId'];
         const hasRequiredKeys = requiredKeys.some(key => credsJson.hasOwnProperty(key));
-        
+
         if (!hasRequiredKeys) {
             throw new Error('Session missing required Baileys keys (noiseKey, signedIdentityKey, etc.)');
         }
-        
+
         // Step 4: Save to creds.json
         const credsPath = path.join(sessionDir, 'creds.json');
         fs.writeFileSync(credsPath, JSON.stringify(credsJson, null, 2));
-        
+
         console.log(chalk.green('[DAVE-MD] ✅ Session validated and saved successfully!'));
         restartBot();
         return true;
-        
+
     } catch (error) {
-        console.log(chalk.red(`[DAVE-MD] ❌ Failed to parse session: ${error.message}`));
+        console.log(chalk.red(`[GIFT-MD] ❌ Failed to parse session: ${error.message}`));
         return false;
     }
 }
@@ -414,16 +418,16 @@ function parseAndSaveSession(sessionInput) {
     
     // If folder exists but creds.json is missing = corrupted session
     if (fs.existsSync(sessionDir) && !fs.existsSync(credsPath)) {
-        console.log(chalk.red('[DAVE-MD] ⚠️ Detected corrupted session! Cleaning up...'));
+        console.log(chalk.red('[GIFT-MD] ⚠️ Detected corrupted session! Cleaning up...'));
         
         try {
             fs.rmSync(sessionDir, { recursive: true, force: true });
-            console.log(chalk.yellow('[DAVE-MD] 🗑️ Removed corrupted session files'));
-            console.log(chalk.cyan('[DAVE-MD] ⏳ Waiting 5 seconds for stability...'));
+            console.log(chalk.yellow('[GIFT-MD] 🗑️ Removed corrupted session files'));
+            console.log(chalk.cyan('[GIFT-MD] ⏳ Waiting 5 seconds for stability...'));
             await new Promise(resolve => setTimeout(resolve, 5000));
-            console.log(chalk.green('[DAVE-MD] ✅ Ready for fresh session'));
+            console.log(chalk.green('[GIFT-MD] ✅ Ready for fresh session'));
         } catch (err) {
-            console.error(chalk.red('[DAVE-MD] Failed to clean corrupted session:'), err);
+            console.error(chalk.red('[GIFT-MD] Failed to clean corrupted session:'), err);
         }
     }
 }
@@ -578,7 +582,7 @@ console.log(chalk.green('[DAVE-MD] ✅ Session cleanup system enabled'));
             }
             if (!XeonBotInc.public && !mek.key.fromMe && chatUpdate.type === 'notify') return
             if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return
-            
+
             try {
                 await handleMessages(XeonBotInc, chatUpdate, true)
             } catch (err) {
@@ -604,8 +608,8 @@ console.log(chalk.green('[DAVE-MD] ✅ Session cleanup system enabled'));
             return decode.user && decode.server && decode.user + '@' + decode.server || jid
         } else return jid
     }
-        
-    
+
+
     XeonBotInc.ev.on('contacts.update', update => {
         for (let contact of update) {
             let id = XeonBotInc.decodeJid(contact.id)
@@ -651,17 +655,17 @@ console.log(chalk.green('[DAVE-MD] ✅ Session cleanup system enabled'));
         console.log(chalk.bold.blue('1. Enter phone number for new pairing'))
         console.log(chalk.bold.blue('2. Use .env  session'))
         console.log(chalk.bold.blue('3. Paste any kind of session'))
-        
+
         console.log('')
 
         const option = await question(chalk.bgBlack(chalk.green('Choose between option: 1--2--3\n')))
-                 
+
         if (option === '2') {
             // ✅ NEW: Load session from .env
             console.log(chalk.cyan('[DAVE-MD] 🔍 Checking .env for SESSION_ID...'))
-            
+
             const sessionLoaded = loadEnvSession();
-            
+
             if (sessionLoaded) {
                 console.log(chalk.green('[DAVE-MD] ✅ Session loaded from .env successfully!'))
                 console.log(chalk.cyan('[DAVE-MD] 🔄 Connecting with .env session...'))
@@ -669,7 +673,7 @@ console.log(chalk.green('[DAVE-MD] ✅ Session cleanup system enabled'));
             } else {
                 console.log(chalk.red('❌ No valid SESSION_ID found in .env'))
                 console.log(chalk.yellow('💡 Tip: Add SESSION_ID to your .env file'))
-                console.log(chalk.yellow('   Format: SESSION_ID=DAVE-MD:your_base64_session_here'))
+                console.log(chalk.yellow('   Format: SESSION_ID=DAVE-AI:your_base64_session_here'))
                 console.log('')
                 console.log(chalk.yellow('⚠️  Falling back to phone number pairing...'))
                 console.log('')
@@ -680,24 +684,24 @@ console.log(chalk.green('[DAVE-MD] ✅ Session cleanup system enabled'));
             console.log(chalk.cyan('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'))
             console.log('')
             console.log(chalk.yellow('✅ Supported formats:'))
-            console.log(chalk.white('   • Base64 with prefix: DAVE-MD:eyJub2..'))
+            console.log(chalk.white('   • Base64 with prefix: DAVE-AI:eyJub2..'))
             console.log(chalk.white('   • Base64 without prefix: eyJub2lzy....'))
             console.log(chalk.white('   • Raw JSON: {"noiseKey":{"private":...'))
             console.log('')
             console.log(chalk.cyan('Paste your session below (press Enter when done):'))
             console.log('')
-            
+
             const pastedSession = await question(chalk.bgBlack(chalk.green('> ')))
-            
+
             if (!pastedSession || pastedSession.trim().length < 50) {
                 console.log(chalk.red('❌ Session too short or empty!'))
                 console.log(chalk.yellow('⚠️  Falling back to phone number pairing...'))
                 console.log('')
             } else {
                 console.log(chalk.cyan('[DAVE-MD] 🔍 Analyzing session format...'))
-                
+
                 const sessionSaved = parseAndSaveSession(pastedSession);
-                
+
                 if (sessionSaved) {
                     console.log(chalk.green('[DAVE-MD] ✅ Session saved successfully!'))
                     console.log(chalk.cyan('[DAVE-MD] 🔄 Connecting with pasted session...'))
@@ -709,7 +713,7 @@ console.log(chalk.green('[DAVE-MD] ✅ Session cleanup system enabled'));
                 }
             }
         }
-        
+
 
         phoneNumber = await question(chalk.bgBlack(chalk.green('Please type your WhatsApp number\nFormat: 254104260236 (without + or spaces) : ')))
     } else {
@@ -783,21 +787,21 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 // Connection handling
 XeonBotInc.ev.on('connection.update', async (s) => {
     const { connection, lastDisconnect } = s
-    
+
     if (connection == "open") {
         console.log(chalk.green('┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓'))
         console.log(chalk.green('┃') + chalk.white.bold('        ✅ CONNECTION SUCCESSFUL!     ') + chalk.green('  ┃'))
         console.log(chalk.green('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛'))
      // Use dynamic import instead of static import
     await import("./global.js");
-        
+
         reconnectAttempts = 0;
         // Extract LID
         if (XeonBotInc.user.lid) {
             global.ownerLid = XeonBotInc.user.lid.split(':')[0];
             console.log(chalk.cyan(`[DAVE-MD] 🆔 User LID captured: ${global.ownerLid}`));
         }
-        
+
         global.sock = XeonBotInc;
         function createFakeContact(message) {
     return {
@@ -822,11 +826,10 @@ const fake= createFakeContact({
         participant: XeonBotInc.user.id,
         remoteJid: XeonBotInc.user.id
     }});
-        
+
         const botNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
-        
+
         // Send startup message
-// Send startup message
 const time = global.getCurrentTime('time2')
 try {
     await XeonBotInc.sendMessage(botNumber, {
@@ -856,28 +859,19 @@ try {
     console.log(`[DAVE-MD] ⚠️ Newsletter 1 failed: ${err.message}`);
 }
 
-await delay(1000);
-
-// Follow newsletter 2  
-try {
-    await XeonBotInc.newsletterFollow('120363403744025696@newsletter');
-    console.log('[DAVE-MD] ✅ Newsletter 2 followed');
-} catch (err) {
-    console.log(`[DAVE-MD] ⚠️ Newsletter 2 failed: ${err.message}`);
-}
-
 await delay(1999);
 
 // Initialize features
 await restorePresenceSettings(XeonBotInc);
 initializeCallHandler(XeonBotInc);
 }
-   
+
+
     if (connection === 'close') {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
-        
+
         console.log(chalk.yellow(`[DAVE-MD] ⚠️ Connection closed. Status code: ${statusCode}`));
-        
+
         // ✅ Handle 401 - Unauthorized (logged out or bad auth)
         if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
             console.log(chalk.red('[DAVE-MD] 🚨 Logged out - deleting session'));
@@ -885,7 +879,7 @@ initializeCallHandler(XeonBotInc);
             await delay(5000);
             process.exit(0);
         } 
-        
+
         // ✅ Handle badSession
         else if (statusCode === DisconnectReason.badSession) {
             console.log(chalk.red('[DAVE-MD] 🚨 Bad session - deleting and restarting'));
@@ -894,11 +888,11 @@ initializeCallHandler(XeonBotInc);
             await delay(3000);
             startXeonBotInc();
         }
-        
+
         // ✅ Handle 500 - Internal Server Error
         else if (statusCode === 500) {
             console.log(chalk.red('[DAVE-MD] 🚨 Server error (500) - Session may be corrupted'));
-            
+
             if (reconnectAttempts >= 3) {
                 console.log(chalk.red('[DAVE-MD] 🗑️ Too many 500 errors - deleting session'));
                 deleteSessionFolder();
@@ -912,7 +906,7 @@ initializeCallHandler(XeonBotInc);
                 startXeonBotInc();
             }
         }
-        
+
         // ✅ Handle 515 - Restart required (old code)
         else if (statusCode === 515) {
             console.log(chalk.yellow('[DAVE-MD] 🔄 Restart required (515) - Restarting...'));
@@ -920,7 +914,7 @@ initializeCallHandler(XeonBotInc);
             await delay(3000);
             startXeonBotInc();
         }
-        
+
         // ✅ Handle 516 - Restart required (NEW!)
         else if (statusCode === 516) {
             console.log(chalk.yellow('[DAVE-MD] 🔄 Restart required (516) - Restarting...'));
@@ -928,7 +922,7 @@ initializeCallHandler(XeonBotInc);
             await delay(3000);
             startXeonBotInc();
         }
-        
+
         // ✅ Handle 428 - Connection closed (normal)
         else if (statusCode === 428) {
             console.log(chalk.cyan('[DAVE-MD] 🔄 Connection lost (428) - Reconnecting...'));
@@ -936,7 +930,7 @@ initializeCallHandler(XeonBotInc);
             await delay(5000);
             startXeonBotInc();
         }
-        
+
         // ✅ Handle 408 - Timeout
         else if (statusCode === 408) {
             console.log(chalk.yellow('[DAVE-MD] ⏱️ Connection timeout (408) - Retrying...'));
@@ -944,7 +938,7 @@ initializeCallHandler(XeonBotInc);
             await delay(5000);
             startXeonBotInc();
         }
-        
+
         // ✅ Handle timedOut
         else if (statusCode === DisconnectReason.timedOut) {
             console.log(chalk.yellow('[DAVE-MD] ⏱️ Connection timed out - Reconnecting...'));
@@ -952,7 +946,7 @@ initializeCallHandler(XeonBotInc);
             await delay(5000);
             startXeonBotInc();
         }
-        
+
         // ✅ Handle connectionLost
         else if (statusCode === DisconnectReason.connectionLost) {
             console.log(chalk.cyan('[DAVE-MD] 📡 Connection lost - Reconnecting...'));
@@ -960,11 +954,11 @@ initializeCallHandler(XeonBotInc);
             await delay(5000);
             startXeonBotInc();
         }
-        
+
         // ✅ Handle all other errors
         else {
             if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                console.log(chalk.red(`[DAVE-MD] ❌ Max reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached`));
+                console.log(chalk.red(`[GIFT-MD] ❌ Max reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached`));
                 console.log(chalk.yellow('[DAVE-MD] 🗑️ Deleting session and restarting...'));
                 deleteSessionFolder();
                 reconnectAttempts = 0;
@@ -979,11 +973,11 @@ initializeCallHandler(XeonBotInc);
         }
     }
 });
-    
-    
+
+
  XeonBotInc.ev.on('creds.update', saveCreds)
 
-   
+
     return XeonBotInc
 }
 
@@ -998,7 +992,7 @@ async function initializeBot() {
         retryCount = 0;
     } catch (err) {
         console.error(chalk.red('[DAVE-MD] ❌ Failed to start:'), err);
-        
+
         if (retryCount < maxRetries) {
             retryCount++;
             const delay = 10 * retryCount;
@@ -1019,7 +1013,7 @@ initializeBot();
 process.on('uncaughtException', function (err) {
     console.log(chalk.red('[DAVE-MD] ❌ Uncaught exception:'), err);
     console.log(chalk.yellow('[DAVE-MD] 🔄 Attempting to restart...'));
-    
+
     setTimeout(() => {
         startXeonBotInc();
     }, 5000);
@@ -1052,7 +1046,7 @@ setInterval(() => {
             const memUsage = process.memoryUsage();
             const rss = (memUsage.rss / 1024 / 1024).toFixed(2);
             const heapUsed = (memUsage.heapUsed / 1024 / 1024).toFixed(2);
-            
+
             // ✅ Only log if RAM is high (above 200 MB)
             let lastLog = lastLog || 0;
 
@@ -1075,7 +1069,7 @@ setInterval(() => {
     const memUsage = process.memoryUsage();
     const rss = memUsage.rss / 1024 / 1024;
     const heapUsed = memUsage.heapUsed / 1024 / 1024;
-    
+
     // 🟡 Warning (200-250 MB)
     if (rss >= 240 && rss < 260) {
         console.log(chalk.yellow(`[DAVE-MD] ⚠️ RAM: ${rss.toFixed(2)} MB / 280 MB (Warning)`));
@@ -1096,7 +1090,7 @@ setInterval(() => {
     else if (rss >= 270) {
         console.log(chalk.red(`[DAVE-MD] 🔴 CRITICAL RAM: ${rss.toFixed(2)} MB / 280 MB`));
         console.log(chalk.red('[DAVE-MD] ⚠️ Memory limit approaching! Forcing cleanup...'));
-        
+
         if (global.gc) {
             try {
                 global.gc();
@@ -1105,7 +1099,7 @@ setInterval(() => {
                 console.error(chalk.red('[DAVE-MD] ❌ GC failed:', err.message));
             }
         }
-        
+
         // Clear caches
         if (global.sock?.msgRetryCounterCache) {
             global.sock.msgRetryCounterCache.clear();
@@ -1116,7 +1110,7 @@ setInterval(() => {
 setInterval(() => {
     try {
         let cleaned = 0;
-        
+
         // Clean messages (keep only 30 per chat for low RAM)
         Object.keys(store.messages).forEach(jid => {
             if (store.messages[jid] && store.messages[jid].length > 30) {
@@ -1125,16 +1119,16 @@ setInterval(() => {
                 cleaned += excess;
             }
         });
-        
+
         if (cleaned > 0) {
             console.log(chalk.gray(`🗑️ Cleaned ${cleaned} messages | Freed ~${(cleaned * 0.01).toFixed(2)} MB`));
         }
-        
+
         // Force GC after cleanup
         if (global.gc) {
             global.gc();
         }
-        
+
     } catch (error) {
         console.error(chalk.red('❌ Cleanup error:'), error.message);
     }
