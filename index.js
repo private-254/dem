@@ -32,7 +32,7 @@ const {
     delay
 } = Baileys;
 
-import baileysPkg from '@whiskeysockets/baileys/package.json' with { type: "json" };
+import baileysPkg from '@whiskeysockets/baileys/package.json';
 import NodeCache from "node-cache";
 import pino from "pino";
 import readline from "readline";
