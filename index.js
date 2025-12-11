@@ -1134,4 +1134,4 @@ setInterval(() => {
     }
 }, 180_000); // Every 3 minutes
 
-console.log(chalk.green('[GIFT-MD] ✅ Memory optimization enabled (Low RAM mode)\n'));           
+console.log(chalk.green('[DAVE-MD] ✅ Memory optimization enabled (Low RAM mode)\n'));           
