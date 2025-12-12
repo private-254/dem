@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+import { writeExifImg } from '../lib/exif.js';  
 import { WAVersion, sleep, runtime, processTime, isUrl, getSizeMedia, bytesToSize, getTime, formatDate, tanggal, jam, unixTimestampSeconds } from '../lib/myfunc.js';
 import { handleMediaUpload } from '../lib/catbox.js';
 import { buildContext } from '../lib/context.js';
