@@ -17,9 +17,7 @@ import {
     handleAnticall,
     handleAntidelete,
     handleViewOnce,
-    handleMessageRevocation,
-    handleAntipromote,  // Import these separately
-    handleAntidemote    // Import these separately
+    handleMessageRevocation
 } from './lib/case.js';
 import fs from 'fs';
 import { getSetting, getWelcome, getGoodbye, isWelcomeEnabled, isGoodbyeEnabled } from './lib/database.js';
@@ -177,7 +175,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
         );
 
         // ============================================
-        // 🔹 ANTIDELETE - STORE ALL MESSAGES
+        // 🔹 ANTIDELETE - STORE ALL MESSAGES (DEFAULT: DISABLED)
         // ============================================
         try {
             await handleAntidelete(sock, message);  // Store for antidelete
@@ -436,10 +434,12 @@ async function initializeCallHandler(sock) {
     }
 }
 
-// === GROUP PARTICIPANT UPDATE === (FIXED - renamed function)
-async function handleGroupUpdates(sock, update) {
+// === GROUP PARTICIPANT UPDATE === (FIXED - Combine antipromote/antidemote with welcome/goodbye)
+async function handleGroupParticipantUpdate(sock, update) {
     try {
-        // Handle antipromote and antidemote first
+        // First, handle antipromote/antidemote from case.js
+        // We need to import them directly
+        const { handleAntipromote, handleAntidemote } = await import('./lib/case.js');
         await handleAntipromote(sock, update);
         await handleAntidemote(sock, update);
         
@@ -488,7 +488,7 @@ async function handleGroupUpdates(sock, update) {
             }
         }
     } catch (err) {
-        console.error('Error in handleGroupUpdates:', err);
+        console.error('Error in handleGroupParticipantUpdate:', err);
     }
 }
 
@@ -517,7 +517,7 @@ async function initializeEventListeners(sock) {
         // Setup group participant update listener for antipromote/antidemote
         sock.ev.on('group-participants.update', async (update) => {
             try {
-                await handleGroupUpdates(sock, update);
+                await handleGroupParticipantUpdate(sock, update);
             } catch (err) {
                 console.error('Error in group-participants.update listener:', err);
             }
@@ -531,7 +531,7 @@ async function initializeEventListeners(sock) {
 
 export {
     handleMessages,
-    handleGroupUpdates,  // Export with new name
+    handleGroupParticipantUpdate,
     handleStatus,
     restorePresenceSettings,
     initializeCallHandler,
