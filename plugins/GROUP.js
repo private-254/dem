@@ -121,27 +121,9 @@ export default [
     execute: async (sock, m, args, context) => {
         const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, senderId } = context;
 
-        // Define paths
-        const databaseDir = path.join(process.cwd(), 'data');
-        const warningsPath = path.join(databaseDir, 'warnings.json');
-
-        // Initialize warnings file if it doesn't exist
-        function initializeWarningsFile() {
-            // Create database directory if it doesn't exist
-            if (!fs.existsSync(databaseDir)) {
-                fs.mkdirSync(databaseDir, { recursive: true });
-            }
-            
-            // Create warnings.json if it doesn't exist
-            if (!fs.existsSync(warningsPath)) {
-                fs.writeFileSync(warningsPath, JSON.stringify({}), 'utf8');
-            }
-        }
+        const dataPath = path.join(process.cwd(), 'data', 'userGroupData.json');
 
         try {
-            // Initialize files first
-            initializeWarningsFile();
-
             if (!chatId.endsWith('@g.us')) {
                 return await reply('This command can only be used in groups!');
             }
@@ -171,27 +153,32 @@ export default [
 
             await react('⚠️');
 
-            // Add delay to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Read warnings, create empty object if file is empty
-            let warnings = {};
-            try {
-                warnings = JSON.parse(fs.readFileSync(warningsPath, 'utf8'));
-            } catch (error) {
-                warnings = {};
+            // Load existing data
+            let data = {};
+            if (fs.existsSync(dataPath)) {
+                try {
+                    data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+                } catch (error) {
+                    data = { warnings: {} };
+                }
+            } else {
+                data = { warnings: {} };
             }
 
-            // Initialize nested objects if they don't exist
-            if (!warnings[chatId]) warnings[chatId] = {};
-            if (!warnings[chatId][userToWarn]) warnings[chatId][userToWarn] = 0;
+            // Initialize warnings structure if not exists
+            if (!data.warnings) data.warnings = {};
+            if (!data.warnings[chatId]) data.warnings[chatId] = {};
+            if (!data.warnings[chatId][userToWarn]) data.warnings[chatId][userToWarn] = 0;
             
-            warnings[chatId][userToWarn]++;
-            fs.writeFileSync(warningsPath, JSON.stringify(warnings, null, 2));
+            // Increment warning count
+            data.warnings[chatId][userToWarn]++;
+            
+            // Save to file
+            fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
             const warningMessage = `Warning Alert\n\n` +
                 `Warned User: @${userToWarn.split('@')[0]}\n` +
-                `Warning Count: ${warnings[chatId][userToWarn]}/3\n` +
+                `Warning Count: ${data.warnings[chatId][userToWarn]}/3\n` +
                 `Warned By: @${senderId.split('@')[0]}\n` +
                 `Date: ${new Date().toLocaleString()}`;
 
@@ -201,21 +188,26 @@ export default [
             });
 
             // Auto-kick after 3 warnings
-            if (warnings[chatId][userToWarn] >= 3) {
+            if (data.warnings[chatId][userToWarn] >= 3) {
                 // Add delay to avoid rate limiting
                 await new Promise(resolve => setTimeout(resolve, 1000));
 
-                await sock.groupParticipantsUpdate(chatId, [userToWarn], "remove");
-                delete warnings[chatId][userToWarn];
-                fs.writeFileSync(warningsPath, JSON.stringify(warnings, null, 2));
-                
-                const kickMessage = `Auto-Kick\n\n` +
-                    `@${userToWarn.split('@')[0]} has been removed from the group after receiving 3 warnings! ⚠️`;
+                try {
+                    await sock.groupParticipantsUpdate(chatId, [userToWarn], "remove");
+                    // Clear warnings after kick
+                    delete data.warnings[chatId][userToWarn];
+                    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
+                    
+                    const kickMessage = `Auto-Kick\n\n` +
+                        `@${userToWarn.split('@')[0]} has been removed from the group after receiving 3 warnings! ⚠️`;
 
-                await sock.sendMessage(chatId, { 
-                    text: kickMessage,
-                    mentions: [userToWarn]
-                });
+                    await sock.sendMessage(chatId, { 
+                        text: kickMessage,
+                        mentions: [userToWarn]
+                    });
+                } catch (kickError) {
+                    await reply(`Failed to auto-kick: ${kickError.message}`);
+                }
             }
 
         } catch (error) {
@@ -241,8 +233,7 @@ export default [
     execute: async (sock, m, args, context) => {
         const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin } = context;
 
-        const databaseDir = path.join(process.cwd(), 'data');
-        const warningsPath = path.join(databaseDir, 'warnings.json');
+        const dataPath = path.join(process.cwd(), 'data', 'userGroupData.json');
 
         try {
             if (!chatId.endsWith('@g.us')) {
@@ -265,17 +256,17 @@ export default [
                 return await reply('Please mention user or reply to message to check warnings!');
             }
 
-            // Read warnings
-            let warnings = {};
-            if (fs.existsSync(warningsPath)) {
+            // Load data
+            let data = {};
+            if (fs.existsSync(dataPath)) {
                 try {
-                    warnings = JSON.parse(fs.readFileSync(warningsPath, 'utf8'));
+                    data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
                 } catch (error) {
-                    warnings = {};
+                    data = { warnings: {} };
                 }
             }
 
-            const userWarnings = warnings[chatId]?.[userToCheck] || 0;
+            const userWarnings = data.warnings?.[chatId]?.[userToCheck] || 0;
             const userName = userToCheck.split('@')[0];
 
             const warningInfo = `Warnings Info\n\n` +
@@ -304,8 +295,7 @@ export default [
     execute: async (sock, m, args, context) => {
         const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin } = context;
 
-        const databaseDir = path.join(process.cwd(), 'data');
-        const warningsPath = path.join(databaseDir, 'warnings.json');
+        const dataPath = path.join(process.cwd(), 'data', 'userGroupData.json');
 
         try {
             if (!chatId.endsWith('@g.us')) {
@@ -328,21 +318,26 @@ export default [
                 return await reply('Please mention user or reply to message to reset warnings!');
             }
 
-            // Read warnings
-            let warnings = {};
-            if (fs.existsSync(warningsPath)) {
+            // Load data
+            let data = {};
+            if (fs.existsSync(dataPath)) {
                 try {
-                    warnings = JSON.parse(fs.readFileSync(warningsPath, 'utf8'));
+                    data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
                 } catch (error) {
-                    warnings = {};
+                    data = { warnings: {} };
                 }
             }
 
             const userName = userToReset.split('@')[0];
             
-            if (warnings[chatId] && warnings[chatId][userToReset]) {
-                delete warnings[chatId][userToReset];
-                fs.writeFileSync(warningsPath, JSON.stringify(warnings, null, 2));
+            if (data.warnings?.[chatId]?.[userToReset]) {
+                delete data.warnings[chatId][userToReset];
+                // If group has no more warnings, remove group entry
+                if (Object.keys(data.warnings[chatId]).length === 0) {
+                    delete data.warnings[chatId];
+                }
+                
+                fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
                 
                 await reply(`Warnings reset for @${userName}!`, { mentions: [userToReset] });
             } else {
@@ -356,6 +351,66 @@ export default [
         }
     }
 },
+
+{
+    name: "listwarn",
+    aliases: ["allwarnings"],
+    category: "GROUP MENU",
+    description: "List all warned users in the group",
+    usage: ".listwarn",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, isSenderAdmin } = context;
+
+        const dataPath = path.join(process.cwd(), 'data', 'userGroupData.json');
+
+        try {
+            if (!chatId.endsWith('@g.us')) {
+                return await reply('This command can only be used in groups!');
+            }
+
+            if (!isSenderAdmin) {
+                return await reply('Only group admins can list warnings!');
+            }
+
+            await react('📜');
+
+            // Load data
+            let data = {};
+            if (fs.existsSync(dataPath)) {
+                try {
+                    data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+                } catch (error) {
+                    data = { warnings: {} };
+                }
+            }
+
+            const groupWarnings = data.warnings?.[chatId] || {};
+
+            if (Object.keys(groupWarnings).length === 0) {
+                return await reply('No users have been warned in this group.');
+            }
+
+            let warningList = `Warned Users List\n\n`;
+            const mentionsList = [];
+
+            for (const [userId, warningCount] of Object.entries(groupWarnings)) {
+                const userName = userId.split('@')[0];
+                warningList += `@${userName} - ${warningCount}/3 warnings\n`;
+                mentionsList.push(userId);
+            }
+
+            warningList += `\nTotal: ${Object.keys(groupWarnings).length} warned users`;
+
+            await reply(warningList, { mentions: mentionsList });
+
+        } catch (error) {
+            console.error('ListWarn Command Error:', error);
+            await react('❌');
+            await reply('Failed to list warnings!');
+        }
+    }
+}
 
   {
     name: "kill",
