@@ -8,6 +8,7 @@ import { handleMediaUpload } from '../lib/catbox.js';
 import { downloadContentFromMessage, downloadMediaMessage } from '@whiskeysockets/baileys';
 import sharp from 'sharp';
 import fs from 'fs';
+import gTTS from 'gtts';
 import path from 'path';
 import { getSetting, updateSetting } from '../lib/database.js';
 import { getRandom } from '../lib/myfunc.js';
