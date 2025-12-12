@@ -275,7 +275,7 @@ export default [
 
 {
     name: 'savestatus',
-    aliases: ['status'],
+    aliases: ['save', 'send', 'help', 'share'],
     category: 'OWNER MENU',
     description: 'Save WhatsApp status updates',
     usage: '.savestatus (reply to status)',
