@@ -54,6 +54,149 @@ export default [
             }
         }
     },
+
+{
+    name: "telegram",
+    aliases: ["tg", "tstick", "telegramsticker"],
+    category: "STICKER MENU",
+    description: "Download Telegram sticker packs",
+    usage: ".telegram <telegram-sticker-url>",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react } = context;
+
+        try {
+            await react('📦');
+
+            const text = args.slice(1).join(' ').trim();
+            
+            if (!text) {
+                return await reply('Please enter the Telegram sticker URL!\n\nExample: .telegram https://t.me/addstickers/Porcientoreal');
+            }
+
+            if (!text.match(/(https:\/\/t.me\/addstickers\/)/gi)) {
+                return await reply('Invalid URL! Use a valid Telegram sticker pack link.');
+            }
+
+            const packName = text.replace("https://t.me/addstickers/", "");
+            const botToken = settings.telegram_token || '7801479976:AAGuPL0a7kXXBYz6XUSR_ll2SR5V_W6oHl4';
+
+            // Fetch sticker pack metadata
+            const response = await fetch(
+                `https://api.telegram.org/bot${botToken}/getStickerSet?name=${encodeURIComponent(packName)}`
+            );
+
+            const stickerSet = await response.json();
+            if (!stickerSet.ok) {
+                throw new Error("Invalid Telegram sticker pack");
+            }
+
+            const stickerCount = stickerSet.result.stickers.length;
+            await reply(`Found ${stickerCount} stickers\nStarting download...`);
+
+            const tmpDir = path.join(process.cwd(), 'tmp');
+            if (!fs.existsSync(tmpDir)) {
+                fs.mkdirSync(tmpDir, { recursive: true });
+            }
+
+            let successCount = 0;
+
+            for (let i = 0; i < stickerCount; i++) {
+                try {
+                    const sticker = stickerSet.result.stickers[i];
+
+                    // Get file info
+                    const fileInfo = await fetch(
+                        `https://api.telegram.org/bot${botToken}/getFile?file_id=${sticker.file_id}`
+                    );
+                    const fileData = await fileInfo.json();
+                    if (!fileData.ok) continue;
+
+                    // Download sticker
+                    const fileUrl = `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
+                    const imageResponse = await fetch(fileUrl);
+                    const imageBuffer = await imageResponse.arrayBuffer();
+
+                    const tempInput = path.join(tmpDir, `temp_${Date.now()}_${i}`);
+                    const tempOutput = path.join(tmpDir, `sticker_${Date.now()}_${i}.webp`);
+                    
+                    fs.writeFileSync(tempInput, Buffer.from(imageBuffer));
+
+                    const isAnimated = sticker.is_animated || sticker.is_video;
+
+                    // Convert to WhatsApp sticker format
+                    const ffmpegCommand = isAnimated
+                        ? `ffmpeg -i "${tempInput}" -vf "scale=512:-1:force_original_aspect_ratio=decrease,fps=15,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=#00000000" -c:v libwebp -lossless 0 -q:v 60 "${tempOutput}"`
+                        : `ffmpeg -i "${tempInput}" -vf "scale=512:-1:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=#00000000" -vcodec libwebp -lossless 0 -q:v 75 "${tempOutput}"`;
+
+                    await new Promise((resolve, reject) => {
+                        exec(ffmpegCommand, (err) => err ? reject(err) : resolve());
+                    });
+
+                    const webpBuffer = fs.readFileSync(tempOutput);
+
+                    // Create EXIF metadata for WhatsApp
+                    const webp = await import('node-webpmux');
+                    const img = new webp.Image();
+                    await img.load(webpBuffer);
+
+                    const crypto = await import('crypto');
+                    const metadata = {
+                        "sticker-pack-id": crypto.randomBytes(32).toString("hex"),
+                        "sticker-pack-name": packName,
+                        "sticker-pack-publisher": "Dave Md Bot",
+                        "emojis": sticker.emoji ? [sticker.emoji] : ["🤖"]
+                    };
+
+                    const exifAttr = Buffer.from([
+                        0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00,
+                        0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x16, 0x00, 0x00, 0x00
+                    ]);
+
+                    const jsonBuffer = Buffer.from(JSON.stringify(metadata), "utf8");
+                    const exif = Buffer.concat([exifAttr, jsonBuffer]);
+                    exif.writeUIntLE(jsonBuffer.length, 14, 4);
+
+                    img.exif = exif;
+                    const finalBuffer = await img.save(null);
+
+                    // Send sticker
+                    await sock.sendMessage(chatId, { sticker: finalBuffer });
+                    successCount++;
+
+                    // Delay to avoid rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 800));
+
+                    // Cleanup temp files
+                    try {
+                        if (fs.existsSync(tempInput)) fs.unlinkSync(tempInput);
+                        if (fs.existsSync(tempOutput)) fs.unlinkSync(tempOutput);
+                    } catch (cleanupError) {
+                        console.error('[TELEGRAM] Cleanup error:', cleanupError.message);
+                    }
+
+                } catch (err) {
+                    console.error(`[TELEGRAM] Sticker ${i} error:`, err.message);
+                    continue;
+                }
+            }
+
+            await reply(`Successfully downloaded ${successCount}/${stickerCount} stickers!`);
+            await react('✅');
+
+        } catch (error) {
+            console.error('[TELEGRAM] Command error:', error.message);
+            await react('❌');
+            
+            if (error.message.includes('FFmpeg')) {
+                await reply('FFmpeg is required for this command!');
+            } else {
+                await reply('Failed to download Telegram stickers. Check the link and try again.');
+            }
+        }
+    }
+},
     {
         name: 'getsize',
         aliases: ['filesize', 'mediasize'],
