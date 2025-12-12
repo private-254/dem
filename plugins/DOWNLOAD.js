@@ -169,117 +169,197 @@ export default [
 
   {
     name: "shazam",
-    aliases: ["identifysong", "whatsong"],
+    aliases: ["identify", "whatsong", "findsong"],
     category: "SEARCH MENU",
-    desc: "Identify songs from audio or voice messages",
+    desc: "Identify songs from audio/video messages",
+    usage: ".shazam (reply to audio/video)",
 
-    async execute(sock, msg, args, context) {
-      const { reply, react } = context;
-      const from = msg.key.remoteJid;
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react } = context;
 
-      try {
-        const quotedMsg = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-        const audioMsg = quotedMsg?.audioMessage || quotedMsg?.voiceMessage ||
-          msg.message?.audioMessage || msg.message?.voiceMessage;
+        try {
+            await react('🔍');
 
-        if (!audioMsg) {
-          return reply("Please reply to an audio or voice message to identify the song!");
-        }
+            // Helper function to get media from message
+            async function getMediaBuffer(msg, type) {
+                try {
+                    let messageType, downloadType;
+                    
+                    switch (type) {
+                        case 'audio':
+                            if (msg.audioMessage) {
+                                messageType = msg.audioMessage;
+                                downloadType = 'audio';
+                            } else if (msg.voiceMessage) {
+                                messageType = msg.voiceMessage;
+                                downloadType = 'audio';
+                            }
+                            break;
+                        case 'video':
+                            if (msg.videoMessage) {
+                                messageType = msg.videoMessage;
+                                downloadType = 'video';
+                            }
+                            break;
+                        case 'image':
+                            if (msg.imageMessage) {
+                                messageType = msg.imageMessage;
+                                downloadType = 'image';
+                            }
+                            break;
+                    }
 
-        await react('🔍');
-
-        const stream = await sock.downloadMediaMessage(msg);
-        if (!stream) {
-          return reply("Could not download the audio message.");
-        }
-
-        const audioBase64 = stream.toString('base64');
-
-        const apis = [
-          `https://apiskeith.vercel.app/ai/shazam?audio=${encodeURIComponent(audioBase64)}`,
-          `https://api.akuari.my.id/downloader/sha`,
-          `https://api.neoxr.eu.org/api/shazam`
-        ];
-
-        let result = null;
-        let apiUsed = '';
-
-        for (const apiUrl of apis) {
-          try {
-            let res;
-
-            if (apiUrl.includes('apiskeith')) {
-              res = await axios.get(apiUrl, { timeout: 10000 });
-            } else if (apiUrl.includes('akuari')) {
-              const formData = new FormData();
-              const audioBlob = new Blob([stream], { type: 'audio/mpeg' });
-              formData.append('audio', audioBlob, 'audio.mp3');
-
-              res = await axios.post(apiUrl, formData, {
-                headers: formData.getHeaders(),
-                timeout: 10000
-              });
-            } else {
-              res = await axios.post(apiUrl, {
-                audio: audioBase64
-              }, { timeout: 10000 });
+                    if (messageType) {
+                        const stream = await downloadContentFromMessage(messageType, downloadType);
+                        let buffer = Buffer.from([]);
+                        for await (const chunk of stream) {
+                            buffer = Buffer.concat([buffer, chunk]);
+                        }
+                        return { buffer, type };
+                    }
+                    return null;
+                } catch (error) {
+                    console.error(`[SHAZAM] ${type} error:`, error.message);
+                    return null;
+                }
             }
 
-            if (res.data && res.data.result) {
-              result = res.data.result;
-              apiUsed = apiUrl;
-              break;
+            // Check current message
+            let media = null;
+            
+            // Check current message first
+            if (m.message?.audioMessage || m.message?.voiceMessage) {
+                media = await getMediaBuffer(m.message, 'audio');
+            } else if (m.message?.videoMessage) {
+                media = await getMediaBuffer(m.message, 'video');
+            } else if (m.message?.imageMessage) {
+                media = await getMediaBuffer(m.message, 'image');
             }
-          } catch (apiError) {
-            console.log(`API ${apiUrl} failed:`, apiError.message);
-            continue;
-          }
+
+            // Check quoted message if no media found
+            if (!media) {
+                const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+                if (quoted) {
+                    if (quoted.audioMessage || quoted.voiceMessage) {
+                        media = await getMediaBuffer(quoted, 'audio');
+                    } else if (quoted.videoMessage) {
+                        media = await getMediaBuffer(quoted, 'video');
+                    } else if (quoted.imageMessage) {
+                        media = await getMediaBuffer(quoted, 'image');
+                    }
+                }
+            }
+
+            if (!media) {
+                return await reply('Reply to an audio, video, or voice message to identify the song!');
+            }
+
+            await reply('Processing audio...');
+
+            // Create temp file
+            const tempDir = path.join(process.cwd(), 'temp');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+
+            const tempPath = path.join(tempDir, `shazam_${Date.now()}.${media.type === 'audio' ? 'mp3' : 'mp4'}`);
+            fs.writeFileSync(tempPath, media.buffer);
+
+            try {
+                // Try multiple Shazam APIs
+                const apis = [
+                    `https://apiskeith.vercel.app/ai/shazam?audio=${encodeURIComponent(media.buffer.toString('base64'))}`,
+                    `https://api.akuari.my.id/downloader/sha`,
+                    `https://api.neoxr.eu.org/api/shazam`
+                ];
+
+                let songData = null;
+                let apiUsed = '';
+
+                for (const apiUrl of apis) {
+                    try {
+                        let response;
+                        
+                        if (apiUrl.includes('apiskeith')) {
+                            response = await axios.get(apiUrl, { timeout: 15000 });
+                        } else {
+                            const form = new FormData();
+                            const blob = new Blob([media.buffer], { type: media.type === 'audio' ? 'audio/mpeg' : 'video/mp4' });
+                            form.append('audio', blob, 'audio.mp3');
+                            
+                            response = await axios.post(apiUrl, form, {
+                                headers: form.getHeaders(),
+                                timeout: 15000
+                            });
+                        }
+
+                        if (response.data && response.data.result) {
+                            songData = response.data.result;
+                            apiUsed = new URL(apiUrl).hostname;
+                            break;
+                        }
+                    } catch (apiError) {
+                        console.log(`[SHAZAM] API failed: ${apiUrl}`, apiError.message);
+                        continue;
+                    }
+                }
+
+                if (!songData) {
+                    throw new Error('Could not identify song');
+                }
+
+                // Build result message
+                let result = `🎶 Song Identified\n\n`;
+                result += `Title: ${songData.title || songData.song || 'Unknown'}\n`;
+                result += `Artist: ${songData.artist || songData.singer || 'Unknown'}\n`;
+                
+                if (songData.album) result += `Album: ${songData.album}\n`;
+                if (songData.releaseDate) result += `Released: ${songData.releaseDate}\n`;
+                if (songData.genre) result += `Genre: ${songData.genre}\n`;
+                if (songData.duration) result += `Duration: ${songData.duration}\n`;
+                
+                if (songData.lyrics) {
+                    result += `\nLyrics Preview:\n${songData.lyrics.substring(0, 200)}...\n`;
+                }
+
+                if (songData.spotifyUrl) result += `\nSpotify: ${songData.spotifyUrl}\n`;
+                if (songData.youtubeUrl) result += `YouTube: ${songData.youtubeUrl}\n`;
+                if (songData.appleMusicUrl) result += `Apple Music: ${songData.appleMusicUrl}\n`;
+
+                result += `\nIdentified using: ${apiUsed}`;
+
+                await reply(result);
+                await react('✅');
+
+            } catch (error) {
+                console.error('[SHAZAM] Identification error:', error.message);
+                await react('❌');
+                
+                if (error.message.includes('timeout')) {
+                    await reply('Request timeout. Audio might be too long.');
+                } else if (error.message.includes('Could not identify')) {
+                    await reply('Could not recognize the song. Try with clearer audio.');
+                } else {
+                    await reply('Failed to identify song. Please try again.');
+                }
+            } finally {
+                // Cleanup temp file
+                try {
+                    if (fs.existsSync(tempPath)) {
+                        fs.unlinkSync(tempPath);
+                    }
+                } catch (cleanupError) {
+                    console.error('[SHAZAM] Cleanup error:', cleanupError.message);
+                }
+            }
+
+        } catch (error) {
+            console.error('[SHAZAM] Command error:', error.message);
+            await react('❌');
+            await reply('Failed to process song identification.');
         }
-
-        if (!result) {
-          await react('❌');
-          return reply("Could not recognize the song. Please try with a clearer audio clip.");
-        }
-
-        let text = `Song Recognized!\n\n`;
-        text += `Title: ${result.title || result.song || "Unknown"}\n`;
-        text += `Artist: ${result.artist || result.singer || "Unknown"}\n`;
-
-        if (result.album) text += `Album: ${result.album}\n`;
-        if (result.releaseDate) text += `Released: ${result.releaseDate}\n`;
-        if (result.genre) text += `Genre: ${result.genre}\n`;
-        if (result.duration) text += `Duration: ${result.duration}\n`;
-        if (result.lyrics) text += `\nLyrics Preview:\n${result.lyrics.substring(0, 200)}...\n`;
-
-        if (result.spotifyUrl) text += `\nSpotify: ${result.spotifyUrl}\n`;
-        if (result.youtubeUrl) text += `YouTube: ${result.youtubeUrl}\n`;
-        if (result.appleMusicUrl) text += `Apple Music: ${result.appleMusicUrl}\n`;
-
-        if (result.title && result.artist) {
-          const searchQuery = encodeURIComponent(`${result.title} ${result.artist}`);
-          text += `\nShazam Search: https://www.shazam.com/search?term=${searchQuery}\n`;
-        }
-
-        text += `\nIdentified using ${apiUsed.split('/')[2]}`;
-
-        await reply(text);
-        await react('✅');
-
-      } catch (err) {
-        console.error("Shazam Error:", err);
-        await react('❌');
-
-        if (err.message.includes('timeout')) {
-          return reply("Request timeout. The audio might be too long or the API is busy.");
-        } else if (err.message.includes('network') || err.message.includes('ENOTFOUND')) {
-          return reply("Network error. Please check your connection.");
-        }
-
-        reply("Failed to identify the song. Please try again with a different audio clip.");
-      }
     }
-  },
-
+},
   {
     name: "playdoc",
     aliases: ["pdoc", "songdoc"],
