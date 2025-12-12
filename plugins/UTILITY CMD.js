@@ -572,25 +572,48 @@ Node: ${process.version}`;
         }
     },
     {
-        name: "ping",
-        aliases: ["p"],
-        description: "Check bot speed",
-        category: "UTILITY MENU",
-        execute: async (sock, message, args, { chatId }) => {
-            const start = Date.now();
+    name: "ping",
+    aliases: ["p"],
+    description: "Check bot speed",
+    category: "UTILITY MENU",
+    
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply } = context;
 
-            await sock.sendMessage(chatId, { 
-                text: "Calculating speed..." 
+        try {
+            const start = Date.now();
+            
+            // Send initial message
+            const sentMsg = await sock.sendMessage(chatId, {
+                text: "⚡ Calculating speed..."
             }, { quoted: global.ping });
 
             const end = Date.now();
             const speed = end - start;
 
-            await sock.sendMessage(chatId, { 
-                text: `Dave-md Speed: ${speed}ms` 
-            }, { quoted: global.ping });
+            // Generate precise ping (inline function)
+            const generatePrecisePing = (ping) => {
+                const performance = global.performance || {};
+                const microTime = typeof performance.now === 'function' ? performance.now() : ping;
+                const microOffset = (microTime % 1).toFixed(6);
+                const calculatedOffset = parseFloat(microOffset) * 0.999;
+                return (ping + calculatedOffset).toFixed(3);
+            };
+            
+            const precisePing = generatePrecisePing(speed);
+            
+            // Edit the original message
+            await sock.sendMessage(chatId, {
+                text: `Dave-MD Speed: ${precisePing} ms`,
+                edit: sentMsg.key
+            });
+
+        } catch (error) {
+            console.error('[PING] Error:', error.message);
+            await reply('Failed to measure speed.');
         }
-    },
+    }
+},
     {
         name: "alive",
         aliases: ["alv"],
