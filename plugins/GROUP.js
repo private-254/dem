@@ -410,7 +410,7 @@ export default [
             await reply('Failed to list warnings!');
         }
     }
-}
+},
 
   {
     name: "kill",
