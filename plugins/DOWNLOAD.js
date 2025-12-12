@@ -979,80 +979,168 @@ export default [
   }
 },
   {
-  name: "tiktok",
-  aliases: ["tt", "tik"],
-  category: "downloader",
-  desc: "Download TikTok videos with audio",
-  usage: ".tiktok <link>",
+    name: "tiktok",
+    aliases: ["tt", "tik"],
+    category: "downloader",
+    desc: "Download TikTok videos",
+    usage: ".tiktok <link>",
 
-  execute: async (sock, m, args, context) => {  // Fixed: Added =>
-    const { chatId, reply, react } = context;
-    const text = args.slice(1).join(' ').trim();
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react } = context;
+        
+        // Check if message was already processed
+        if (processedMessages.has(m.key.id)) return;
+        processedMessages.add(m.key.id);
+        
+        // Clean up after 5 minutes
+        setTimeout(() => {
+            processedMessages.delete(m.key.id);
+        }, 5 * 60 * 1000);
 
-    if (!text) {
-      return reply(`Provide a TikTok link.`);
-    }
+        try {
+            const text = args.slice(1).join(' ').trim();
+            
+            if (!text) {
+                return await reply("Please provide a TikTok link!");
+            }
 
-    try {
-      await react("⏳");
-      await reply("Fetching TikTok data...");
+            // Check for TikTok URL patterns
+            const tiktokPatterns = [
+                /https?:\/\/(?:www\.)?tiktok\.com\//,
+                /https?:\/\/(?:vm\.)?tiktok\.com\//,
+                /https?:\/\/(?:vt\.)?tiktok\.com\//,
+                /https?:\/\/(?:www\.)?tiktok\.com\/@/,
+                /https?:\/\/(?:www\.)?tiktok\.com\/t\//
+            ];
 
-      const apiUrl = `https://api.princetechn.com/api/download/tiktok?apikey=prince&url=${encodeURIComponent(text)}`;
-      const response = await axios.get(apiUrl);  // Need: import axios from 'axios';
-      const data = response.data;
+            const isValidUrl = tiktokPatterns.some(pattern => pattern.test(text));
+            
+            if (!isValidUrl) {
+                return await reply("That is not a valid TikTok link!");
+            }
 
-      if (!data.result) {
-        throw new Error("Invalid TikTok link or API error");
-      }
+            await react('🕹️');
 
-      const json = data.result;
+            // Try multiple APIs
+            const apis = [
+                `https://api.princetechn.com/api/download/tiktok?apikey=prince&url=${encodeURIComponent(text)}`,
+                `https://api.princetechn.com/api/download/tiktokdlv2?apikey=prince&url=${encodeURIComponent(text)}`,
+                `https://api.princetechn.com/api/download/tiktokdlv3?apikey=prince&url=${encodeURIComponent(text)}`,
+                `https://api.princetechn.com/api/download/tiktokdlv4?apikey=prince&url=${encodeURIComponent(text)}`,
+                `https://api.dreaded.site/api/tiktok?url=${encodeURIComponent(text)}`
+            ];
 
-      let caption = `TikTok Download\n\n`;
-      caption += `Id: ${json.id || 'N/A'}\n`;
-      caption += `Username: ${json.author?.nickname || 'N/A'}\n`;
-      caption += `Title: ${json.title || 'N/A'}\n`;
-      caption += `Likes: ${json.digg_count || 0}\n`;
-      caption += `Comments: ${json.comment_count || 0}\n`;
-      caption += `Shares: ${json.share_count || 0}\n`;
-      caption += `Plays: ${json.play_count || 0}\n`;
-      caption += `Created: ${json.create_time || 'N/A'}\n`;
-      caption += `Size: ${json.size || 'N/A'}\n`;
-      caption += `Duration: ${json.duration || 'N/A'}`;
+            let videoUrl = null;
+            let audioUrl = null;
+            let title = null;
 
-      if (json.images && json.images.length > 0) {
-        for (const imgUrl of json.images) {
-          await sock.sendMessage(chatId, {
-            image: { url: imgUrl },
-            caption: json.images.length > 1 ? `Part ${json.images.indexOf(imgUrl) + 1}/${json.images.length}` : caption
-          }, { quoted: m });
-          await new Promise(resolve => setTimeout(resolve, 1000));
+            // Try each API
+            for (const apiUrl of apis) {
+                try {
+                    const response = await axios.get(apiUrl, { timeout: 10000 });
+                    
+                    if (response.data) {
+                        // PrinceTech API format
+                        if (response.data.result && response.data.result.videoUrl) {
+                            videoUrl = response.data.result.videoUrl;
+                            audioUrl = response.data.result.audioUrl;
+                            title = response.data.result.title;
+                            break;
+                        }
+                        // Dreaded API format
+                        else if (response.data.tiktok && response.data.tiktok.video) {
+                            videoUrl = response.data.tiktok.video;
+                            break;
+                        }
+                        // Alternative format
+                        else if (response.data.video) {
+                            videoUrl = response.data.video;
+                            break;
+                        }
+                    }
+                } catch (apiError) {
+                    console.log(`[TIKTOK] API ${apiUrl} failed:`, apiError.message);
+                    continue;
+                }
+            }
+
+            // Fallback to ttdl if APIs fail
+            if (!videoUrl) {
+                try {
+                    const downloadData = await ttdl(text);
+                    if (downloadData && downloadData.data && downloadData.data.length > 0) {
+                        const mediaData = downloadData.data;
+                        for (let i = 0; i < Math.min(20, mediaData.length); i++) {
+                            const media = mediaData[i];
+                            const mediaUrl = media.url;
+                            const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(mediaUrl) || media.type === 'video';
+
+                            if (isVideo) {
+                                await sock.sendMessage(chatId, {
+                                    video: { url: mediaUrl },
+                                    mimetype: "video/mp4",
+                                    caption: ""
+                                }, { quoted: m });
+                            } else {
+                                await sock.sendMessage(chatId, {
+                                    image: { url: mediaUrl },
+                                    caption: ""
+                                }, { quoted: m });
+                            }
+                        }
+                        await react('✅');
+                        return;
+                    }
+                } catch (ttdlError) {
+                    console.error('[TIKTOK] ttdl failed:', ttdlError.message);
+                }
+            }
+
+            // Send video if we have URL
+            if (videoUrl) {
+                try {
+                    // Try to send as URL first (more efficient)
+                    const caption = title ? `TikTok Download\n\nTitle: ${title}` : "TikTok Video";
+                    
+                    await sock.sendMessage(chatId, {
+                        video: { url: videoUrl },
+                        mimetype: "video/mp4",
+                        caption: caption
+                    }, { quoted: m });
+
+                    // Send audio separately if available
+                    if (audioUrl) {
+                        setTimeout(async () => {
+                            try {
+                                await sock.sendMessage(chatId, {
+                                    audio: { url: audioUrl },
+                                    mimetype: "audio/mpeg",
+                                    fileName: "tiktok_audio.mp3"
+                                }, { quoted: m });
+                            } catch (audioError) {
+                                console.error('[TIKTOK] Audio failed:', audioError.message);
+                            }
+                        }, 2000);
+                    }
+
+                    await react('✅');
+                    
+                } catch (sendError) {
+                    console.error('[TIKTOK] Send failed:', sendError.message);
+                    await react('❌');
+                    await reply("Failed to send video. The link might be invalid.");
+                }
+            } else {
+                await react('❌');
+                await reply("Failed to download TikTok. All methods failed.");
+            }
+
+        } catch (error) {
+            console.error('[TIKTOK] Command error:', error.message);
+            await react('❌');
+            await reply("Failed to process TikTok download.");
         }
-      } else {
-        await sock.sendMessage(chatId, {
-          video: { url: json.play },
-          mimetype: 'video/mp4',
-          caption: caption
-        }, { quoted: m });
-
-        if (json.music) {
-          setTimeout(async () => {
-            await sock.sendMessage(chatId, {
-              audio: { url: json.music },
-              mimetype: 'audio/mpeg',
-              fileName: 'tiktok_audio.mp3'
-            }, { quoted: m });
-          }, 3000);
-        }
-      }
-
-      await react("✅");
-
-    } catch (error) {
-      console.error('[TIKTOK] Error:', error);
-      await react("❌");
-      return reply("Failed to fetch TikTok data. Make sure the link is valid.");
     }
-  }
 },
 
 ];
