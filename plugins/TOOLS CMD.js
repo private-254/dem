@@ -46,6 +46,151 @@ export default [
     }
 },
 
+
+{
+    name: "translate",
+    aliases: ["trt", "trans"],
+    category: "TOOLS MENU",
+    description: "Translate text to different languages",
+    usage: ".translate <text> <lang> or reply to message with .translate <lang>",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react } = context;
+
+        try {
+            await react('🌐');
+
+            let textToTranslate = '';
+            let lang = '';
+
+            // Language codes mapping
+            const languageNames = {
+                'fr': 'French', 'es': 'Spanish', 'de': 'German', 'it': 'Italian',
+                'pt': 'Portuguese', 'ru': 'Russian', 'ja': 'Japanese', 'ko': 'Korean',
+                'zh': 'Chinese', 'ar': 'Arabic', 'hi': 'Hindi', 'sw': 'Swahili',
+                'en': 'English', 'id': 'Indonesian', 'tr': 'Turkish', 'nl': 'Dutch',
+                'pl': 'Polish', 'uk': 'Ukrainian', 'vi': 'Vietnamese', 'th': 'Thai'
+            };
+
+            // Check if it's a reply
+            const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+            if (quoted) {
+                // Get text from quoted message
+                textToTranslate = quoted.conversation || 
+                                quoted.extendedTextMessage?.text || 
+                                quoted.imageMessage?.caption || 
+                                quoted.videoMessage?.caption || 
+                                '';
+
+                // Get language from command arguments
+                lang = args.slice(1).join(' ').trim();
+            } else {
+                // Parse command arguments for direct message
+                const textArgs = args.slice(1);
+                if (textArgs.length < 2) {
+                    const langList = Object.entries(languageNames)
+                        .slice(0, 15)
+                        .map(([code, name]) => `${code}: ${name}`)
+                        .join('\n');
+                    
+                    return await reply(
+                        `*Translate Command*\n\n` +
+                        `Usage:\n` +
+                        `1. Reply to a message: .translate <lang>\n` +
+                        `2. Direct text: .translate <text> <lang>\n\n` +
+                        `Examples:\n` +
+                        `.translate Hello World fr\n` +
+                        `.translate fr (when replying)\n\n` +
+                        `Supported languages:\n${langList}\n\n` +
+                        `More: https://cloud.google.com/translate/docs/languages`
+                    );
+                }
+
+                lang = textArgs.pop(); // Get language code
+                textToTranslate = textArgs.join(' '); // Get text to translate
+            }
+
+            if (!textToTranslate) {
+                return await reply('No text found to translate. Please provide text or reply to a message.');
+            }
+
+            if (!lang) {
+                return await reply('Please specify a language code. Example: .translate Hello fr');
+            }
+
+            // Validate language code
+            if (!languageNames[lang] && lang !== 'auto') {
+                return await reply(`Unsupported language code: ${lang}\n\nUse .translate to see supported languages.`);
+            }
+
+            // Try multiple translation APIs
+            let translatedText = null;
+            
+            // API 1: Google Translate
+            try {
+                const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang}&dt=t&q=${encodeURIComponent(textToTranslate)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data[0] && data[0][0] && data[0][0][0]) {
+                        translatedText = data[0][0][0];
+                    }
+                }
+            } catch (e) {
+                console.log('[TRANSLATE] API 1 failed:', e.message);
+            }
+
+            // API 2: MyMemory
+            if (!translatedText) {
+                try {
+                    const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=auto|${lang}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.responseData && data.responseData.translatedText) {
+                            translatedText = data.responseData.translatedText;
+                        }
+                    }
+                } catch (e) {
+                    console.log('[TRANSLATE] API 2 failed:', e.message);
+                }
+            }
+
+            // API 3: Custom API
+            if (!translatedText) {
+                try {
+                    const response = await fetch(`https://api.dreaded.site/api/translate?text=${encodeURIComponent(textToTranslate)}&lang=${lang}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.translated) {
+                            translatedText = data.translated;
+                        }
+                    }
+                } catch (e) {
+                    console.log('[TRANSLATE] API 3 failed:', e.message);
+                }
+            }
+
+            if (!translatedText) {
+                throw new Error('All translation services failed');
+            }
+
+            // Format response
+            const langName = languageNames[lang] || lang;
+            const result = `*Translation Result*\n\n` +
+                          `📝 *Original:* ${textToTranslate.substring(0, 200)}${textToTranslate.length > 200 ? '...' : ''}\n` +
+                          `🌐 *Translated (${langName}):* ${translatedText.substring(0, 300)}${translatedText.length > 300 ? '...' : ''}`;
+
+            await reply(result);
+
+            await react('✅');
+
+        } catch (error) {
+            console.error('[TRANSLATE] Error:', error.message);
+            await react('❌');
+            await reply('Failed to translate. Please try again or use a different language code.');
+        }
+    }
+},
+
 {
     name: "tts",
     aliases: ["texttospeech"],
