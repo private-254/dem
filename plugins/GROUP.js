@@ -111,6 +111,179 @@ export default [
     }
   },
 
+// Antipromote command
+{
+    name: "antipromote",
+    aliases: ["antipmt", "blockpromote"],
+    category: "GROUP MENU",
+    description: "Block unauthorized promotions in the group",
+    usage: ".antipromote [enable/disable] [mode: revert/kick/warn]",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, isGroup, isBotAdmin, isSenderAdmin, senderIsSudo } = context;
+
+        if (!isGroup) {
+            return await reply("This command can only be used in groups!");
+        }
+
+        if (!isBotAdmin) {
+            return await reply("Bot must be admin to manage antipromote!");
+        }
+
+        if (!isSenderAdmin && !senderIsSudo) {
+            return await reply("Only group admins can use this command!");
+        }
+
+        await react("👑");
+
+        try {
+            const action = args[1]?.toLowerCase();
+            const mode = args[2]?.toLowerCase();
+
+            if (!action) {
+                // Show current status
+                const isEnabled = global.featureManager?.antipromote?.isEnabled(chatId) || false;
+                const settings = global.featureManager?.antipromote?.getSettings(chatId) || { enabled: false, mode: 'revert' };
+                
+                const statusText = `🚫 *Antipromote Settings*\n\n` +
+                    `Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n` +
+                    `Mode: ${settings.mode?.toUpperCase() || 'revert'}\n\n` +
+                    `Modes available:\n` +
+                    `• revert - Demote user back to member\n` +
+                    `• kick - Kick the user from group\n` +
+                    `• warn - Only send warning message\n\n` +
+                    `Usage:\n` +
+                    `• .antipromote enable [mode]\n` +
+                    `• .antipromote disable\n` +
+                    `• .antipromote mode <revert/kick/warn>`;
+                
+                return await reply(statusText);
+            }
+
+            if (action === 'enable') {
+                const validModes = ['revert', 'kick', 'warn'];
+                const selectedMode = mode && validModes.includes(mode) ? mode : 'revert';
+                
+                const result = global.featureManager?.antipromote?.enable(chatId, selectedMode);
+                
+                await reply(`✅ Antipromote enabled!\n\nMode: ${selectedMode.toUpperCase()}\n\n` +
+                    `This will automatically block unauthorized promotions in this group.`);
+                
+            } else if (action === 'disable') {
+                global.featureManager?.antipromote?.disable(chatId);
+                await reply("❌ Antipromote disabled!");
+                
+            } else if (action === 'mode') {
+                if (!mode) {
+                    return await reply("Please specify a mode: revert, kick, or warn");
+                }
+                
+                const validModes = ['revert', 'kick', 'warn'];
+                if (!validModes.includes(mode)) {
+                    return await reply("Invalid mode! Available modes: revert, kick, warn");
+                }
+                
+                global.featureManager?.antipromote?.setMode(chatId, mode);
+                await reply(`⚙️ Antipromote mode updated to: ${mode.toUpperCase()}`);
+                
+            } else {
+                await reply("Invalid action! Use: enable, disable, or mode");
+            }
+
+        } catch (error) {
+            console.error('Antipromote command error:', error);
+            await reply(`Failed to configure antipromote: ${error.message}`);
+        }
+    }
+},
+
+// Antidemote command
+{
+    name: "antidemote",
+    aliases: ["blockdemote"],
+    category: "GROUP MENU",
+    description: "Block unauthorized demotions in the group",
+    usage: ".antidemote [enable/disable] [mode: revert/kick/warn]",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, isGroup, isBotAdmin, isSenderAdmin, senderIsSudo } = context;
+
+        if (!isGroup) {
+            return await reply("This command can only be used in groups!");
+        }
+
+        if (!isBotAdmin) {
+            return await reply("Bot must be admin to manage antidemote!");
+        }
+
+        if (!isSenderAdmin && !senderIsSudo) {
+            return await reply("Only group admins can use this command!");
+        }
+
+        await react("⬇️");
+
+        try {
+            const action = args[1]?.toLowerCase();
+            const mode = args[2]?.toLowerCase();
+
+            if (!action) {
+                // Show current status
+                const isEnabled = global.featureManager?.antidemote?.isEnabled(chatId) || false;
+                const settings = global.featureManager?.antidemote?.getSettings(chatId) || { enabled: false, mode: 'revert' };
+                
+                const statusText = `🚫 *Antidemote Settings*\n\n` +
+                    `Status: ${isEnabled ? '✅ Enabled' : '❌ Disabled'}\n` +
+                    `Mode: ${settings.mode?.toUpperCase() || 'revert'}\n\n` +
+                    `Modes available:\n` +
+                    `• revert - Promote user back to admin\n` +
+                    `• kick - Kick the user from group\n` +
+                    `• warn - Only send warning message\n\n` +
+                    `Usage:\n` +
+                    `• .antidemote enable [mode]\n` +
+                    `• .antidemote disable\n` +
+                    `• .antidemote mode <revert/kick/warn>`;
+                
+                return await reply(statusText);
+            }
+
+            if (action === 'enable') {
+                const validModes = ['revert', 'kick', 'warn'];
+                const selectedMode = mode && validModes.includes(mode) ? mode : 'revert';
+                
+                global.featureManager?.antidemote?.enable(chatId, selectedMode);
+                
+                await reply(`✅ Antidemote enabled!\n\nMode: ${selectedMode.toUpperCase()}\n\n` +
+                    `This will automatically block unauthorized demotions in this group.`);
+                
+            } else if (action === 'disable') {
+                global.featureManager?.antidemote?.disable(chatId);
+                await reply("❌ Antidemote disabled!");
+                
+            } else if (action === 'mode') {
+                if (!mode) {
+                    return await reply("Please specify a mode: revert, kick, or warn");
+                }
+                
+                const validModes = ['revert', 'kick', 'warn'];
+                if (!validModes.includes(mode)) {
+                    return await reply("Invalid mode! Available modes: revert, kick, warn");
+                }
+                
+                global.featureManager?.antidemote?.setMode(chatId, mode);
+                await reply(`⚙️ Antidemote mode updated to: ${mode.toUpperCase()}`);
+                
+            } else {
+                await reply("Invalid action! Use: enable, disable, or mode");
+            }
+
+        } catch (error) {
+            console.error('Antidemote command error:', error);
+            await reply(`Failed to configure antidemote: ${error.message}`);
+        }
+    }
+},
+
+// Fixed Warning commands with proper admin checks
 {
     name: "warn",
     aliases: ["warning"],
@@ -119,7 +292,7 @@ export default [
     usage: ".warn @user or reply to message",
 
     execute: async (sock, m, args, context) => {
-        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, senderId } = context;
+        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, senderId, senderIsSudo } = context;
 
         const dataPath = path.join(process.cwd(), 'data', 'userGroupData.json');
 
@@ -132,12 +305,13 @@ export default [
                 return await reply('Bot must be admin to use warn command!');
             }
 
-            if (!isSenderAdmin) {
+            // Allow both admins and sudo users
+            if (!isSenderAdmin && !senderIsSudo) {
                 return await reply('Only group admins can warn users!');
             }
 
             let userToWarn;
-            
+
             // Check for mentioned users
             if (mentions && mentions.length > 0) {
                 userToWarn = mentions[0];
@@ -146,7 +320,7 @@ export default [
             else if (hasQuotedMessage && m.message?.extendedTextMessage?.contextInfo?.participant) {
                 userToWarn = m.message.extendedTextMessage.contextInfo.participant;
             }
-            
+
             if (!userToWarn) {
                 return await reply('Please mention the user or reply to their message to warn!');
             }
@@ -169,10 +343,10 @@ export default [
             if (!data.warnings) data.warnings = {};
             if (!data.warnings[chatId]) data.warnings[chatId] = {};
             if (!data.warnings[chatId][userToWarn]) data.warnings[chatId][userToWarn] = 0;
-            
+
             // Increment warning count
             data.warnings[chatId][userToWarn]++;
-            
+
             // Save to file
             fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
@@ -197,7 +371,7 @@ export default [
                     // Clear warnings after kick
                     delete data.warnings[chatId][userToWarn];
                     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-                    
+
                     const kickMessage = `Auto-Kick\n\n` +
                         `@${userToWarn.split('@')[0]} has been removed from the group after receiving 3 warnings! ⚠️`;
 
@@ -213,7 +387,7 @@ export default [
         } catch (error) {
             console.error('Warn Command Error:', error);
             await react('❌');
-            
+
             if (error.data === 429) {
                 await reply('Rate limit reached. Please try again in a few seconds.');
             } else {
@@ -231,7 +405,7 @@ export default [
     usage: ".warnings @user or reply to message",
 
     execute: async (sock, m, args, context) => {
-        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin } = context;
+        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin, senderIsSudo } = context;
 
         const dataPath = path.join(process.cwd(), 'data', 'userGroupData.json');
 
@@ -240,14 +414,15 @@ export default [
                 return await reply('This command can only be used in groups!');
             }
 
-            if (!isSenderAdmin) {
+            // Allow both admins and sudo users
+            if (!isSenderAdmin && !senderIsSudo) {
                 return await reply('Only group admins can check warnings!');
             }
 
             await react('📋');
 
             let userToCheck;
-            
+
             if (mentions && mentions.length > 0) {
                 userToCheck = mentions[0];
             } else if (hasQuotedMessage && m.message?.extendedTextMessage?.contextInfo?.participant) {
@@ -293,7 +468,7 @@ export default [
     usage: ".resetwarn @user or reply to message",
 
     execute: async (sock, m, args, context) => {
-        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin } = context;
+        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin, senderIsSudo } = context;
 
         const dataPath = path.join(process.cwd(), 'data', 'userGroupData.json');
 
@@ -302,14 +477,15 @@ export default [
                 return await reply('This command can only be used in groups!');
             }
 
-            if (!isSenderAdmin) {
+            // Allow both admins and sudo users
+            if (!isSenderAdmin && !senderIsSudo) {
                 return await reply('Only group admins can reset warnings!');
             }
 
             await react('🔄');
 
             let userToReset;
-            
+
             if (mentions && mentions.length > 0) {
                 userToReset = mentions[0];
             } else if (hasQuotedMessage && m.message?.extendedTextMessage?.contextInfo?.participant) {
@@ -329,16 +505,16 @@ export default [
             }
 
             const userName = userToReset.split('@')[0];
-            
+
             if (data.warnings?.[chatId]?.[userToReset]) {
                 delete data.warnings[chatId][userToReset];
                 // If group has no more warnings, remove group entry
                 if (Object.keys(data.warnings[chatId]).length === 0) {
                     delete data.warnings[chatId];
                 }
-                
+
                 fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-                
+
                 await reply(`Warnings reset for @${userName}!`, { mentions: [userToReset] });
             } else {
                 await reply(`No warnings found for @${userName}.`, { mentions: [userToReset] });
@@ -360,7 +536,7 @@ export default [
     usage: ".listwarn",
 
     execute: async (sock, m, args, context) => {
-        const { chatId, reply, react, isSenderAdmin } = context;
+        const { chatId, reply, react, isSenderAdmin, senderIsSudo } = context;
 
         const dataPath = path.join(process.cwd(), 'data', 'userGroupData.json');
 
@@ -369,7 +545,8 @@ export default [
                 return await reply('This command can only be used in groups!');
             }
 
-            if (!isSenderAdmin) {
+            // Allow both admins and sudo users
+            if (!isSenderAdmin && !senderIsSudo) {
                 return await reply('Only group admins can list warnings!');
             }
 
