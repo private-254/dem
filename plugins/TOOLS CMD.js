@@ -45,6 +45,87 @@ export default [
     }
 },
 
+{
+    name: "tts",
+    aliases: ["texttospeech"],
+    category: "TOOLS MENU",
+    description: "Convert text to speech audio",
+    usage: ".tts [text] or reply to message",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react } = context;
+        const gTTS = (await import('gtts')).default;
+
+        try {
+            await react('🔊');
+
+            // Extract text from command or quoted message
+            let text = args.slice(1).join(' ').trim();
+            
+            // If no text in command, check for quoted message
+            if (!text) {
+                const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+                if (quoted) {
+                    text = quoted.conversation || quoted.extendedTextMessage?.text || '';
+                }
+            }
+
+            if (!text) {
+                return await reply('Please provide text or reply to a message!\n\nExample: .tts Hello World');
+            }
+
+            // Limit text length to prevent issues
+            if (text.length > 500) {
+                return await reply('Text too long! Maximum 500 characters.');
+            }
+
+            const fileName = `tts-${Date.now()}.mp3`;
+            const filePath = path.join(process.cwd(), 'temp', fileName);
+
+            // Create temp directory if it doesn't exist
+            const tempDir = path.join(process.cwd(), 'temp');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+
+            // Create TTS audio
+            const gtts = new gTTS(text, 'en');
+            
+            await new Promise((resolve, reject) => {
+                gtts.save(filePath, (err) => {
+                    if (err) {
+                        reject(new Error('Failed to generate TTS audio'));
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+
+            // Send audio
+            await sock.sendMessage(chatId, {
+                audio: { url: filePath },
+                mimetype: 'audio/mpeg',
+                fileName: 'tts-audio.mp3'
+            }, { quoted: m });
+
+            // Clean up temp file
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            } catch (cleanupError) {
+                console.error('[TTS] Cleanup error:', cleanupError.message);
+            }
+
+            await react('✅');
+
+        } catch (error) {
+            console.error('[TTS] Error:', error.message);
+            await react('❌');
+            await reply('Failed to generate TTS audio. Please try again.');
+        }
+    }
+},
 
 {
   name: "save",
