@@ -1,4 +1,3 @@
-
 import { getChatId, getSenderId } from './lib/myfunc.js';
 import chalk from 'chalk';
 import chatbotMemory from './lib/chatbot.js';
@@ -19,7 +18,8 @@ import {
     handleAntidelete,
     handleViewOnce,
     handleMessageRevocation,
-    handleGroupParticipantUpdate  // Added for antipromote/antidemote
+    handleAntipromote,  // Import these separately
+    handleAntidemote    // Import these separately
 } from './lib/case.js';
 import fs from 'fs';
 import { getSetting, getWelcome, getGoodbye, isWelcomeEnabled, isGoodbyeEnabled } from './lib/database.js';
@@ -436,13 +436,14 @@ async function initializeCallHandler(sock) {
     }
 }
 
-// === GROUP PARTICIPANT UPDATE === (Updated to use new handler)
-async function handleGroupParticipantUpdate(sock, update) {
+// === GROUP PARTICIPANT UPDATE === (FIXED - renamed function)
+async function handleGroupUpdates(sock, update) {
     try {
-        // Use the new handler from case.js
-        await handleGroupParticipantUpdate(sock, update);
+        // Handle antipromote and antidemote first
+        await handleAntipromote(sock, update);
+        await handleAntidemote(sock, update);
         
-        // Keep existing welcome/goodbye functionality
+        // Then handle existing welcome/goodbye functionality
         const { id, participants, action } = update;
         if (!id.endsWith('@g.us')) return;
 
@@ -487,7 +488,7 @@ async function handleGroupParticipantUpdate(sock, update) {
             }
         }
     } catch (err) {
-        console.error('Error in handleGroupParticipantUpdate:', err);
+        console.error('Error in handleGroupUpdates:', err);
     }
 }
 
@@ -516,7 +517,7 @@ async function initializeEventListeners(sock) {
         // Setup group participant update listener for antipromote/antidemote
         sock.ev.on('group-participants.update', async (update) => {
             try {
-                await handleGroupParticipantUpdate(sock, update);
+                await handleGroupUpdates(sock, update);
             } catch (err) {
                 console.error('Error in group-participants.update listener:', err);
             }
@@ -530,9 +531,9 @@ async function initializeEventListeners(sock) {
 
 export {
     handleMessages,
-    handleGroupParticipantUpdate,
+    handleGroupUpdates,  // Export with new name
     handleStatus,
     restorePresenceSettings,
     initializeCallHandler,
-    initializeEventListeners  // Export the new function
+    initializeEventListeners
 };
