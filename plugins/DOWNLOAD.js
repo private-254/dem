@@ -1,3 +1,5 @@
+
+import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import { fetchJson, isUrl } from '../lib/myfunc.js';
 import { ttdl, igdl } from "ruhend-scraper";
 import axios from 'axios';
@@ -5,6 +7,7 @@ import { channelInfo } from '../lib/messageConfig.js';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
+import { UploadFileUgu } from '../lib/uploader.js';  // Add this line
 import yts from 'yt-search';
 import settings from '../settings.js';
 import * as cheerio from 'cheerio';
