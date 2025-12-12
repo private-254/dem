@@ -1,4 +1,4 @@
-// Import all necessary modules
+// main.js - Updated to include antipromote/antidemote
 import { getChatId, getSenderId } from './lib/myfunc.js';
 import chalk from 'chalk';
 import chatbotMemory from './lib/chatbot.js';
@@ -16,9 +16,10 @@ import {
     handleAutoRecord, 
     handleAutoRecordType, 
     handleAnticall,
-    handleAntidelete,  // Added
-    handleViewOnce,     // Added
-    handleMessageRevocation  // Added
+    handleAntidelete,
+    handleViewOnce,
+    handleMessageRevocation,
+    handleGroupParticipantUpdate  // Added for antipromote/antidemote
 } from './lib/case.js';
 import fs from 'fs';
 import { getSetting, getWelcome, getGoodbye, isWelcomeEnabled, isGoodbyeEnabled } from './lib/database.js';
@@ -34,7 +35,7 @@ import { rainbow, pastel } from './lib/color.js';
 console.log(chalk.yellow('[DAVE-MD] initializing executor'));
 loadCommands();
 
-//....................................................................................................................................//
+// ....................................................................................................................................//
 // === GLOBALS ===//
 
 // === RESTORE PRESENCE ===
@@ -102,17 +103,17 @@ async function handleMessages(sock, messageUpdate, printLog) {
         // 🔹 AUTO STATUS VIEWING - HANDLE FIRST
         // ============================================
         const isStatus = chatId === 'status@broadcast';
-        
+
         if (isStatus) {
             console.log(chalk.cyan('📱 Status update detected'));
-            
+
             // Handle ephemeral messages
             if (message.message && Object.keys(message.message)[0] === 'ephemeralMessage') {
                 message.message = message.message.ephemeralMessage.message;
             }
-            
+
             if (!message.message) return;
-            
+
             try {
                 // Call the autostatus handler
                 const statusHandled = await handleStatusUpdate(sock, message);
@@ -122,7 +123,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
             } catch (statusError) {
                 console.error(chalk.red('❌ Error in autostatus handler:'), statusError);
             }
-            
+
             // Exit early after handling status
             return;
         }
@@ -305,7 +306,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
             return; // Exit after handling channel command
         }
 
-        // Admin commands  
+        // Admin commands - Add antipromote and antidemote to admin commands list
         const adminCommands = [  
             `${currentPrefix}mute`, `${currentPrefix}unmute`, `${currentPrefix}ban`,  
             `${currentPrefix}unban`, `${currentPrefix}promote`, `${currentPrefix}demote`,  
@@ -315,6 +316,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
             `${currentPrefix}poll`, `${currentPrefix}resetlink`, `${currentPrefix}setgdesc`,
             `${currentPrefix}setgname`, `${currentPrefix}setgpp`, `${currentPrefix}tagadmin`,
             `${currentPrefix}tagall`, `${currentPrefix}tagnotadmin`,
+            `${currentPrefix}antipromote`, `${currentPrefix}antidemote`  // Added new commands
         ];  
         const isAdminCommand = adminCommands.some(cmd => userMessage.startsWith(cmd));  
 
@@ -434,9 +436,13 @@ async function initializeCallHandler(sock) {
     }
 }
 
-// === GROUP PARTICIPANT UPDATE ===
+// === GROUP PARTICIPANT UPDATE === (Updated to use new handler)
 async function handleGroupParticipantUpdate(sock, update) {
     try {
+        // Use the new handler from case.js
+        await handleGroupParticipantUpdate(sock, update);
+        
+        // Keep existing welcome/goodbye functionality
         const { id, participants, action } = update;
         if (!id.endsWith('@g.us')) return;
 
@@ -501,10 +507,32 @@ async function handleStatus(sock, statusUpdate) {
     }
 }
 
+// Initialize event listeners
+async function initializeEventListeners(sock) {
+    try {
+        // Initialize call handler
+        await initializeCallHandler(sock);
+        
+        // Setup group participant update listener for antipromote/antidemote
+        sock.ev.on('group-participants.update', async (update) => {
+            try {
+                await handleGroupParticipantUpdate(sock, update);
+            } catch (err) {
+                console.error('Error in group-participants.update listener:', err);
+            }
+        });
+        
+        console.log(chalk.green('✅ Event listeners initialized'));
+    } catch (err) {
+        console.error('❌ Error initializing event listeners:', err);
+    }
+}
+
 export {
     handleMessages,
     handleGroupParticipantUpdate,
     handleStatus,
     restorePresenceSettings,
-    initializeCallHandler
+    initializeCallHandler,
+    initializeEventListeners  // Export the new function
 };
