@@ -274,78 +274,82 @@ export default [
 },
 
 {
-  name: "save",
-  aliases: ["savestatus", "savestory"],
-  category: "TOOLS MENU",
-  desc: "Save status images/videos to your chat",
+    name: 'savestatus',
+    aliases: ['status'],
+    category: 'OWNER MENU',
+    description: 'Save WhatsApp status updates',
+    usage: '.savestatus (reply to status)',
 
-  async execute(sock, msg, args, context) {
-    const { reply, react } = context;
-    const quotedMessage = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+    execute: async (sock, m, args, context) => {
+        const { reply, react, senderIsSudo } = context;
 
-    try {
-      await react('💾');
+        // Owner check
+        if (!senderIsSudo) {
+            return await reply("This command is only for the owner!");
+        }
 
-      // Check if user quoted a message
-      if (!quotedMessage) {
-        return reply('❌ Please reply to a status message to save it!');
-      }
+        try {
+            await react('📥');
 
-      // Verify it's a status message
-      if (!msg.key.remoteJid?.endsWith('@broadcast')) {
-        return reply('❌ That message is not a status! Please reply to a status message.');
-      }
+            const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+            
+            if (!quoted) {
+                return await reply("Reply to a status message to save it!");
+            }
 
-      // Download the media first
-      const mediaBuffer = await sock.downloadMediaMessage(msg);
-      if (!mediaBuffer || mediaBuffer.length === 0) {
-        return reply('❌ Could not download the status media. It may have expired.');
-      }
+            // Check for different media types
+            if (quoted.imageMessage) {
+                const stream = await downloadContentFromMessage(quoted.imageMessage, 'image');
+                let buffer = Buffer.from([]);
+                for await (const chunk of stream) {
+                    buffer = Buffer.concat([buffer, chunk]);
+                }
+                
+                await sock.sendMessage(context.chatId, {
+                    image: buffer,
+                    caption: quoted.imageMessage.caption || 'Saved status image'
+                }, { quoted: m });
+                
+            } else if (quoted.videoMessage) {
+                const stream = await downloadContentFromMessage(quoted.videoMessage, 'video');
+                let buffer = Buffer.from([]);
+                for await (const chunk of stream) {
+                    buffer = Buffer.concat([buffer, chunk]);
+                }
+                
+                await sock.sendMessage(context.chatId, {
+                    video: buffer,
+                    caption: quoted.videoMessage.caption || 'Saved status video'
+                }, { quoted: m });
+                
+            } else if (quoted.audioMessage) {
+                const stream = await downloadContentFromMessage(quoted.audioMessage, 'audio');
+                let buffer = Buffer.from([]);
+                for await (const chunk of stream) {
+                    buffer = Buffer.concat([buffer, chunk]);
+                }
+                
+                await sock.sendMessage(context.chatId, {
+                    audio: buffer,
+                    mimetype: 'audio/ogg',
+                    ptt: true
+                }, { quoted: m });
+                
+            } else if (quoted.extendedTextMessage?.text) {
+                await reply(`Text status saved:\n\n${quoted.extendedTextMessage.text}`);
+            } else {
+                return await reply("Unsupported status type!");
+            }
 
-      // Determine media type and prepare payload
-      let payload;
-      let mediaType;
+            await react('✅');
+            await reply("Status saved successfully!");
 
-      if (quotedMessage.imageMessage) {
-        mediaType = 'image';
-        payload = {
-          image: mediaBuffer,
-          caption: quotedMessage.imageMessage.captionText || '📸 Saved status image',
-          mimetype: 'image/jpeg'
-        };
-      } 
-      else if (quotedMessage.videoMessage) {
-        mediaType = 'video';
-        payload = {
-          video: mediaBuffer,
-          caption: quotedMessage.videoMessage.caption || '🎥 Saved status video',
-          mimetype: 'video/mp4'
-        };
-      } 
-      else {
-        return reply('❌ Only image and video statuses can be saved!');
-      }
-
-      // Send to user's DM
-      await sock.sendMessage(
-        msg.key.participant || msg.key.remoteJid, 
-        payload,
-        { quoted: msg }
-      );
-
-      // Confirm in chat
-      await react('✅');
-      return reply(`✅ ${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} saved successfully!`);
-
-    } catch (error) {
-      console.error('Save error:', error);
-      await react('❌');
-      if (error.message.includes('404') || error.message.includes('not found')) {
-        return reply('❌ The status may have expired or been deleted.');
-      }
-      return reply('❌ Failed to save status: ' + error.message);
+        } catch (error) {
+            console.error('[SAVESTATUS] Error:', error.message);
+            await react('❌');
+            await reply(`Failed to save status: ${error.message}`);
+        }
     }
-  }
 },
  {
     name: 'calculate',
