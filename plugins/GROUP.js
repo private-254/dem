@@ -111,6 +111,252 @@ export default [
     }
   },
 
+{
+    name: "warn",
+    aliases: ["warning"],
+    category: "GROUP MENU",
+    description: "Warn users in the group",
+    usage: ".warn @user or reply to message",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin, isBotAdmin, senderId } = context;
+
+        // Define paths
+        const databaseDir = path.join(process.cwd(), 'data');
+        const warningsPath = path.join(databaseDir, 'warnings.json');
+
+        // Initialize warnings file if it doesn't exist
+        function initializeWarningsFile() {
+            // Create database directory if it doesn't exist
+            if (!fs.existsSync(databaseDir)) {
+                fs.mkdirSync(databaseDir, { recursive: true });
+            }
+            
+            // Create warnings.json if it doesn't exist
+            if (!fs.existsSync(warningsPath)) {
+                fs.writeFileSync(warningsPath, JSON.stringify({}), 'utf8');
+            }
+        }
+
+        try {
+            // Initialize files first
+            initializeWarningsFile();
+
+            if (!chatId.endsWith('@g.us')) {
+                return await reply('This command can only be used in groups!');
+            }
+
+            if (!isBotAdmin) {
+                return await reply('Bot must be admin to use warn command!');
+            }
+
+            if (!isSenderAdmin) {
+                return await reply('Only group admins can warn users!');
+            }
+
+            let userToWarn;
+            
+            // Check for mentioned users
+            if (mentions && mentions.length > 0) {
+                userToWarn = mentions[0];
+            }
+            // Check for replied message
+            else if (hasQuotedMessage && m.message?.extendedTextMessage?.contextInfo?.participant) {
+                userToWarn = m.message.extendedTextMessage.contextInfo.participant;
+            }
+            
+            if (!userToWarn) {
+                return await reply('Please mention the user or reply to their message to warn!');
+            }
+
+            await react('⚠️');
+
+            // Add delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Read warnings, create empty object if file is empty
+            let warnings = {};
+            try {
+                warnings = JSON.parse(fs.readFileSync(warningsPath, 'utf8'));
+            } catch (error) {
+                warnings = {};
+            }
+
+            // Initialize nested objects if they don't exist
+            if (!warnings[chatId]) warnings[chatId] = {};
+            if (!warnings[chatId][userToWarn]) warnings[chatId][userToWarn] = 0;
+            
+            warnings[chatId][userToWarn]++;
+            fs.writeFileSync(warningsPath, JSON.stringify(warnings, null, 2));
+
+            const warningMessage = `Warning Alert\n\n` +
+                `Warned User: @${userToWarn.split('@')[0]}\n` +
+                `Warning Count: ${warnings[chatId][userToWarn]}/3\n` +
+                `Warned By: @${senderId.split('@')[0]}\n` +
+                `Date: ${new Date().toLocaleString()}`;
+
+            await sock.sendMessage(chatId, { 
+                text: warningMessage,
+                mentions: [userToWarn, senderId]
+            });
+
+            // Auto-kick after 3 warnings
+            if (warnings[chatId][userToWarn] >= 3) {
+                // Add delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                await sock.groupParticipantsUpdate(chatId, [userToWarn], "remove");
+                delete warnings[chatId][userToWarn];
+                fs.writeFileSync(warningsPath, JSON.stringify(warnings, null, 2));
+                
+                const kickMessage = `Auto-Kick\n\n` +
+                    `@${userToWarn.split('@')[0]} has been removed from the group after receiving 3 warnings! ⚠️`;
+
+                await sock.sendMessage(chatId, { 
+                    text: kickMessage,
+                    mentions: [userToWarn]
+                });
+            }
+
+        } catch (error) {
+            console.error('Warn Command Error:', error);
+            await react('❌');
+            
+            if (error.data === 429) {
+                await reply('Rate limit reached. Please try again in a few seconds.');
+            } else {
+                await reply('Failed to warn user. Make sure bot is admin!');
+            }
+        }
+    }
+},
+
+{
+    name: "warnings",
+    aliases: ["checkwarn"],
+    category: "GROUP MENU",
+    description: "Check warnings for a user",
+    usage: ".warnings @user or reply to message",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin } = context;
+
+        const databaseDir = path.join(process.cwd(), 'data');
+        const warningsPath = path.join(databaseDir, 'warnings.json');
+
+        try {
+            if (!chatId.endsWith('@g.us')) {
+                return await reply('This command can only be used in groups!');
+            }
+
+            if (!isSenderAdmin) {
+                return await reply('Only group admins can check warnings!');
+            }
+
+            await react('📋');
+
+            let userToCheck;
+            
+            if (mentions && mentions.length > 0) {
+                userToCheck = mentions[0];
+            } else if (hasQuotedMessage && m.message?.extendedTextMessage?.contextInfo?.participant) {
+                userToCheck = m.message.extendedTextMessage.contextInfo.participant;
+            } else {
+                return await reply('Please mention user or reply to message to check warnings!');
+            }
+
+            // Read warnings
+            let warnings = {};
+            if (fs.existsSync(warningsPath)) {
+                try {
+                    warnings = JSON.parse(fs.readFileSync(warningsPath, 'utf8'));
+                } catch (error) {
+                    warnings = {};
+                }
+            }
+
+            const userWarnings = warnings[chatId]?.[userToCheck] || 0;
+            const userName = userToCheck.split('@')[0];
+
+            const warningInfo = `Warnings Info\n\n` +
+                `User: @${userName}\n` +
+                `Current Warnings: ${userWarnings}/3\n` +
+                `Status: ${userWarnings >= 3 ? '⚠️ Auto-kick pending' : 'Active'}\n` +
+                `Remaining: ${3 - userWarnings} warnings until kick`;
+
+            await reply(warningInfo, { mentions: [userToCheck] });
+
+        } catch (error) {
+            console.error('Warnings Command Error:', error);
+            await react('❌');
+            await reply('Failed to check warnings!');
+        }
+    }
+},
+
+{
+    name: "resetwarn",
+    aliases: ["clearwarn"],
+    category: "GROUP MENU",
+    description: "Reset warnings for a user",
+    usage: ".resetwarn @user or reply to message",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react, mentions, hasQuotedMessage, isSenderAdmin } = context;
+
+        const databaseDir = path.join(process.cwd(), 'data');
+        const warningsPath = path.join(databaseDir, 'warnings.json');
+
+        try {
+            if (!chatId.endsWith('@g.us')) {
+                return await reply('This command can only be used in groups!');
+            }
+
+            if (!isSenderAdmin) {
+                return await reply('Only group admins can reset warnings!');
+            }
+
+            await react('🔄');
+
+            let userToReset;
+            
+            if (mentions && mentions.length > 0) {
+                userToReset = mentions[0];
+            } else if (hasQuotedMessage && m.message?.extendedTextMessage?.contextInfo?.participant) {
+                userToReset = m.message.extendedTextMessage.contextInfo.participant;
+            } else {
+                return await reply('Please mention user or reply to message to reset warnings!');
+            }
+
+            // Read warnings
+            let warnings = {};
+            if (fs.existsSync(warningsPath)) {
+                try {
+                    warnings = JSON.parse(fs.readFileSync(warningsPath, 'utf8'));
+                } catch (error) {
+                    warnings = {};
+                }
+            }
+
+            const userName = userToReset.split('@')[0];
+            
+            if (warnings[chatId] && warnings[chatId][userToReset]) {
+                delete warnings[chatId][userToReset];
+                fs.writeFileSync(warningsPath, JSON.stringify(warnings, null, 2));
+                
+                await reply(`Warnings reset for @${userName}!`, { mentions: [userToReset] });
+            } else {
+                await reply(`No warnings found for @${userName}.`, { mentions: [userToReset] });
+            }
+
+        } catch (error) {
+            console.error('ResetWarn Command Error:', error);
+            await react('❌');
+            await reply('Failed to reset warnings!');
+        }
+    }
+},
+
   {
     name: "kill",
     aliases: ["kickall", "nuke", "destroy"],
