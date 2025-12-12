@@ -59,7 +59,7 @@ export default [
 
 {
     name: "telegram",
-    aliases: ["tg", "tstick", "telegramsticker"],
+    aliases: ["tg", "tgsticker", "telegramsticker"],
     category: "UTILITY MENU",
     description: "Download Telegram sticker packs",
     usage: ".telegram <telegram-sticker-url>",
