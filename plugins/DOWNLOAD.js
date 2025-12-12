@@ -7,7 +7,7 @@ import { channelInfo } from '../lib/messageConfig.js';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
-import { UploadFileUgu } from '../lib/uploader.js';  // Add this line
+import { UploadFileUgu } from '../lib/uploader.js';  // Added this line
 import yts from 'yt-search';
 import settings from '../settings.js';
 import * as cheerio from 'cheerio';
