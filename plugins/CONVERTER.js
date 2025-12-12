@@ -31,6 +31,7 @@ import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import { exec } from 'child_process';
+import { tmpdir } from 'os'; 
 import path from 'path';
 import settings from '../settings.js';
 
