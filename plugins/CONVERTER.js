@@ -84,6 +84,164 @@ export default [
             }
         }
     },
+
+{
+    name: "toaudio",
+    aliases: ["extractaudio", "mp3"],
+    category: "TOOLS MENU",
+    description: "Extract audio from video or convert audio files",
+    usage: ".toaudio (reply to video/audio)",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react } = context;
+
+        try {
+            await react('🎵');
+
+            // Get the media message
+            const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+            let msg = null;
+            
+            // Check quoted message first
+            if (quoted) {
+                msg = quoted.videoMessage || quoted.audioMessage || quoted.documentMessage;
+            } else {
+                // Check direct message
+                msg = m.message?.videoMessage || m.message?.audioMessage || m.message?.documentMessage;
+            }
+
+            if (!msg) {
+                return await reply("Reply to a video or audio file to convert it to audio!");
+            }
+
+            // MIME type checking
+            const mime = msg.mimetype || '';
+            const isVideo = mime.startsWith('video/');
+            const isAudio = mime.startsWith('audio/');
+            const isDocument = msg.documentMessage && (
+                mime.includes('video') || 
+                mime.includes('audio') || 
+                mime.includes('mp4') || 
+                mime.includes('mpeg')
+            );
+
+            if (!isVideo && !isAudio && !isDocument) {
+                return await reply("Only works on video or audio messages!");
+            }
+
+            await reply("Converting to audio...");
+
+            // Create temp directory
+            const tempDir = path.join(process.cwd(), 'temp');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+
+            // Temp file paths
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(7);
+            const inputPath = path.join(tempDir, `input_${timestamp}_${random}.tmp`);
+            const outputPath = path.join(tempDir, `audio_${timestamp}_${random}.mp3`);
+
+            try {
+                // Determine file type for download
+                const fileType = isVideo ? 'video' : 'audio';
+                
+                // Download media
+                const stream = await downloadContentFromMessage(msg, fileType);
+                
+                // Write to file
+                const writeStream = fs.createWriteStream(inputPath);
+                for await (const chunk of stream) {
+                    writeStream.write(chunk);
+                }
+                writeStream.end();
+
+                await new Promise((resolve, reject) => {
+                    writeStream.on('finish', resolve);
+                    writeStream.on('error', reject);
+                });
+
+                // Verify file
+                const stats = fs.statSync(inputPath);
+                if (stats.size === 0) {
+                    throw new Error('Downloaded file is empty');
+                }
+
+                // Convert using ffmpeg
+                await new Promise((resolve, reject) => {
+                    const ffmpeg = require('fluent-ffmpeg');
+                    
+                    ffmpeg(inputPath)
+                        .toFormat('mp3')
+                        .audioCodec('libmp3lame')
+                        .audioBitrate('192k')
+                        .audioChannels(2)
+                        .audioFrequency(44100)
+                        .on('start', () => {
+                            console.log('[TOAUDIO] Conversion started');
+                        })
+                        .on('progress', (progress) => {
+                            if (progress.percent) {
+                                console.log(`[TOAUDIO] Processing: ${Math.round(progress.percent)}%`);
+                            }
+                        })
+                        .on('end', () => {
+                            console.log('[TOAUDIO] Conversion completed');
+                            resolve();
+                        })
+                        .on('error', (err) => {
+                            console.error('[TOAUDIO] FFmpeg error:', err.message);
+                            reject(new Error(`Conversion failed: ${err.message}`));
+                        })
+                        .save(outputPath);
+                });
+
+                // Check output file
+                if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+                    throw new Error('Conversion produced empty file');
+                }
+
+                // Send audio
+                await sock.sendMessage(chatId, { 
+                    audio: { url: outputPath },
+                    mimetype: 'audio/mpeg',
+                    ptt: false,
+                    fileName: `audio_${timestamp}.mp3`
+                }, { quoted: m });
+
+                await react('✅');
+
+            } catch (conversionError) {
+                console.error('[TOAUDIO] Conversion error:', conversionError.message);
+                
+                if (conversionError.message.includes('ffmpeg') || conversionError.message.includes('FFmpeg')) {
+                    throw new Error('FFmpeg is not installed or not in PATH.\nInstall: https://ffmpeg.org/download.html');
+                }
+                throw conversionError;
+                
+            } finally {
+                // Cleanup temp files
+                try {
+                    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+                    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+                } catch (cleanupError) {
+                    console.error('[TOAUDIO] Cleanup error:', cleanupError.message);
+                }
+            }
+
+        } catch (error) {
+            console.error('[TOAUDIO] Command error:', error.message);
+            await react('❌');
+            
+            if (error.message.includes('FFmpeg')) {
+                await reply(`FFmpeg error: ${error.message}\n\nMake sure FFmpeg is installed on your system!`);
+            } else {
+                await reply(`Failed to convert: ${error.message}`);
+            }
+        }
+    }
+},
     {
         name: 'audioformat',
         aliases: ['af'],
