@@ -46,6 +46,127 @@ export default [
     }
   },
 
+
+{
+    name: "spotify",
+    aliases: ["spotifydl", "sp"],
+    category: "downloader",
+    desc: "Download songs from Spotify",
+    usage: ".spotify <song/artist> or .spotify <spotify-url>",
+
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react } = context;
+        const text = args.slice(1).join(' ').trim();
+
+        try {
+            if (!text) {
+                return await reply('Usage: .spotify <song/artist/keywords or Spotify URL>\n\nExample: .spotify Faded\nExample: .spotify https://open.spotify.com/track/...');
+            }
+
+            // Check if input is a Spotify URL
+            const isSpotifyUrl = text.includes('open.spotify.com/track/');
+            
+            let audioUrl, trackInfo;
+
+            if (isSpotifyUrl) {
+                // Direct Spotify URL
+                await react('🎼');
+                const apiUrl = `https://casper-tech-apis.vercel.app/api/downloader/sportify?url=${encodeURIComponent(text)}`;
+                const { data } = await axios.get(apiUrl, { 
+                    timeout: 20000, 
+                    headers: { 'user-agent': 'Mozilla/5.0' } 
+                });
+
+                if (!data?.success || !data?.track) {
+                    throw new Error('No result from Spotify downloader');
+                }
+
+                const track = data.track;
+                audioUrl = track.audio?.url;
+                trackInfo = {
+                    title: track.title || 'Unknown Title',
+                    artist: track.artist || 'Unknown Artist',
+                    duration: track.duration || '',
+                    thumbnail: track.thumbnail || track.album?.cover,
+                    spotifyUrl: track.spotify_url || text
+                };
+
+            } else {
+                // Search query
+                await react('🔍');
+                const apiUrl = `https://casper-tech-apis.vercel.app/api/play/sportify?q=${encodeURIComponent(text)}`;
+                const { data } = await axios.get(apiUrl, { 
+                    timeout: 20000, 
+                    headers: { 'user-agent': 'Mozilla/5.0' } 
+                });
+
+                if (!data?.success || !data?.results || data.results.length === 0) {
+                    throw new Error('No results found');
+                }
+
+                // Get first result
+                const result = data.results[0];
+                audioUrl = result.download_url;
+                trackInfo = {
+                    title: result.title || result.name || 'Unknown Title',
+                    artist: result.artists?.join(', ') || result.artist || 'Unknown Artist',
+                    duration: result.duration?.formatted || '',
+                    thumbnail: result.thumbnail || result.album?.cover,
+                    spotifyUrl: result.spotify_url,
+                    album: result.album?.name,
+                    popularity: result.popularity
+                };
+            }
+
+            if (!audioUrl) {
+                await react('❌');
+                return await reply('No downloadable audio found.');
+            }
+
+            // Build caption
+            let caption = `Spotify Download\n\n`;
+            caption += `Title: ${trackInfo.title}\n`;
+            caption += `Artist: ${trackInfo.artist}\n`;
+            if (trackInfo.album) caption += `Album: ${trackInfo.album}\n`;
+            if (trackInfo.duration) caption += `Duration: ${trackInfo.duration}\n`;
+            if (trackInfo.popularity) caption += `Popularity: ${trackInfo.popularity}%\n`;
+            if (trackInfo.spotifyUrl) caption += `\nLink: ${trackInfo.spotifyUrl}`;
+
+            // Send thumbnail with caption
+            if (trackInfo.thumbnail) {
+                await sock.sendMessage(chatId, { 
+                    image: { url: trackInfo.thumbnail }, 
+                    caption: caption
+                }, { quoted: m });
+            } else {
+                await reply(caption);
+            }
+
+            // Send audio file
+            const cleanTitle = (trackInfo.title || 'song').replace(/[\\/:*?"<>|]/g, '');
+            await sock.sendMessage(chatId, {
+                audio: { url: audioUrl },
+                mimetype: 'audio/mpeg',
+                fileName: `${cleanTitle.substring(0, 50)}.mp3`
+            }, { quoted: m });
+
+            await react('🪩');
+
+        } catch (error) {
+            console.error('[SPOTIFY] error:', error.message);
+            await react('❌');
+            
+            if (error.message.includes('timeout')) {
+                await reply('Request timeout. Try again or use a different search.');
+            } else if (error.message.includes('No results')) {
+                await reply('No results found. Try different keywords or a direct Spotify URL.');
+            } else {
+                await reply(`Failed to fetch Spotify: ${error.message}`);
+            }
+        }
+    }
+},
+
   {
     name: "shazam",
     aliases: ["identifysong", "whatsong"],
