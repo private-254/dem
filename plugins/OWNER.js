@@ -345,7 +345,7 @@ Code expires in 60 seconds.`;
   },
 
   {
-    name: 'antideletepm',
+    name: 'antidelete private',
     aliases: ['antidelpm'],
     category: 'owner',
     description: 'Anti-delete for private messages only',
@@ -669,59 +669,102 @@ Code expires in 60 seconds.`;
 
   {
     name: "lyrics",
-    description: "Get lyrics for any song",
+    aliases: ["lyric"],
     category: "SEARCH MENU",
-    usage: ".lyrics <song name> - <artist>",
-    async execute(sock, m, args, context) {
-      try {
-        const chatId = m.key.remoteJid;
-        const query = args.slice(1).join(' ').trim();
+    desc: "Find song lyrics",
+    usage: ".lyrics <song name>",
 
-        if (!query) {
-          await context.react('✅');
-          return await context.replyPlain({
-            text: 'Please provide a song name.\n\nExample: .lyrics Shape of You - Ed Sheeran'
-          }, { quoted: m });
+    execute: async (sock, m, args, context) => {
+        const { chatId, reply, react } = context;
+        const songTitle = args.slice(1).join(' ').trim();
+
+        try {
+            if (!songTitle) {
+                return await reply('Please enter the song name!\n\nUsage: .lyrics <song name>\nExample: .lyrics Faded');
+            }
+
+            await react('🔍');
+
+            // Fetch lyrics
+            const apiUrl = `https://lyricsapi.fly.dev/api/lyrics?q=${encodeURIComponent(songTitle)}`;
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) {
+                throw new Error('Lyrics API failed');
+            }
+
+            const data = await response.json();
+            const lyrics = data?.result?.lyrics;
+            const songInfo = data?.result;
+
+            if (!lyrics) {
+                await react('❌');
+                return await reply(`No lyrics found for "${songTitle}"`);
+            }
+
+            // Get album artwork
+            let artworkUrl = null;
+            try {
+                const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(songTitle)}&entity=song&limit=1`;
+                const itunesRes = await fetch(itunesUrl);
+                if (itunesRes.ok) {
+                    const itunesData = await itunesRes.json();
+                    if (itunesData.results?.length > 0) {
+                        artworkUrl = itunesData.results[0].artworkUrl100?.replace('100x100', '300x300');
+                    }
+                }
+            } catch (artError) {
+                console.log('[LYRICS] Artwork error:', artError.message);
+            }
+
+            // Prepare caption
+            const title = songInfo?.title || songTitle;
+            const artist = songInfo?.artist || 'Unknown Artist';
+            const album = songInfo?.album || 'Unknown Album';
+            
+            // Truncate lyrics if too long
+            const maxChars = 4096;
+            let displayLyrics = lyrics;
+            if (lyrics.length > maxChars) {
+                displayLyrics = lyrics.substring(0, maxChars - 100) + '...\n\n[Lyrics truncated due to length]';
+            }
+
+            const caption = `🎵 ${title}\n👤 ${artist}\n💿 ${album}\n\n📝 Lyrics:\n${displayLyrics}`;
+
+            await react('📝');
+
+            // Send with or without image
+            if (artworkUrl) {
+                await sock.sendMessage(chatId, {
+                    image: { url: artworkUrl },
+                    caption: caption.substring(0, 1024) // Image captions have shorter limit
+                }, { quoted: m });
+                
+                // If lyrics are long, send remaining as text
+                if (lyrics.length > 1024) {
+                    const remainingText = caption.substring(1024);
+                    if (remainingText.length > 0) {
+                        await reply(remainingText);
+                    }
+                }
+            } else {
+                await reply(caption);
+            }
+
+            await react('🎵');
+
+        } catch (error) {
+            console.error('[LYRICS] Error:', error.message);
+            await react('❌');
+            
+            if (error.message.includes('fetch') || error.message.includes('network')) {
+                await reply('Network error. Please try again.');
+            } else {
+                await reply(`Failed to fetch lyrics for "${songTitle}"`);
+            }
         }
-
-        await context.react('⭐');
-        await context.replyPlain({ text: 'Searching for lyrics...' }, { quoted: m });
-
-        const response = await axios.get(`https://lyricsapi.fly.dev/api/lyrics?q=${encodeURIComponent(query)}`);
-        const result = response.data;
-
-        if (!result.status || !result.result) {
-          return await context.replyPlain({
-            text: 'Lyrics not found. Please check the song name and try again.'
-          }, { quoted: m });
-        }
-
-        const lyricsData = result.result;
-        let lyricsText = `${lyricsData.title}\n`;
-        lyricsText += `Artist: ${lyricsData.artist}\n\n`;
-        lyricsText += `Lyrics:\n\n${lyricsData.lyrics}`;
-
-        if (lyricsText.length > 4000) {
-          const parts = lyricsText.match(/.{1,3900}/g);
-          for (let i = 0; i < parts.length && i < 3; i++) {
-            await context.replyPlain({
-              text: i === 0 ? parts[i] : `Continued...\n\n${parts[i]}`
-            }, { quoted: m });
-          }
-        } else {
-          await context.replyPlain({
-            text: lyricsText
-          }, { quoted: m });
-        }
-
-      } catch (error) {
-        console.error('Lyrics Command Error:', error);
-        await context.replyPlain({
-          text: 'Failed to fetch lyrics. Please try again later.'
-        }, { quoted: m });
-      }
     }
-  },
+},
 
   {
     name: 'sudo',
