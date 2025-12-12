@@ -61,89 +61,84 @@ async function extractMentionedJid(sock, message, chatId) {
 export default [
   {
     name: 'pair',
-    aliases: ['paircode'],
-    category: 'owner',
-    execute: async (sock, message, args, context) => {
-      if (!message.key.fromMe && !context.senderIsSudo) {
-        return context.reply("This command is only for the owner.");
-      }
+    aliases: ['paircode', 'qr'],
+    category: 'OWNER MENU',
+    description: 'Generate WhatsApp pairing code',
+    usage: '.pair <phone number with country code>',
 
-      const text = args.slice(1).join(' ');
-      if (!text) {
-        return context.replyPlain('Provide a phone number.\n\nExample: .pair 254701234567');
-      }
+    execute: async (sock, m, args, context) => {
+        const { reply, react, senderIsSudo } = context;
 
-      const phoneNumber = text.replace(/\D/g, '');
-
-      if (phoneNumber.length < 10) {
-        return context.replyPlain('Invalid phone number. Must include country code.\nExample: .pair 254701234567');
-      }
-
-      await context.replyPlain('Generating pairing code...');
-
-      try {
-        const apiUrl = `https://davexsessionpair-7f789a0c7afd.herokuapp.com/pair/code?number=${phoneNumber}`;
-
-        const response = await axios.get(apiUrl, {
-          timeout: 45000,
-          headers: { 'Accept': 'application/json' }
-        });
-
-        const data = response.data;
-
-        let code =
-          data?.code ||
-          data?.pairingCode ||
-          data?.pair_code ||
-          data?.result ||
-          (typeof data === "string" ? data : null);
-
-        if (
-          !code ||
-          code === "Service Unavailable" ||
-          code.toLowerCase().includes("unavailable") ||
-          code.toLowerCase().includes("error") ||
-          code.length < 3
-        ) {
-          return context.replyPlain("Pairing code could not be generated. Try again in 10 seconds.");
+        // Owner check
+        if (!senderIsSudo) {
+            return await reply('Owner only command!');
         }
 
-        const pairingMessage = `DAVE-MD PAIRING CODE
+        try {
+            await react('🔐');
 
-Code: ${code}
+            const text = args.slice(1).join(' ');
+            if (!text) {
+                return await reply('Provide a phone number.\n\nExample: .pair 254701234567');
+            }
 
-Number: +${phoneNumber}
+            const phoneNumber = text.replace(/\D/g, '');
+            
+            if (phoneNumber.length < 10) {
+                return await reply('Invalid phone number. Include country code.\nExample: .pair 254701234567');
+            }
 
-HOW TO LINK:
-1. Open WhatsApp
-2. Tap ⋮ (3 dots)
-3. Select Linked Devices
-4. Tap Link a Device
-5. Tap Link with phone number instead
-6. Enter the code above
+            await reply('Generating pairing code...');
 
-Code expires in 60 seconds.`;
+            const apiUrl = `https://davexsessionpair-7f789a0c7afd.herokuapp.com/pair/code?number=${phoneNumber}`;
 
-        await context.replyPlain(pairingMessage);
+            const response = await axios.get(apiUrl, {
+                timeout: 15000,
+                headers: { 
+                    'Accept': 'application/json',
+                    'User-Agent': 'Dave-MD-Bot'
+                }
+            });
 
-      } catch (error) {
-        console.error('Pair command error:', error);
+            let code = response.data?.code || 
+                      response.data?.pairingCode || 
+                      response.data?.pair_code || 
+                      response.data?.result || 
+                      response.data;
 
-        let msg = "Error generating pairing code.";
+            if (!code || typeof code !== 'string' || code.length < 3) {
+                return await reply('Invalid response from pairing server.');
+            }
 
-        if (error.code === 'ECONNABORTED') {
-          msg = "Request timed out. Please try again.";
-        } else if (error.response) {
-          msg = "Server responded with an error. Try again later.";
-        } else if (error.request) {
-          msg = "Cannot reach pairing server. Check network or server status.";
+            const pairingMessage = `*PAIRING CODE*\n\n` +
+                `Number: +${phoneNumber}\n` +
+                `Code: ${code}\n\n` +
+                `How to use:\n` +
+                `1. Open WhatsApp\n` +
+                `2. Go to Linked Devices\n` +
+                `3. Tap "Link a Device"\n` +
+                `4. Choose "Link with phone number"\n` +
+                `5. Enter the code above`;
+
+            await reply(pairingMessage);
+            await react('✅');
+
+        } catch (error) {
+            console.error('[PAIR] Error:', error.message);
+            await react('❌');
+            
+            if (error.code === 'ECONNABORTED') {
+                await reply('Request timeout. Try again.');
+            } else if (error.response) {
+                await reply(`Server error: ${error.response.status}`);
+            } else if (error.request) {
+                await reply('Cannot reach pairing server.');
+            } else {
+                await reply('Failed to generate pairing code.');
+            }
         }
-
-        await context.replyPlain(msg);
-      }
     }
-  },
-
+},
   {
     name: 'block',
     category: 'owner',
