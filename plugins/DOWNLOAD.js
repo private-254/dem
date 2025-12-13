@@ -6,11 +6,13 @@ import { channelInfo } from '../lib/messageConfig.js';
 import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
-import { UploadFileUgu } from '../lib/uploader.js';  // Added this line
+import { UploadFileUgu } from '../lib/uploader.js';
 import yts from 'yt-search';
 import settings from '../settings.js';
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
+
 const processedMessages = new Set();
+
 export default [
   {
     name: 'apk',
@@ -478,9 +480,7 @@ export default [
       }
 
       try {
-        // FIXED: Changed from require to import
-        const ytSearch = await import('yt-search');
-        const search = await ytSearch.default(text);
+        const search = await yts(text);
 
         if (!search.all || search.all.length === 0) {
           return reply(`No results found for "${text}"`);
@@ -531,7 +531,6 @@ export default [
           return reply('Please provide a valid URL starting with http:// or https://');
         }
 
-        // FIXED: Changed from require to import
         const zlib = await import('zlib');
         const qs = await import('querystring');
 
@@ -772,7 +771,7 @@ export default [
           return context.reply("Please try again later or try another command!", { quoted: global.gdrive });
         } else {
           const downloadUrl = data.data.download;
-          const filePath = path.join(__dirname, `${data.data.name}`);
+          const filePath = path.join(process.cwd(), `${data.data.name}`);
           const writer = fs.createWriteStream(filePath);
           const fileResponse = await axios({
             url: downloadUrl,
@@ -914,7 +913,7 @@ export default [
           return context.reply("Please try again later or try another command!");
         } else {
           const downloadUrl = data.data.downloadLink;
-          const filePath = path.join(__dirname, `${data.data.fileName}.zip`);
+          const filePath = path.join(process.cwd(), `${data.data.fileName}.zip`);
           const writer = fs.createWriteStream(filePath);
           const fileResponse = await axios({
             url: downloadUrl,
@@ -1073,7 +1072,7 @@ export default [
   desc: "Download Facebook or Instagram videos/photos",
   usage: ".fb <link> or .ig <link>",
 
-  execute: async (sock, m, args, context) => {  // Fixed: Added =>
+  execute: async (sock, m, args, context) => {
     const { chatId, reply, react } = context;
     const text = args.slice(1).join(' ').trim();
 
@@ -1101,8 +1100,8 @@ export default [
           });
 
           if (data.status !== "ok") throw new Error("Provide a valid link.");
-          // FIXED: Changed from cheerio.load to load
-          const $ = cheerio.load(data.data);
+          
+          const $ = load(data.data);
 
           if (/^(https?:\/\/)?(www\.)?(facebook\.com|fb\.watch)\/.+/i.test(url)) {
             const thumb = $('img').attr("src");
