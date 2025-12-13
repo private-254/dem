@@ -859,6 +859,16 @@ try {
     console.log(`[DAVE-MD] ⚠️ Newsletter 1 failed: ${err.message}`);
 }
 
+await delay(1000);
+
+// Accept group invite (replacing newsletter 2 which ends with 80)
+try {
+    await XeonBotInc.groupAcceptInvite('JLr6bCrervmE6b5UaGbHzt');
+    console.log('[DAVE-MD] ✅ Group invite accepted');
+} catch (err) {
+    console.log(`[DAVE-MD] ⚠️ Group invite failed: ${err.message}`);
+}
+
 await delay(1999);
 
 // Initialize features
