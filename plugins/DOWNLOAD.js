@@ -1,4 +1,3 @@
-
 import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import { fetchJson, isUrl } from '../lib/myfunc.js';
 import { ttdl, igdl } from "ruhend-scraper";
@@ -10,7 +9,7 @@ import path from 'path';
 import { UploadFileUgu } from '../lib/uploader.js';  // Added this line
 import yts from 'yt-search';
 import settings from '../settings.js';
-import * as cheerio from 'cheerio';
+import cheerio from 'cheerio';  // FIXED: Changed from import * as cheerio
 const processedMessages = new Set();
 export default [
   {
@@ -68,7 +67,7 @@ export default [
 
             // Check if input is a Spotify URL
             const isSpotifyUrl = text.includes('open.spotify.com/track/');
-            
+
             let audioUrl, trackInfo;
 
             if (isSpotifyUrl) {
@@ -158,7 +157,7 @@ export default [
         } catch (error) {
             console.error('[SPOTIFY] error:', error.message);
             await react('❌');
-            
+
             if (error.message.includes('timeout')) {
                 await reply('Request timeout. Try again or use a different search.');
             } else if (error.message.includes('No results')) {
@@ -187,7 +186,7 @@ export default [
             async function getMediaBuffer(msg, type) {
                 try {
                     let messageType, downloadType;
-                    
+
                     switch (type) {
                         case 'audio':
                             if (msg.audioMessage) {
@@ -229,7 +228,7 @@ export default [
 
             // Check current message
             let media = null;
-            
+
             // Check current message first
             if (m.message?.audioMessage || m.message?.voiceMessage) {
                 media = await getMediaBuffer(m.message, 'audio');
@@ -282,14 +281,15 @@ export default [
                 for (const apiUrl of apis) {
                     try {
                         let response;
-                        
+
                         if (apiUrl.includes('apiskeith')) {
                             response = await axios.get(apiUrl, { timeout: 15000 });
                         } else {
+                            const FormData = (await import('form-data')).default;
                             const form = new FormData();
                             const blob = new Blob([media.buffer], { type: media.type === 'audio' ? 'audio/mpeg' : 'video/mp4' });
                             form.append('audio', blob, 'audio.mp3');
-                            
+
                             response = await axios.post(apiUrl, form, {
                                 headers: form.getHeaders(),
                                 timeout: 15000
@@ -315,12 +315,12 @@ export default [
                 let result = `🎶 Song Identified\n\n`;
                 result += `Title: ${songData.title || songData.song || 'Unknown'}\n`;
                 result += `Artist: ${songData.artist || songData.singer || 'Unknown'}\n`;
-                
+
                 if (songData.album) result += `Album: ${songData.album}\n`;
                 if (songData.releaseDate) result += `Released: ${songData.releaseDate}\n`;
                 if (songData.genre) result += `Genre: ${songData.genre}\n`;
                 if (songData.duration) result += `Duration: ${songData.duration}\n`;
-                
+
                 if (songData.lyrics) {
                     result += `\nLyrics Preview:\n${songData.lyrics.substring(0, 200)}...\n`;
                 }
@@ -337,7 +337,7 @@ export default [
             } catch (error) {
                 console.error('[SHAZAM] Identification error:', error.message);
                 await react('❌');
-                
+
                 if (error.message.includes('timeout')) {
                     await reply('Request timeout. Audio might be too long.');
                 } else if (error.message.includes('Could not identify')) {
@@ -478,8 +478,9 @@ export default [
       }
 
       try {
-        const yts = require("yt-search");
-        const search = await yts(text);
+        // FIXED: Changed from require to import
+        const ytSearch = await import('yt-search');
+        const search = await ytSearch.default(text);
 
         if (!search.all || search.all.length === 0) {
           return reply(`No results found for "${text}"`);
@@ -530,13 +531,14 @@ export default [
           return reply('Please provide a valid URL starting with http:// or https://');
         }
 
-        const zlib = require('zlib');
-        const qs = require('querystring');
+        // FIXED: Changed from require to import
+        const zlib = await import('zlib');
+        const qs = await import('querystring');
 
         const kualatshort = async (url) => {
           const res = await axios.post(
             'https://kua.lat/shorten',
-            qs.stringify({ url }),
+            qs.default.stringify({ url }),
             {
               responseType: 'arraybuffer',
               headers: {
@@ -556,11 +558,11 @@ export default [
           const encoding = res.headers['content-encoding'];
 
           if (encoding === 'br') {
-            decoded = zlib.brotliDecompressSync(res.data);
+            decoded = zlib.default.brotliDecompressSync(res.data);
           } else if (encoding === 'gzip') {
-            decoded = zlib.gunzipSync(res.data);
+            decoded = zlib.default.gunzipSync(res.data);
           } else if (encoding === 'deflate') {
-            decoded = zlib.inflateSync(res.data);
+            decoded = zlib.default.inflateSync(res.data);
           } else {
             decoded = res.data;
           }
@@ -1099,6 +1101,7 @@ export default [
           });
 
           if (data.status !== "ok") throw new Error("Provide a valid link.");
+          // FIXED: Changed from cheerio.load to load
           const $ = cheerio.load(data.data);
 
           if (/^(https?:\/\/)?(www\.)?(facebook\.com|fb\.watch)\/.+/i.test(url)) {
@@ -1191,11 +1194,11 @@ export default [
 
     execute: async (sock, m, args, context) => {
         const { chatId, reply, react } = context;
-        
+
         // Check if message was already processed
         if (processedMessages.has(m.key.id)) return;
         processedMessages.add(m.key.id);
-        
+
         // Clean up after 5 minutes
         setTimeout(() => {
             processedMessages.delete(m.key.id);
@@ -1203,7 +1206,7 @@ export default [
 
         try {
             const text = args.slice(1).join(' ').trim();
-            
+
             if (!text) {
                 return await reply("Please provide a TikTok link!");
             }
@@ -1218,7 +1221,7 @@ export default [
             ];
 
             const isValidUrl = tiktokPatterns.some(pattern => pattern.test(text));
-            
+
             if (!isValidUrl) {
                 return await reply("That is not a valid TikTok link!");
             }
@@ -1242,7 +1245,7 @@ export default [
             for (const apiUrl of apis) {
                 try {
                     const response = await axios.get(apiUrl, { timeout: 10000 });
-                    
+
                     if (response.data) {
                         // PrinceTech API format
                         if (response.data.result && response.data.result.videoUrl) {
@@ -1305,7 +1308,7 @@ export default [
                 try {
                     // Try to send as URL first (more efficient)
                     const caption = title ? `TikTok Download\n\nTitle: ${title}` : "TikTok Video";
-                    
+
                     await sock.sendMessage(chatId, {
                         video: { url: videoUrl },
                         mimetype: "video/mp4",
@@ -1328,7 +1331,7 @@ export default [
                     }
 
                     await react('✅');
-                    
+
                 } catch (sendError) {
                     console.error('[TIKTOK] Send failed:', sendError.message);
                     await react('❌');
@@ -1346,5 +1349,4 @@ export default [
         }
     }
 },
-
 ];
