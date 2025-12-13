@@ -9,7 +9,7 @@ import path from 'path';
 import { UploadFileUgu } from '../lib/uploader.js';  // Added this line
 import yts from 'yt-search';
 import settings from '../settings.js';
-import cheerio from 'cheerio';  // FIXED: Changed from import * as cheerio
+import * as cheerio from 'cheerio';
 const processedMessages = new Set();
 export default [
   {
