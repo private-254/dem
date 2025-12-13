@@ -7,7 +7,6 @@ import fs from 'fs';
 import path from 'path';
 import yts from 'yt-search';
 import settings from '../settings.js';
-import * as cheerio from 'cheerio';
 const processedMessages = new Set();
 export default [
   {
@@ -1016,124 +1015,280 @@ execute: async (sock, m, args, context) => {
     }
   },
 
-  {
-  name: "fb",
-  aliases: ["facebook", "fbdl", "ig", "instagram", "igdl"],
-  category: "downloader",
-  desc: "Download Facebook or Instagram videos/photos",
-  usage: ".fb <link> or .ig <link>",
+   {
+    name: "fb",
+    aliases: ["facebook", "fbdl"],
+    category: "downloader",
+    desc: "Download Facebook videos",
+    usage: ".fb <facebook-video-link>",
 
-  execute: async (sock, m, args, context) => {  // Fixed: Added =>
-    const { chatId, reply, react } = context;
-    const text = args.slice(1).join(' ').trim();
+    execute: async (sock, m, args, context) => {
+      const { chatId, reply, react, rawText } = context;
+      const text = rawText.split(' ').slice(1).join(' ').trim();
+      let tempFile = null;
 
-    if (!text) {
-      return reply(`Provide a Facebook or Instagram link!\n\nExample: .fb <link> or .ig <link>`);
-    }
+      try {
+        if (!text) {
+          return await reply("Please provide a Facebook video URL!\n\nExample: .fb https://www.facebook.com/...\nExample: .fb https://fb.watch/...");
+        }
 
-    try {
-      await react("⏳");
+        // Validate Facebook URL patterns
+        const facebookPatterns = [
+          'facebook.com',
+          'fb.watch',
+          'fb.com',
+          'facebook.com/watch/',
+          'facebook.com/reel/',
+          'facebook.com/story.php'
+        ];
+        
+        const isFacebookUrl = facebookPatterns.some(pattern => text.includes(pattern));
+        if (!isFacebookUrl) {
+          return await reply("❌ That is not a valid Facebook video URL.\n\nSupported formats:\n• facebook.com/.../videos/...\n• fb.watch/...\n• facebook.com/reel/...\n• facebook.com/watch/...");
+        }
 
-      await reply("Fetching media... Please wait!");
+        await react("⬇️");
 
-      async function fetchMedia(url) {
+        // Resolve URL (handle redirects)
+        let resolvedUrl = text;
         try {
-          const form = new URLSearchParams();
-          form.append("q", url);
-          form.append("vt", "home");
-
-          const { data } = await axios.post('https://yt5s.io/api/ajaxSearch', form, {
-            headers: {
-              "Accept": "application/json",
-              "X-Requested-With": "XMLHttpRequest",
-              "Content-Type": "application/x-www-form-urlencoded",
+          const res = await axios.get(text, { 
+            timeout: 15000, 
+            maxRedirects: 10, 
+            headers: { 
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
             },
+            validateStatus: (status) => status >= 200 && status < 400
+          });
+          resolvedUrl = res.request?.res?.responseUrl || text;
+        } catch (error) {
+          console.log('URL resolution failed, using original URL');
+        }
+
+        await reply("🔍 Fetching Facebook video...");
+
+        // Helper functions
+        function checkForVideoData(data) {
+          if (!data) return false;
+          const checks = [
+            data.status === true,
+            data.result?.media?.video_hd,
+            data.result?.media?.video_sd,
+            data.result?.url,
+            data.data?.url,
+            data.url,
+            data.download,
+            data.video,
+            Array.isArray(data.data) && data.data.length > 0,
+            typeof data.result === 'string' && data.result.startsWith('http')
+          ];
+          return checks.some(check => check === true);
+        }
+
+        function extractVideoUrl(data) {
+          if (!data) return null;
+          
+          const extractionAttempts = [
+            () => data.result?.media?.video_hd || data.result?.media?.video_sd || data.result?.media?.video,
+            () => data.result?.url,
+            () => data.data?.url,
+            () => data.url || data.download,
+            () => (typeof data.video === 'string' ? data.video : data.video?.url),
+            () => {
+              if (Array.isArray(data.data)) {
+                const hd = data.data.find(item => item.quality === 'HD' || item.quality === 'high');
+                const sd = data.data.find(item => item.quality === 'SD' || item.quality === 'low');
+                return (hd || sd || data.data[0])?.url;
+              }
+              return null;
+            },
+            () => (typeof data.result === 'string' && data.result.startsWith('http') ? data.result : null),
+            () => data.result?.download || data.data?.download
+          ];
+
+          for (const attempt of extractionAttempts) {
+            try {
+              const videoUrl = attempt();
+              if (videoUrl && typeof videoUrl === 'string' && videoUrl.startsWith('http')) {
+                return videoUrl;
+              }
+            } catch (error) {
+              continue;
+            }
+          }
+          return null;
+        }
+
+        function extractTitle(data) {
+          const titleSources = [
+            data.result?.info?.title,
+            data.result?.title,
+            data.title,
+            data.result?.caption,
+            data.data?.title,
+            data.video?.title
+          ];
+          return titleSources.find(title => title && typeof title === 'string') || "Facebook Video";
+        }
+
+        // Try multiple Facebook APIs
+        const facebookApis = [
+          `https://api.hanggts.xyz/download/facebook?url=${encodeURIComponent(resolvedUrl)}`,
+          `https://api.drivex.cc/api/fbdl?url=${encodeURIComponent(resolvedUrl)}`,
+          `https://api.siputzx.my.id/api/downloader/facebook?url=${encodeURIComponent(resolvedUrl)}`,
+          `https://api.ryzendesu.my.id/api/downloader/fbdl?url=${encodeURIComponent(resolvedUrl)}`
+        ];
+        
+        let mediaData = null;
+        let apiName = 'Facebook API';
+        
+        for (const api of facebookApis) {
+          try {
+            const response = await axios.get(api, {
+              timeout: 25000,
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json'
+              }
+            });
+            
+            if (checkForVideoData(response.data)) {
+              mediaData = response.data;
+              apiName = new URL(api).hostname;
+              break;
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+
+        // Fallback to original URL if resolved URL failed
+        if (!mediaData) {
+          for (const api of facebookApis.map(api => api.replace(encodeURIComponent(resolvedUrl), encodeURIComponent(text)))) {
+            try {
+              const response = await axios.get(api, {
+                timeout: 25000,
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Accept': 'application/json'
+                }
+              });
+              
+              if (checkForVideoData(response.data)) {
+                mediaData = response.data;
+                apiName = new URL(api).hostname;
+                break;
+              }
+            } catch (error) {
+              continue;
+            }
+          }
+        }
+
+        if (!mediaData) {
+          await react('❌');
+          return await reply('❌ Failed to download Facebook video.\n\nPossible reasons:\n• Video is private or deleted\n• Link is invalid or not a video\n• Video is age-restricted\n• API is temporarily unavailable\n\nPlease try a different Facebook video link.');
+        }
+
+        const videoUrl = extractVideoUrl(mediaData);
+        const title = extractTitle(mediaData);
+
+        if (!videoUrl) {
+          await react('❌');
+          return await reply('Could not extract video URL. The content might be private or unavailable.');
+        }
+
+        // Try URL method first (most efficient)
+        try {
+          const caption = `🎬 *Facebook Video*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n⬇️ Downloaded successfully!`;
+          
+          await sock.sendMessage(chatId, {
+            video: { url: videoUrl },
+            mimetype: "video/mp4",
+            caption: caption
+          }, { quoted: m });
+          
+          await react('✅');
+          return;
+          
+        } catch (urlError) {
+          console.log('URL method failed, trying buffer method...');
+          
+          // Fallback to buffer method
+          const tempDir = path.join(process.cwd(), 'temp');
+          if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+          
+          tempFile = path.join(tempDir, `fb_${Date.now()}.mp4`);
+          
+          const videoResponse = await axios({
+            method: 'GET',
+            url: videoUrl,
+            responseType: 'stream',
+            timeout: 120000,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'video/mp4,video/*;q=0.9,*/*;q=0.8',
+              'Referer': 'https://www.facebook.com/'
+            }
           });
 
-          if (data.status !== "ok") throw new Error("Provide a valid link.");
-          const $ = cheerio.load(data.data);
+          const writer = fs.createWriteStream(tempFile);
+          videoResponse.data.pipe(writer);
 
-          if (/^(https?:\/\/)?(www\.)?(facebook\.com|fb\.watch)\/.+/i.test(url)) {
-            const thumb = $('img').attr("src");
-            let links = [];
+          await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+            setTimeout(() => reject(new Error('Download timeout')), 120000);
+          });
 
-            $('table tbody tr').each((_, el) => {
-              const quality = $(el).find('.video-quality').text().trim();
-              const link = $(el).find('a.download-link-fb').attr("href");
-              if (quality && link) links.push({ quality, link });
-            });
-
-            if (links.length > 0) return {
-              platform: "Facebook",
-              type: "video",
-              thumb,
-              media: links[0].link
-            };
-
-            if (thumb) return {
-              platform: "Facebook",
-              type: "image",
-              media: thumb
-            };
-
-            throw new Error("Media is invalid.");
-
-          } else if (/^(https?:\/\/)?(www\.)?(instagram\.com\/(p|reel)\/).+/i.test(url)) {
-            const video = $('a[title="Download Video"]').attr("href");
-            const image = $('img').attr("src");
-
-            if (video) return {
-              platform: "Instagram",
-              type: "video",
-              media: video
-            };
-
-            if (image) return {
-              platform: "Instagram",
-              type: "image",
-              media: image
-            };
-
-            throw new Error("Media invalid.");
-          } else {
-            throw new Error("Provide a valid Facebook or Instagram URL.");
+          // Verify download
+          if (!fs.existsSync(tempFile) || fs.statSync(tempFile).size === 0) {
+            throw new Error('Download failed or empty file');
           }
-        } catch (err) {
-          return { error: err.message };
+
+          const caption = `🎬 *Facebook Video*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n⬇️ Downloaded successfully!`;
+          
+          await sock.sendMessage(chatId, {
+            video: fs.readFileSync(tempFile),
+            mimetype: "video/mp4",
+            caption: caption
+          }, { quoted: m });
+
+          await react('✅');
+        }
+
+      } catch (error) {
+        console.error('[FB] Error:', error.message);
+        await react('❌');
+        
+        let errorMessage = "❌ Failed to download Facebook video. ";
+        if (error.message.includes('timeout')) {
+          errorMessage += "The request timed out. Please try again.";
+        } else if (error.message.includes('Network Error')) {
+          errorMessage += "Network error. Please check your connection.";
+        } else if (error.message.includes('404') || error.message.includes('Not Found')) {
+          errorMessage += "Video not found. The link may be invalid or the video was removed.";
+        } else if (error.message.includes('private') || error.message.includes('unavailable')) {
+          errorMessage += "Video is private, deleted, or unavailable.";
+        } else {
+          errorMessage += error.message;
+        }
+        
+        await reply(errorMessage);
+      } finally {
+        // Clean up temp file
+        if (tempFile && fs.existsSync(tempFile)) {
+          try {
+            fs.unlinkSync(tempFile);
+            console.log('Temp file cleaned up');
+          } catch (cleanupError) {
+            console.error('Cleanup error:', cleanupError.message);
+          }
         }
       }
-
-      const res = await fetchMedia(text);
-
-      if (res.error) {
-        await react("❌");
-        return reply(`Error: ${res.error}`);
-      }
-
-      await reply("Media found! Downloading now...");
-
-      if (res.type === "video") {
-        await sock.sendMessage(chatId, {
-          video: { url: res.media },
-          caption: `Downloaded video from ${res.platform}!`
-        }, { quoted: m });
-      } else if (res.type === "image") {
-        await sock.sendMessage(chatId, {
-          image: { url: res.media },
-          caption: `Downloaded photo from ${res.platform}!`
-        }, { quoted: m });
-      }
-
-      await react("✅");
-      await reply("Done!");
-
-    } catch (error) {
-      console.error('[FB/IG] Error:', error);
-      await react("❌");
-      return reply("Failed to get media.");
     }
-  }
-},
+  },
     {
     name: "tiktok",
     aliases: ["tt", "tik"],
