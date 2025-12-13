@@ -1225,134 +1225,156 @@ execute: async (sock, m, args, context) => {
   },
 
    {
-    name: "fb",
-    aliases: ["facebook", "fbdl"],
-    category: "downloader",
-    desc: "Download Facebook videos",
-    usage: ".fb <facebook-video-link>",
+  name: "fb",
+  aliases: ["facebook", "fbdl"],
+  category: "downloader",
+  desc: "Download Facebook videos",
+  usage: ".fb <facebook-video-link>",
 
-    execute: async (sock, m, args, context) => {
-      const { chatId, reply, react, rawText } = context;
-      const text = rawText.split(' ').slice(1).join(' ').trim();
-      let tempFile = null;
+  execute: async (sock, m, args, context) => {
+    const { chatId, reply, react, rawText } = context;
+    const text = rawText.split(' ').slice(1).join(' ').trim();
+    let tempFile = null;
 
+    try {
+      if (!text) {
+        return await reply("Please provide a Facebook video URL!\n\nExample: .fb https://www.facebook.com/...\nExample: .fb https://fb.watch/...");
+      }
+
+      // Validate Facebook URL patterns
+      const facebookPatterns = [
+        'facebook.com',
+        'fb.watch',
+        'fb.com',
+        'facebook.com/watch/',
+        'facebook.com/reel/',
+        'facebook.com/story.php'
+      ];
+      
+      const isFacebookUrl = facebookPatterns.some(pattern => text.includes(pattern));
+      if (!isFacebookUrl) {
+        return await reply("❌ That is not a valid Facebook video URL.\n\nSupported formats:\n• facebook.com/.../videos/...\n• fb.watch/...\n• facebook.com/reel/...\n• facebook.com/watch/...");
+      }
+
+      await react("⬇️");
+
+      // Resolve URL (handle redirects)
+      let resolvedUrl = text;
       try {
-        if (!text) {
-          return await reply("Please provide a Facebook video URL!\n\nExample: .fb https://www.facebook.com/...\nExample: .fb https://fb.watch/...");
-        }
+        const res = await axios.get(text, { 
+          timeout: 15000, 
+          maxRedirects: 10, 
+          headers: { 
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+          },
+          validateStatus: (status) => status >= 200 && status < 400
+        });
+        resolvedUrl = res.request?.res?.responseUrl || text;
+      } catch (error) {
+        console.log('URL resolution failed, using original URL');
+      }
 
-        // Validate Facebook URL patterns
-        const facebookPatterns = [
-          'facebook.com',
-          'fb.watch',
-          'fb.com',
-          'facebook.com/watch/',
-          'facebook.com/reel/',
-          'facebook.com/story.php'
+      await reply("🔍 Fetching Facebook video...");
+
+      // Helper functions
+      function checkForVideoData(data) {
+        if (!data) return false;
+        const checks = [
+          data.status === true,
+          data.result?.media?.video_hd,
+          data.result?.media?.video_sd,
+          data.result?.url,
+          data.data?.url,
+          data.url,
+          data.download,
+          data.video,
+          Array.isArray(data.data) && data.data.length > 0,
+          typeof data.result === 'string' && data.result.startsWith('http')
         ];
+        return checks.some(check => check === true);
+      }
+
+      function extractVideoUrl(data) {
+        if (!data) return null;
         
-        const isFacebookUrl = facebookPatterns.some(pattern => text.includes(pattern));
-        if (!isFacebookUrl) {
-          return await reply("❌ That is not a valid Facebook video URL.\n\nSupported formats:\n• facebook.com/.../videos/...\n• fb.watch/...\n• facebook.com/reel/...\n• facebook.com/watch/...");
-        }
-
-        await react("⬇️");
-
-        // Resolve URL (handle redirects)
-        let resolvedUrl = text;
-        try {
-          const res = await axios.get(text, { 
-            timeout: 15000, 
-            maxRedirects: 10, 
-            headers: { 
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-            },
-            validateStatus: (status) => status >= 200 && status < 400
-          });
-          resolvedUrl = res.request?.res?.responseUrl || text;
-        } catch (error) {
-          console.log('URL resolution failed, using original URL');
-        }
-
-        await reply("🔍 Fetching Facebook video...");
-
-        // Helper functions
-        function checkForVideoData(data) {
-          if (!data) return false;
-          const checks = [
-            data.status === true,
-            data.result?.media?.video_hd,
-            data.result?.media?.video_sd,
-            data.result?.url,
-            data.data?.url,
-            data.url,
-            data.download,
-            data.video,
-            Array.isArray(data.data) && data.data.length > 0,
-            typeof data.result === 'string' && data.result.startsWith('http')
-          ];
-          return checks.some(check => check === true);
-        }
-
-        function extractVideoUrl(data) {
-          if (!data) return null;
-          
-          const extractionAttempts = [
-            () => data.result?.media?.video_hd || data.result?.media?.video_sd || data.result?.media?.video,
-            () => data.result?.url,
-            () => data.data?.url,
-            () => data.url || data.download,
-            () => (typeof data.video === 'string' ? data.video : data.video?.url),
-            () => {
-              if (Array.isArray(data.data)) {
-                const hd = data.data.find(item => item.quality === 'HD' || item.quality === 'high');
-                const sd = data.data.find(item => item.quality === 'SD' || item.quality === 'low');
-                return (hd || sd || data.data[0])?.url;
-              }
-              return null;
-            },
-            () => (typeof data.result === 'string' && data.result.startsWith('http') ? data.result : null),
-            () => data.result?.download || data.data?.download
-          ];
-
-          for (const attempt of extractionAttempts) {
-            try {
-              const videoUrl = attempt();
-              if (videoUrl && typeof videoUrl === 'string' && videoUrl.startsWith('http')) {
-                return videoUrl;
-              }
-            } catch (error) {
-              continue;
+        const extractionAttempts = [
+          () => data.result?.media?.video_hd || data.result?.media?.video_sd || data.result?.media?.video,
+          () => data.result?.url,
+          () => data.data?.url,
+          () => data.url || data.download,
+          () => (typeof data.video === 'string' ? data.video : data.video?.url),
+          () => {
+            if (Array.isArray(data.data)) {
+              const hd = data.data.find(item => item.quality === 'HD' || item.quality === 'high');
+              const sd = data.data.find(item => item.quality === 'SD' || item.quality === 'low');
+              return (hd || sd || data.data[0])?.url;
             }
-          }
-          return null;
-        }
-
-        function extractTitle(data) {
-          const titleSources = [
-            data.result?.info?.title,
-            data.result?.title,
-            data.title,
-            data.result?.caption,
-            data.data?.title,
-            data.video?.title
-          ];
-          return titleSources.find(title => title && typeof title === 'string') || "Facebook Video";
-        }
-
-        // Try multiple Facebook APIs
-        const facebookApis = [
-          `https://api.hanggts.xyz/download/facebook?url=${encodeURIComponent(resolvedUrl)}`,
-          `https://api.drivex.cc/api/fbdl?url=${encodeURIComponent(resolvedUrl)}`,
-          `https://api.siputzx.my.id/api/downloader/facebook?url=${encodeURIComponent(resolvedUrl)}`,
-          `https://api.ryzendesu.my.id/api/downloader/fbdl?url=${encodeURIComponent(resolvedUrl)}`
+            return null;
+          },
+          () => (typeof data.result === 'string' && data.result.startsWith('http') ? data.result : null),
+          () => data.result?.download || data.data?.download
         ];
-        
-        let mediaData = null;
-        let apiName = 'Facebook API';
-        
-        for (const api of facebookApis) {
+
+        for (const attempt of extractionAttempts) {
+          try {
+            const videoUrl = attempt();
+            if (videoUrl && typeof videoUrl === 'string' && videoUrl.startsWith('http')) {
+              return videoUrl;
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+        return null;
+      }
+
+      function extractTitle(data) {
+        const titleSources = [
+          data.result?.info?.title,
+          data.result?.title,
+          data.title,
+          data.result?.caption,
+          data.data?.title,
+          data.video?.title
+        ];
+        return titleSources.find(title => title && typeof title === 'string') || "Facebook Video";
+      }
+
+      // Try multiple Facebook APIs
+      const facebookApis = [
+        `https://api.hanggts.xyz/download/facebook?url=${encodeURIComponent(resolvedUrl)}`,
+        `https://api.drivex.cc/api/fbdl?url=${encodeURIComponent(resolvedUrl)}`,
+        `https://api.siputzx.my.id/api/downloader/facebook?url=${encodeURIComponent(resolvedUrl)}`,
+        `https://api.ryzendesu.my.id/api/downloader/fbdl?url=${encodeURIComponent(resolvedUrl)}`
+      ];
+      
+      let mediaData = null;
+      let apiName = 'Facebook API';
+      
+      for (const api of facebookApis) {
+        try {
+          const response = await axios.get(api, {
+            timeout: 25000,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (checkForVideoData(response.data)) {
+            mediaData = response.data;
+            apiName = new URL(api).hostname;
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      // Fallback to original URL if resolved URL failed
+      if (!mediaData) {
+        for (const api of facebookApis.map(api => api.replace(encodeURIComponent(resolvedUrl), encodeURIComponent(text)))) {
           try {
             const response = await axios.get(api, {
               timeout: 25000,
@@ -1371,133 +1393,111 @@ execute: async (sock, m, args, context) => {
             continue;
           }
         }
+      }
 
-        // Fallback to original URL if resolved URL failed
-        if (!mediaData) {
-          for (const api of facebookApis.map(api => api.replace(encodeURIComponent(resolvedUrl), encodeURIComponent(text)))) {
-            try {
-              const response = await axios.get(api, {
-                timeout: 25000,
-                headers: {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                  'Accept': 'application/json'
-                }
-              });
-              
-              if (checkForVideoData(response.data)) {
-                mediaData = response.data;
-                apiName = new URL(api).hostname;
-                break;
-              }
-            } catch (error) {
-              continue;
-            }
-          }
-        }
-
-        if (!mediaData) {
-          await react('❌');
-          return await reply('❌ Failed to download Facebook video.\n\nPossible reasons:\n• Video is private or deleted\n• Link is invalid or not a video\n• Video is age-restricted\n• API is temporarily unavailable\n\nPlease try a different Facebook video link.');
-        }
-
-        const videoUrl = extractVideoUrl(mediaData);
-        const title = extractTitle(mediaData);
-
-        if (!videoUrl) {
-          await react('❌');
-          return await reply('Could not extract video URL. The content might be private or unavailable.');
-        }
-
-        // Try URL method first (most efficient)
-        try {
-          const caption = `🎬 *Facebook Video*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n⬇️ Downloaded successfully!`;
-          
-          await sock.sendMessage(chatId, {
-            video: { url: videoUrl },
-            mimetype: "video/mp4",
-            caption: caption
-          }, { quoted: m });
-          
-          await react('✅');
-          return;
-          
-        } catch (urlError) {
-          console.log('URL method failed, trying buffer method...');
-          
-          // Fallback to buffer method
-          const tempDir = path.join(process.cwd(), 'temp');
-          if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-          
-          tempFile = path.join(tempDir, `fb_${Date.now()}.mp4`);
-          
-          const videoResponse = await axios({
-            method: 'GET',
-            url: videoUrl,
-            responseType: 'stream',
-            timeout: 120000,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'Accept': 'video/mp4,video/*;q=0.9,*/*;q=0.8',
-              'Referer': 'https://www.facebook.com/'
-            }
-          });
-
-          const writer = fs.createWriteStream(tempFile);
-          videoResponse.data.pipe(writer);
-
-          await new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
-            setTimeout(() => reject(new Error('Download timeout')), 120000);
-          });
-
-          // Verify download
-          if (!fs.existsSync(tempFile) || fs.statSync(tempFile).size === 0) {
-            throw new Error('Download failed or empty file');
-          }
-
-          const caption = `🎬 *Facebook Video*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n⬇️ Downloaded successfully!`;
-          
-          await sock.sendMessage(chatId, {
-            video: fs.readFileSync(tempFile),
-            mimetype: "video/mp4",
-            caption: caption
-          }, { quoted: m });
-
-          await react('✅');
-        }
-
-      } catch (error) {
-        console.error('[FB] Error:', error.message);
+      if (!mediaData) {
         await react('❌');
+        return await reply('❌ Failed to download Facebook video.\n\nPossible reasons:\n• Video is private or deleted\n• Link is invalid or not a video\n• Video is age-restricted\n• API is temporarily unavailable\n\nPlease try a different Facebook video link.');
+      }
+
+      const videoUrl = extractVideoUrl(mediaData);
+      const title = extractTitle(mediaData);
+
+      if (!videoUrl) {
+        await react('❌');
+        return await reply('Could not extract video URL. The content might be private or unavailable.');
+      }
+
+      // Try URL method first (most efficient)
+      try {
+        const caption = `🎬 *Facebook Video*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n⬇️ Downloaded successfully!`;
         
-        let errorMessage = "❌ Failed to download Facebook video. ";
-        if (error.message.includes('timeout')) {
-          errorMessage += "The request timed out. Please try again.";
-        } else if (error.message.includes('Network Error')) {
-          errorMessage += "Network error. Please check your connection.";
-        } else if (error.message.includes('404') || error.message.includes('Not Found')) {
-          errorMessage += "Video not found. The link may be invalid or the video was removed.";
-        } else if (error.message.includes('private') || error.message.includes('unavailable')) {
-          errorMessage += "Video is private, deleted, or unavailable.";
-        } else {
-          errorMessage += error.message;
-        }
+        await sock.sendMessage(chatId, {
+          video: { url: videoUrl },
+          mimetype: "video/mp4",
+          caption: caption
+        }, { quoted: m });
         
-        await reply(errorMessage);
-      } finally {
-        // Clean up temp file
-        if (tempFile && fs.existsSync(tempFile)) {
-          try {
-            fs.unlinkSync(tempFile);
-            console.log('Temp file cleaned up');
-          } catch (cleanupError) {
-            console.error('Cleanup error:', cleanupError.message);
+        await react('✅');
+        return;
+        
+      } catch (urlError) {
+        console.log('URL method failed, trying buffer method...');
+        
+        // Fallback to buffer method
+        const tempDir = path.join(process.cwd(), 'temp');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+        
+        tempFile = path.join(tempDir, `fb_${Date.now()}.mp4`);
+        
+        const videoResponse = await axios({
+          method: 'GET',
+          url: videoUrl,
+          responseType: 'stream',
+          timeout: 120000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'video/mp4,video/*;q=0.9,*/*;q=0.8',
+            'Referer': 'https://www.facebook.com/'
           }
+        });
+
+        const writer = fs.createWriteStream(tempFile);
+        videoResponse.data.pipe(writer);
+
+        await new Promise((resolve, reject) => {
+          writer.on('finish', resolve);
+          writer.on('error', reject);
+          setTimeout(() => reject(new Error('Download timeout')), 120000);
+        });
+
+        // Verify download
+        if (!fs.existsSync(tempFile) || fs.statSync(tempFile).size === 0) {
+          throw new Error('Download failed or empty file');
+        }
+
+        const caption = `🎬 *Facebook Video*\n\n📝 Title: ${title}\n🔧 Source: ${apiName}\n⬇️ Downloaded successfully!`;
+        
+        await sock.sendMessage(chatId, {
+          video: fs.readFileSync(tempFile),
+          mimetype: "video/mp4",
+          caption: caption
+        }, { quoted: m });
+
+        await react('✅');
+      }
+
+    } catch (error) {
+      console.error('[FB] Error:', error.message);
+      await react('❌');
+      
+      let errorMessage = "❌ Failed to download Facebook video. ";
+      if (error.message.includes('timeout')) {
+        errorMessage += "The request timed out. Please try again.";
+      } else if (error.message.includes('Network Error')) {
+        errorMessage += "Network error. Please check your connection.";
+      } else if (error.message.includes('404') || error.message.includes('Not Found')) {
+        errorMessage += "Video not found. The link may be invalid or the video was removed.";
+      } else if (error.message.includes('private') || error.message.includes('unavailable')) {
+        errorMessage += "Video is private, deleted, or unavailable.";
+      } else {
+        errorMessage += error.message;
+      }
+      
+      await reply(errorMessage);
+    } finally {
+      // Clean up temp file
+      if (tempFile && fs.existsSync(tempFile)) {
+        try {
+          fs.unlinkSync(tempFile);
+          console.log('Temp file cleaned up');
+        } catch (cleanupError) {
+          console.error('Cleanup error:', cleanupError.message);
         }
       }
     }
-  },
+  }
+},
     {
     name: "tiktok",
     aliases: ["tt", "tik"],
