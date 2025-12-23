@@ -1,5 +1,3 @@
-
-// help.js - Enhanced version with integrated functions
 const settings = require('../settings');
 const fs = require('fs');
 const path = require('path');
@@ -7,13 +5,8 @@ const os = require('os');
 const { getMenuStyle, getMenuSettings, MENU_STYLES } = require('./menuSettings');
 const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 const { getPrefix, handleSetPrefixCommand } = require('./setprefix');
-
 const { getOwnerName, handleSetOwnerCommand } = require('./setowner');
 
-const more = String.fromCharCode(8206);
-const readmore = more.repeat(4001);
-
-// Utility Functions
 function formatTime(seconds) {
     const days = Math.floor(seconds / (24 * 60 * 60));
     seconds = seconds % (24 * 60 * 60);
@@ -31,40 +24,36 @@ function formatTime(seconds) {
     return time.trim();
 }
 
-function detectHost() {
-    const env = process.env;
+const detectPlatform = () => {
+  if (process.env.DYNO) return "Heroku";
+  if (process.env.RENDER) return "Render";
+  if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "Termux";
+  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "CypherX";
+  if (process.env.P_SERVER_UUID) return "Panel";
+  if (process.env.LXC) return "Linux Container";
+  
+  switch (os.platform()) {
+    case "win32": return "Windows";
+    case "darwin": return "macOS";
+    case "linux": return "Linux";
+    default: return "Unknown";
+  }
+};
 
-    if (env.RENDER || env.RENDER_EXTERNAL_URL) return 'Render';
-    if (env.DYNO || env.HEROKU_APP_DIR || env.HEROKU_SLUG_COMMIT) return 'Heroku';
-    if (env.VERCEL || env.VERCEL_ENV || env.VERCEL_URL) return 'Vercel';
-    if (env.PORTS || env.CYPHERX_HOST_ID) return "CypherXHost";
-    if (env.RAILWAY_ENVIRONMENT || env.RAILWAY_PROJECT_ID) return 'Railway';
-    if (env.REPL_ID || env.REPL_SLUG) return 'Replit';
+const hostName = detectPlatform();
 
-    const hostname = os.hostname().toLowerCase();
-    if (!env.CLOUD_PROVIDER && !env.DYNO && !env.VERCEL && !env.RENDER) {
-        if (hostname.includes('vps') || hostname.includes('server')) return 'VPS';
-        return 'Panel';
-    }
-
-    return 'Unknown Host';
-}
-
-// Memory formatting function
 const formatMemory = (memory) => {
     return memory < 1024 * 1024 * 1024
         ? Math.round(memory / 1024 / 1024) + ' MB'
         : Math.round(memory / 1024 / 1024 / 1024) + ' GB';
 };
 
-// Progress bar function
 const progressBar = (used, total, size = 10) => {
     let percentage = Math.round((used / total) * size);
     let bar = '█'.repeat(percentage) + '░'.repeat(size - percentage);
     return `${bar} ${Math.round((used / total) * 100)}%`;
 };
 
-// Generate Menu Function
 const generateMenu = (pushname, currentMode, hostName, ping, uptimeFormatted, prefix = '.') => {
     const memoryUsage = process.memoryUsage();
     const botUsedMemory = memoryUsage.heapUsed;
@@ -74,131 +63,273 @@ const generateMenu = (pushname, currentMode, hostName, ping, uptimeFormatted, pr
     let newOwner = getOwnerName();
     const menuSettings = getMenuSettings();
     
-    let menu = `┏❐  *❴ DAVE-X BOT ❵* ❐\n`;
-    menu += `┃➥ *User:* ${pushname}\n`;
-    menu += `┃➥ *Owner:* ${newOwner}\n`;
-    menu += `┃➥ *Mode:* ${currentMode}\n`;
-    menu += `┃➥ *Host:* ${hostName}\n`;
-    menu += `┃➥ *Speed:* ${ping} ms\n`;
-    menu += `┃➥ *Prefix:* [${prefix2}]\n`;
+    let menu = `┏━━━━━✧ DAVE-X MENU ✧━━━━━━━\n`;
+    menu += `┃✧ Prefix: [${prefix2}]\n`;
+    menu += `┃✧ Owner: ${newOwner}\n`;
+    menu += `┃✧ Mode: ${currentMode}\n`;
+    menu += `┃✧ Platform: ${hostName}\n`;
+    menu += `┃✧ Speed: ${ping} ms\n`;
     
     if (menuSettings.showUptime) {
-        menu += `┃➥ *Uptime:* ${uptimeFormatted}\n`;
+        menu += `┃✧ Uptime: ${uptimeFormatted}\n`;
     }
     
-    menu += `┃➥ *version:* v${settings.version}\n`;
+    menu += `┃✧ Version: v${settings.version}\n`;
     
     if (menuSettings.showMemory) {
-        menu += `┃➥ *Usage:* ${formatMemory(botUsedMemory)} of ${formatMemory(totalMemory)}\n`;
-        menu += `┃➥ *RAM:* ${progressBar(systemUsedMemory, totalMemory)}\n`;
+        menu += `┃✧ RAM: ${progressBar(systemUsedMemory, totalMemory)}\n`;
     }
     
-    menu += `┗❐\n${readmore}\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Owner Menu
-    menu += `┏❐ \`OWNER MENU\` ❐\n`;
-    menu += `┃ .ban\n┃ .restart\n┃ .unban\n┃ .promote\n┃ .demote\n┃ .mute\n┃ .unmute\n┃ .delete\n┃ .kick\n┃ .warnings\n┃ .antilink\n┃ .antibadword\n┃ .clear\n┃ .chatbot\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ OWNER MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}ban\n`;
+    menu += `┃› ${prefix2}restart\n`;
+    menu += `┃› ${prefix2}unban\n`;
+    menu += `┃› ${prefix2}promote\n`;
+    menu += `┃› ${prefix2}demote\n`;
+    menu += `┃› ${prefix2}mute\n`;
+    menu += `┃› ${prefix2}unmute\n`;
+    menu += `┃› ${prefix2}delete\n`;
+    menu += `┃› ${prefix2}kick\n`;
+    menu += `┃› ${prefix2}warnings\n`;
+    menu += `┃› ${prefix2}antilink\n`;
+    menu += `┃› ${prefix2}antibadword\n`;
+    menu += `┃› ${prefix2}clear\n`;
+    menu += `┃› ${prefix2}chatbot\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Group Menu
-    menu += `┏❐ \`GROUP MENU\` ❐\n`;
-    menu += `┃ .promote\n┃ .demote\n┃ .settings\n┃ .welcome\n┃ .setgpp\n┃ .getgpp\n┃ .listadmin\n┃ .goodbye\n┃ .tagnoadmin\n┃ .tag\n┃ .antilink\n┃ .set welcome\n┃ .listadmin\n┃ .groupinfo\n┃ .admins\n┃ .warn\n┃ .revoke\n┃ .resetlink\n┃ .open\n┃ .close\n┃ .mention\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ GROUP MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}promote\n`;
+    menu += `┃› ${prefix2}demote\n`;
+    menu += `┃› ${prefix2}settings\n`;
+    menu += `┃› ${prefix2}togroupstatus\n`;
+    menu += `┃› ${prefix2}tosgroup\n`;
+    menu += `┃› ${prefix2}welcome\n`;
+    menu += `┃› ${prefix2}setgpp\n`;
+    menu += `┃› ${prefix2}getgpp\n`;
+    menu += `┃› ${prefix2}listadmin\n`;
+    menu += `┃› ${prefix2}goodbye\n`;
+    menu += `┃› ${prefix2}tagnoadmin\n`;
+    menu += `┃› ${prefix2}tag\n`;
+    menu += `┃› ${prefix2}antilink\n`;
+    menu += `┃› ${prefix2}set welcome\n`;
+    menu += `┃› ${prefix2}groupinfo\n`;
+    menu += `┃› ${prefix2}admins\n`;
+    menu += `┃› ${prefix2}warn\n`;
+    menu += `┃› ${prefix2}revoke\n`;
+    menu += `┃› ${prefix2}resetlink\n`;
+    menu += `┃› ${prefix2}open\n`;
+    menu += `┃› ${prefix2}close\n`;
+    menu += `┃› ${prefix2}mention\n`;
+    menu += `┃› ${prefix2}setgdesc\n`;
+    menu += `┃› ${prefix2}leave\n`;
+    menu += `┃› ${prefix2}left\n`;
+    menu += `┃› ${prefix2}killall\n`;
+    menu += `┃› ${prefix2}removeall\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // AI Menu
-    menu += `┏❐ \`AI MENU\` ❐\n`;
-    menu += `┃ .Ai\n┃ .gpt\n┃ .gemini\n┃ .imagine\n┃ .flux\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ AI MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}Ai\n`;
+    menu += `┃› ${prefix2}gpt\n`;
+    menu += `┃› ${prefix2}gemini\n`;
+    menu += `┃› ${prefix2}imagine\n`;
+    menu += `┃› ${prefix2}flux\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Setting Menu
-    menu += `┏❐ \`SETTING MENU\` ❐\n`;
-    menu += `┃ .mode\n┃ .autostatus\n┃ .pmblock\n┃ .setmention\n┃ .autoread\n┃ .clearsession\n┃ .antidelete\n┃ .cleartmp\n┃ .autoreact\n┃ .getpp\n┃ .setpp\n┃ .sudo\n┃ .autotyping\n┃ .setmenu\n┃ .setprefix\n`;
-    menu += `┗❐\n${readmore}\n`;
+    menu += `┏━━━━━✧ SETTINGS MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}mode\n`;
+    menu += `┃› ${prefix2}autostatus\n`;
+    menu += `┃› ${prefix2}pmblock\n`;
+    menu += `┃› ${prefix2}setmention\n`;
+    menu += `┃› ${prefix2}autoread\n`;
+    menu += `┃› ${prefix2}clearsession\n`;
+    menu += `┃› ${prefix2}antidelete\n`;
+    menu += `┃› ${prefix2}cleartmp\n`;
+    menu += `┃› ${prefix2}autoreact\n`;
+    menu += `┃› ${prefix2}getpp\n`;
+    menu += `┃› ${prefix2}setpp\n`;
+    menu += `┃› ${prefix2}sudo\n`;
+    menu += `┃› ${prefix2}autotyping\n`;
+    menu += `┃› ${prefix2}setmenu\n`;
+    menu += `┃› ${prefix2}menuconfig reset\n`;
+    menu += `┃› ${prefix2}setmenu toggle\n`;
+    menu += `┃› ${prefix2}setprefix\n`;
+    menu += `┃› ${prefix2}setprefix reset\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Main Menu
-    menu += `┏❐ \`MAIN MENU\` ❐\n`;
-    menu += `┃ .url\n┃ .tagall\n┃ .yts\n┃ .play\n┃ .spotify\n┃ .trt\n┃ .alive\n┃ .ping\n┃ .apk\n┃ .vv\n┃ .video\n┃ .song\n┃ .ssweb\n┃ .instagram\n┃ .facebook\n┃ .tiktok\n┃ .ytmp4\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ MAIN MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}yts\n`;
+    menu += `┃› ${prefix2}url\n`;
+    menu += `┃› ${prefix2}tourl\n`;
+    menu += `┃› ${prefix2}block\n`;
+    menu += `┃› ${prefix2}listblock\n`;
+    menu += `┃› ${prefix2}blocklist\n`;
+    menu += `┃› ${prefix2}tagall\n`;
+    menu += `┃› ${prefix2}play\n`;
+    menu += `┃› ${prefix2}spotify\n`;
+    menu += `┃› ${prefix2}trt\n`;
+    menu += `┃› ${prefix2}runtime\n`;
+    menu += `┃› ${prefix2}ping\n`;
+    menu += `┃› ${prefix2}apk\n`;
+    menu += `┃› ${prefix2}vv\n`;
+    menu += `┃› ${prefix2}video\n`;
+    menu += `┃› ${prefix2}song\n`;
+    menu += `┃› ${prefix2}ssweb\n`;
+    menu += `┃› ${prefix2}instagram\n`;
+    menu += `┃› ${prefix2}facebook\n`;
+    menu += `┃› ${prefix2}tiktok\n`;
+    menu += `┃› ${prefix2}ytmp4\n`;
+    menu += `┃› ${prefix2}shazam\n`;
+    menu += `┃› ${prefix2}find\n`;
+    menu += `┃› ${prefix2}send\n`;
+    menu += `┃› ${prefix2}get\n`;
+    menu += `┃› ${prefix2}tomp3\n`;
+    menu += `┃› ${prefix2}toaudio\n`;
+    menu += `┃› ${prefix2}ytsearch\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Stick Menu
-    menu += `┏❐ \`STICK MENU\` ❐\n`;
-    menu += `┃ .blur\n┃ .simage\n┃ .sticker\n┃ .tgsticker\n┃ .meme\n┃ .take\n┃ .emojimix\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ STICKER MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}blur\n`;
+    menu += `┃› ${prefix2}timage\n`;
+    menu += `┃› ${prefix2}sticker\n`;
+    menu += `┃› ${prefix2}tgsticker\n`;
+    menu += `┃› ${prefix2}meme\n`;
+    menu += `┃› ${prefix2}take\n`;
+    menu += `┃› ${prefix2}emojimix\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Game Menu
-    menu += `┏❐ \`GAME MENU\` ❐\n`;
-    menu += `┃ .tictactoe\n┃ .hangman\n┃ .guess\n┃ .trivia\n┃ .answer\n┃ .truth\n┃ .dare\n┃ .8ball\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ GAME MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}tictactoe\n`;
+    menu += `┃› ${prefix2}hangman\n`;
+    menu += `┃› ${prefix2}guess\n`;
+    menu += `┃› ${prefix2}trivia\n`;
+    menu += `┃› ${prefix2}answer\n`;
+    menu += `┃› ${prefix2}truth\n`;
+    menu += `┃› ${prefix2}dare\n`;
+    menu += `┃› ${prefix2}8ball\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // GitHub Menu
-    menu += `┏❐ \`GITHUB CMD\` ❐\n`;
-    menu += `┃ .git\n┃ .github\n┃ .sc\n┃ .script\n┃ .repo\n`;
-    menu += `┗❐\n${readmore}\n`;
+    menu += `┏━━━━━✧ GITHUB CMD ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}git\n`;
+    menu += `┃› ${prefix2}github\n`;
+    menu += `┃› ${prefix2}sc\n`;
+    menu += `┃› ${prefix2}script\n`;
+    menu += `┃› ${prefix2}repo\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Maker Menu
-    menu += `┏❐ \`MAKER MENU\`❐\n`;
-    menu += `┃ .compliment\n┃ .insult\n┃ .flirt\n┃ .shayari\n┃ .goodnight\n┃ .roseday\n┃ .character\n┃ .wasted\n┃ .ship\n┃ .simp\n┃ .stupid\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ MAKER MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}compliment\n`;
+    menu += `┃› ${prefix2}insult\n`;
+    menu += `┃› ${prefix2}flirt\n`;
+    menu += `┃› ${prefix2}shayari\n`;
+    menu += `┃› ${prefix2}goodnight\n`;
+    menu += `┃› ${prefix2}roseday\n`;
+    menu += `┃› ${prefix2}character\n`;
+    menu += `┃› ${prefix2}wasted\n`;
+    menu += `┃› ${prefix2}ship\n`;
+    menu += `┃› ${prefix2}simp\n`;
+    menu += `┃› ${prefix2}stupid\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Anime Menu
-    menu += `┏❐ \`ANIME MENU\` ❐\n`;
-    menu += `┃ .neko\n┃ .waifu\n┃ .loli\n┃ .nom\n┃ .poke\n┃ .cry\n┃ .kiss\n┃ .pat\n┃ .hug\n┃ .wink\n┃ .facepalm\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ ANIME MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}neko\n`;
+    menu += `┃› ${prefix2}waifu\n`;
+    menu += `┃› ${prefix2}loli\n`;
+    menu += `┃› ${prefix2}nom\n`;
+    menu += `┃› ${prefix2}poke\n`;
+    menu += `┃› ${prefix2}cry\n`;
+    menu += `┃› ${prefix2}kiss\n`;
+    menu += `┃› ${prefix2}pat\n`;
+    menu += `┃› ${prefix2}hug\n`;
+    menu += `┃› ${prefix2}wink\n`;
+    menu += `┃› ${prefix2}facepalm\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Text Maker Menu
-    menu += `┏❐ \`TEXT MAKER MENU\` ❐\n`;
-    menu += `┃ .metallic\n┃ .ice\n┃ .snow\n┃ .impressive\n┃ .matrix\n┃ .light\n┃ .neon\n┃ .devil\n┃ .purple\n┃ .thunder\n┃ .leaves\n┃ .1917\n┃ .arena\n┃ .hacker\n┃ .sand\n┃ .blackpink\n┃ .glitch\n┃ .fire\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ TEXT MAKER MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}metallic\n`;
+    menu += `┃› ${prefix2}ice\n`;
+    menu += `┃› ${prefix2}snow\n`;
+    menu += `┃› ${prefix2}impressive\n`;
+    menu += `┃› ${prefix2}matrix\n`;
+    menu += `┃› ${prefix2}light\n`;
+    menu += `┃› ${prefix2}neon\n`;
+    menu += `┃› ${prefix2}devil\n`;
+    menu += `┃› ${prefix2}purple\n`;
+    menu += `┃› ${prefix2}thunder\n`;
+    menu += `┃› ${prefix2}leaves\n`;
+    menu += `┃› ${prefix2}1917\n`;
+    menu += `┃› ${prefix2}arena\n`;
+    menu += `┃› ${prefix2}hacker\n`;
+    menu += `┃› ${prefix2}sand\n`;
+    menu += `┃› ${prefix2}blackpink\n`;
+    menu += `┃› ${prefix2}glitch\n`;
+    menu += `┃› ${prefix2}fire\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Image Edit Menu
-    menu += `┏❐ \`IMG EDIT\` ❐\n`;
-    menu += `┃ .heart\n┃ .horny\n┃ .circle\n┃ .lgbt\n┃ .lolice\n┃ .stupid\n┃ .namecard\n┃ .tweet\n┃ .ytcomment\n┃ .comrade\n┃ .gay\n┃ .glass\n┃ .jail\n┃ .passed\n┃ .triggered\n`;
-    menu += `┗❐\n`;
+    menu += `┏━━━━━✧ IMAGE EDIT MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}heart\n`;
+    menu += `┃› ${prefix2}horny\n`;
+    menu += `┃› ${prefix2}circle\n`;
+    menu += `┃› ${prefix2}lgbt\n`;
+    menu += `┃› ${prefix2}lolice\n`;
+    menu += `┃› ${prefix2}stupid\n`;
+    menu += `┃› ${prefix2}namecard\n`;
+    menu += `┃› ${prefix2}tweet\n`;
+    menu += `┃› ${prefix2}ytcomment\n`;
+    menu += `┃› ${prefix2}comrade\n`;
+    menu += `┃› ${prefix2}gay\n`;
+    menu += `┃› ${prefix2}glass\n`;
+    menu += `┃› ${prefix2}jail\n`;
+    menu += `┃› ${prefix2}passed\n`;
+    menu += `┃› ${prefix2}triggered\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    menu += `┏━━━━━✧ 🎄 MERRY CHRISTMAS ✧━━━━━━━\n`;
+    menu += `┃✧ Developer: DAVE\n`;
+    menu += `┃✧ Bot: DAVE-X\n`;
+    menu += `┃✧ Version: v${settings.version}\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
     return menu;
 };
 
-// Helper function to safely load thumbnail
 async function loadThumbnail(thumbnailPath) {
     try {
         if (fs.existsSync(thumbnailPath)) {
             return fs.readFileSync(thumbnailPath);
         } else {
             console.log(`Thumbnail not found: ${thumbnailPath}, using fallback`);
-            // Create a simple 1x1 pixel buffer as fallback
             return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
         }
     } catch (error) {
         console.error('Error loading thumbnail:', error);
-        // Return fallback buffer
         return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
     }
 }
 
-// Create fake contact for enhanced replies
 function createFakeContact(message) {
     return {
         key: {
             participants: "0@s.whatsapp.net",
-            remoteJid: "status@broadcast",
-            fromMe: false,
-            id: "DAVE-X-MENU"
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
         },
         message: {
             contactMessage: {
-                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE X\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
+                displayName: "DaveX Menu",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DaveX Bot\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Bot\nEND:VCARD`
             }
         },
         participant: "0@s.whatsapp.net"
     };
 }
 
-// YOUR EXACT MENU STYLE FUNCTION WITH FIXED tylorkids AND fkontak FOR ALL STYLES
 async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thumbnailBuffer, pushname) {
     const fkontak = createFakeContact(message);
     const botname = "DAVE-X BOT";
     const ownername = pushname;
-    const tylorkids = thumbnailBuffer; // Fixed: using thumbnails from assets
+    const tylorkids = thumbnailBuffer;
     const plink = "https://github.com/gifteddevsmd";
 
     if (menustyle === '1') {
@@ -287,40 +418,36 @@ async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thu
             },
         }, {});
     } else {
-        // Default fallback
         await sock.sendMessage(chatId, { 
             text: menulist 
         }, { quoted: fkontak });
     }
 }
 
-// Main help command function
 async function helpCommand(sock, chatId, message) {
-    const pushname = message.pushName || "Unknown User"; 
+    const pushname = message.pushName || "User"; 
     const menuStyle = getMenuStyle();
 
-    console.log('Current menu style:', menuStyle);
+    console.log('Menu style:', menuStyle);
 
     let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
     
-    // Create fake contact for enhanced reply
     const fkontak = createFakeContact(message);
     
     const start = Date.now();
     await sock.sendMessage(chatId, { 
-        text: '_Wait loading menu..._' 
+        text: 'Loading DaveX menu...' 
     }, { quoted: fkontak });
     const end = Date.now();
     const ping = Math.round((end - start) / 2);
 
     const uptimeInSeconds = process.uptime();
     const uptimeFormatted = formatTime(uptimeInSeconds);
-    const currentMode = data.isPublic ? 'public' : 'private';    
-    const hostName = detectHost();
+    const currentMode = data.isPublic ? 'public' : 'private';
+    const hostName = detectPlatform();
     
     const menulist = generateMenu(pushname, currentMode, hostName, ping, uptimeFormatted);
 
-    // Random thumbnail selection from local files
     const thumbnailFiles = [
         'menu1.jpg',
         'menu2.jpg', 
@@ -331,32 +458,27 @@ async function helpCommand(sock, chatId, message) {
     const randomThumbFile = thumbnailFiles[Math.floor(Math.random() * thumbnailFiles.length)];
     const thumbnailPath = path.join(__dirname, '../assets', randomThumbFile);
 
-    // Send reaction
     await sock.sendMessage(chatId, {
         react: { text: '📔', key: message.key }
     });
 
     try {
-        // Load thumbnail using helper function
         const thumbnailBuffer = await loadThumbnail(thumbnailPath);
 
-        // Send menu using YOUR EXACT menu style function
         await sendMenuWithStyle(sock, chatId, message, menulist, menuStyle, thumbnailBuffer, pushname);
 
-        // Success reaction
         await sock.sendMessage(chatId, {
             react: { text: '✅', key: message.key }
         });
 
     } catch (error) {
-        console.error('Error in help command:', error);
-        // Fallback to simple text
+        console.error('Menu error:', error);
         try {
             await sock.sendMessage(chatId, { 
                 text: menulist 
             }, { quoted: fkontak });
         } catch (fallbackError) {
-            console.error('Even fallback failed:', fallbackError);
+            console.error('Fallback error:', fallbackError);
         }
     }
 }
