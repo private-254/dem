@@ -7,7 +7,6 @@ const {
     updateMenuSettings
 } = require('./menuSettings');
 
-// Create fake contact function (same as mute command)
 function createFakeContact(message) {
     return {
         key: {
