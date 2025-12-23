@@ -19,8 +19,27 @@ function initializeWarningsFile() {
     }
 }
 
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "Davex Warning System",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Warning;;;\nFN:Davex Warning System\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Moderation Bot\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
+
 async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
     try {
+        const fakeContact = createFakeContact(message);
+        
         // Initialize files first
         initializeWarningsFile();
 
@@ -28,7 +47,7 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
         if (!chatId.endsWith('@g.us')) {
             await sock.sendMessage(chatId, { 
                 text: 'This command can only be used in groups!'
-            });
+            }, { quoted: fakeContact });
             return;
         }
 
@@ -38,22 +57,22 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
             
             if (!isBotAdmin) {
                 await sock.sendMessage(chatId, { 
-                    text: '🛑 Error: Please make the bot an admin first to use this command.'
-                });
+                    text: 'Please make the bot an admin first to use this command.'
+                }, { quoted: fakeContact });
                 return;
             }
 
             if (!isSenderAdmin) {
                 await sock.sendMessage(chatId, { 
-                    text: '🛑 Error: Only group admins can use the warn command.'
-                });
+                    text: 'Only group admins can use the warn command.'
+                }, { quoted: fakeContact });
                 return;
             }
         } catch (adminError) {
             console.error('Error checking admin status:', adminError);
             await sock.sendMessage(chatId, { 
-                text: '🛑 Error: Please make sure the bot is an admin of this group.'
-            });
+                text: 'Please make sure the bot is an admin of this group.'
+            }, { quoted: fakeContact });
             return;
         }
 
@@ -70,8 +89,8 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
         
         if (!userToWarn) {
             await sock.sendMessage(chatId, { 
-                text: '🛑 Error: Please mention the user or reply to their message to warn!'
-            });
+                text: 'Please mention the user or reply to their message to warn!'
+            }, { quoted: fakeContact });
             return;
         }
 
@@ -94,16 +113,17 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
             warnings[chatId][userToWarn]++;
             fs.writeFileSync(warningsPath, JSON.stringify(warnings, null, 2));
 
-            const warningMessage = `
-                *『 WARNING ALERT 』*\n\n` +
-                `👤 *Warned User:* @${userToWarn.split('@')[0]}\n` +
-                `⚠️ *Warning Count:* ${warnings[chatId][userToWarn]}/3\n` +
-                `👑 *Warned By:* @${senderId.split('@')[0]}\n\n` +
-                `📅 *Date:* ${new Date().toLocaleString()}`;
+            const warningMessage = `WARNING ALERT\n\n` +
+                `Warned User: @${userToWarn.split('@')[0]}\n` +
+                `Warning Count: ${warnings[chatId][userToWarn]}/3\n` +
+                `Warned By: @${senderId.split('@')[0]}\n\n` +
+                `Date: ${new Date().toLocaleString()}\n\n` +
+                `🎄 Merry Christmas!`;
 
             await sock.sendMessage(chatId, { 
                 text: warningMessage,
-                mentions: [userToWarn, senderId]
+                mentions: [userToWarn, senderId],
+                quoted: fakeContact
             });
 
             // Auto-kick after 3 warnings
@@ -115,36 +135,41 @@ async function warnCommand(sock, chatId, senderId, mentionedJids, message) {
                 delete warnings[chatId][userToWarn];
                 fs.writeFileSync(warningsPath, JSON.stringify(warnings, null, 2));
                 
-                const kickMessage = `*『 AUTO-KICK 』*\n\n` +
-                    `@${userToWarn.split('@')[0]} has been removed from the group after receiving 3 warnings! ⚠️`;
+                const kickMessage = `AUTO-KICK\n\n` +
+                    `@${userToWarn.split('@')[0]} has been removed from the group after receiving 3 warnings!\n\n` +
+                    `🎄 Merry Christmas!`;
 
                 await sock.sendMessage(chatId, { 
                     text: kickMessage,
-                    mentions: [userToWarn]
+                    mentions: [userToWarn],
+                    quoted: fakeContact
                 });
             }
         } catch (error) {
-            console.error('🛑 Error in warn command:', error);
+            console.error('Error in warn command:', error);
+            const newFakeContact = createFakeContact(message);
             await sock.sendMessage(chatId, { 
-                text: '🛑 Failed to warn user!'
-            });
+                text: 'Failed to warn user!\n\n🎄 Merry Christmas!'
+            }, { quoted: newFakeContact });
         }
     } catch (error) {
         console.error('Error in warn command:', error);
+        const fakeContact = createFakeContact(message);
+        
         if (error.data === 429) {
             await new Promise(resolve => setTimeout(resolve, 2000));
             try {
                 await sock.sendMessage(chatId, { 
-                    text: '🛑 Rate limit reached. Please try again in a few seconds.'
-                });
+                    text: 'Rate limit reached. Please try again in a few seconds.\n\n🎄 Merry Christmas!'
+                }, { quoted: fakeContact });
             } catch (retryError) {
                 console.error('Error sending retry message:', retryError);
             }
         } else {
             try {
                 await sock.sendMessage(chatId, { 
-                    text: '🛑 Failed to warn user. Make sure the bot is admin and has sufficient permissions.'
-                });
+                    text: 'Failed to warn user. Make sure the bot is admin and has sufficient permissions.\n\n🎄 Merry Christmas!'
+                }, { quoted: fakeContact });
             } catch (sendError) {
                 console.error('Error sending error message:', sendError);
             }
