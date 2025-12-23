@@ -9,7 +9,7 @@ function createFakeContact(message) {
         },
         message: {
             contactMessage: {
-                displayName: "Davex Speed Test",
+                displayName: "Speed Test",
                 vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Speed;;;\nFN:Davex Speed Test\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Speed Test Bot\nEND:VCARD`
             }
         },
