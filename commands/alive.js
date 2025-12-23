@@ -4,18 +4,18 @@ const settings = require("../settings");
 const os = require("os");
 
 const detectPlatform = () => {
-  if (process.env.DYNO) return "☁️ Heroku";
-  if (process.env.RENDER) return "⚡ Render";
-  if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "📱 Termux";
-  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "🌀 CypherX Platform";
-  if (process.env.P_SERVER_UUID) return "🖥️ Panel";
-  if (process.env.LXC) return "🐦‍⬛ Linux Container (LXC)";
+  if (process.env.DYNO) return "Heroku";
+  if (process.env.RENDER) return "Render";
+  if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "Termux";
+  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "CypherX Platform";
+  if (process.env.P_SERVER_UUID) return "Panel";
+  if (process.env.LXC) return "Linux Container (LXC)";
   
   switch (os.platform()) {
-    case "win32": return "🪟 Windows";
-    case "darwin": return "🍎 macOS";
-    case "linux": return "🐧 Linux";
-    default: return "❓ Unknown";
+    case "win32": return "Windows";
+    case "darwin": return "macOS";
+    case "linux": return "Linux";
+    default: return "Unknown";
   }
 };
 
@@ -35,8 +35,24 @@ function formatUptime(uptime) {
   return parts.join(', ');
 }
 
-// Store bot start time
 const botStartTime = Date.now();
+
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "DaveX",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DaveX\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Phone\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
 
 async function aliveCommand(sock, chatId, message) {
   try {
@@ -44,26 +60,18 @@ async function aliveCommand(sock, chatId, message) {
     const formattedUptime = formatUptime(uptime);
     const hostName = detectPlatform();
 
-  const message1 = `⏰ Running on [${hostName}] for:\n *${formattedUptime}*`;
+    const fake = createFakeContact(message);
 
-    // Fake contact for quoting
-    const fake = {
-      key: {
-        participants: "0@s.whatsapp.net",
-        remoteJid: "status@broadcast",
-        fromMe: false,
-        id: "DAVE-X"
-      },
-      message: {
-        contactMessage: {
-          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE X\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
-        }
-      },
-      participant: "0@s.whatsapp.net"
-    };
+    const messageText = `*DaveX Bot Status*\n\n` +
+                       `Platform: ${hostName}\n` +
+                       `Uptime: ${formattedUptime}\n` +
+                       `Prefix: ${settings.prefix}\n` +
+                       `Mode: ${global.public ? 'Public' : 'Private'}\n\n` +
+                       `DaveX v2.0 - Professional WhatsApp Bot\n\n` +
+                       `🎄 Merry Christmas & Happy Holidays\n` +
+                       `Wishing you joy and peace this season!`;
 
-    // send uptime
-    await sock.sendMessage(chatId, { text: message1 }, { quoted: fake });
+    await sock.sendMessage(chatId, { text: messageText }, { quoted: fake });
 
   } catch (error) {
     console.error('Error in alive command:', error);
