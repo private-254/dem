@@ -1,4 +1,4 @@
-// updateCommand.js
+// Dave Tech 
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -6,7 +6,23 @@ const https = require('https');
 const settings = require('../settings');
 const isOwnerOrSudo = require('../lib/isOwner');
 
-/* -------------------- Helpers -------------------- */
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "Davex Update",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Update;;;\nFN:Davex System Update\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Update Bot\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
+
 function run(cmd) {
     return new Promise((resolve, reject) => {
         exec(cmd, { windowsHide: true }, (err, stdout, stderr) => {
@@ -27,7 +43,6 @@ async function hasGitRepo() {
     }
 }
 
-/* -------------------- Git Update -------------------- */
 async function updateViaGit() {
     const oldRev = await run('git rev-parse HEAD').catch(() => 'unknown');
     await run('git fetch --all --prune');
@@ -43,7 +58,6 @@ async function updateViaGit() {
     return { oldRev, newRev, alreadyUpToDate, commits, files };
 }
 
-/* -------------------- ZIP Update -------------------- */
 function downloadFile(url, dest, visited = new Set()) {
     return new Promise((resolve, reject) => {
         if (visited.has(url) || visited.size > 5) return reject(new Error('Too many redirects'));
@@ -81,7 +95,7 @@ async function extractZip(zipPath, outDir) {
             return;
         } catch {}
     }
-    throw new Error("No unzip tool found (unzip/7z/busybox). Git mode recommended.");
+    throw new Error("No unzip tool found");
 }
 
 function copyRecursive(src, dest, ignore = [], relative = '', outList = []) {
@@ -130,9 +144,9 @@ async function updateViaZip(zipUrl) {
     return { copiedFiles: copied };
 }
 
-/* -------------------- Restart -------------------- */
 async function restartProcess(sock, chatId, message) {
-    await sock.sendMessage(chatId, { text: '✅ Update complete! Restarting…' }, { quoted: message }).catch(() => {});
+    const fakeContact = createFakeContact(message);
+    await sock.sendMessage(chatId, { text: 'Update finished restarting' }, { quoted: fakeContact }).catch(() => {});
     try {
         await run('pm2 restart all');
     } catch {
@@ -140,40 +154,40 @@ async function restartProcess(sock, chatId, message) {
     }
 }
 
-/* -------------------- Main Command -------------------- */
 async function updateCommand(sock, chatId, message, zipOverride) {
+    const fakeContact = createFakeContact(message);
     const senderId = message.key.participant || message.key.remoteJid;
     const isOwner = await isOwnerOrSudo(senderId, sock, chatId);
 
     if (!message.key.fromMe && !isOwner) {
-        return sock.sendMessage(chatId, { text: 'Only bot owner or sudo can use .update' }, { quoted: message });
+        return sock.sendMessage(chatId, { text: 'System update unauthorized' }, { quoted: fakeContact });
     }
 
     let statusMessage;
     try {
-        statusMessage = await sock.sendMessage(chatId, { text: '🔄 Updating DAVE-X BOT, please wait…' }, { quoted: message });
+        statusMessage = await sock.sendMessage(chatId, { text: 'System update initialization' }, { quoted: fakeContact });
 
         if (await hasGitRepo()) {
-            await sock.sendMessage(chatId, { text: '🔄 Updating via Git…', edit: statusMessage.key });
+            await sock.sendMessage(chatId, { text: 'Repository synchronization', edit: statusMessage.key });
             const { oldRev, newRev, alreadyUpToDate } = await updateViaGit();
-            const summary = alreadyUpToDate ? `✅ Already up to date: ${newRev}` : `✅ Updated from ${oldRev.slice(0, 7)} to ${newRev.slice(0, 7)}`;
-            await sock.sendMessage(chatId, { text: `${summary}\n📦 Installing dependencies...`, edit: statusMessage.key });
+            const summary = alreadyUpToDate ? `System current: ${newRev}` : `Version transition: ${oldRev.slice(0, 7)} to ${newRev.slice(0, 7)}`;
+            await sock.sendMessage(chatId, { text: `${summary}\nDependency installation`, edit: statusMessage.key });
         } else {
-            await sock.sendMessage(chatId, { text: '📥 Downloading update via ZIP...', edit: statusMessage.key });
+            await sock.sendMessage(chatId, { text: 'Archive update download', edit: statusMessage.key });
             const { copiedFiles } = await updateViaZip(zipOverride || settings.updateZipUrl || process.env.UPDATE_ZIP_URL);
-            await sock.sendMessage(chatId, { text: `✅ Extracted ${copiedFiles.length} files\n📦 Installing dependencies...`, edit: statusMessage.key });
+            await sock.sendMessage(chatId, { text: `Archive extraction: ${copiedFiles.length} files\nDependency installation`, edit: statusMessage.key });
         }
 
         await run('npm install --no-audit --no-fund');
-        await sock.sendMessage(chatId, { text: '✅ Update completed! Restarting bot...', edit: statusMessage.key });
+        await sock.sendMessage(chatId, { text: 'Update finalized system restart', edit: statusMessage.key });
         await restartProcess(sock, chatId, message);
     } catch (err) {
         console.error('Update failed:', err);
-        const errorMsg = `❌ Update failed:\n${String(err.message || err).slice(0, 1000)}`;
+        const errorMsg = `Update procedure failure:\n${String(err.message || err).slice(0, 1000)}`;
         if (statusMessage?.key) {
             await sock.sendMessage(chatId, { text: errorMsg, edit: statusMessage.key });
         } else {
-            await sock.sendMessage(chatId, { text: errorMsg }, { quoted: message });
+            await sock.sendMessage(chatId, { text: errorMsg }, { quoted: fakeContact });
         }
     }
 }
