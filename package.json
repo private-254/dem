@@ -1,7 +1,7 @@
 {
-  "name": "june-x",
+  "name": "DAVE-X",
   "version": "2.6.4",
-  "description": "WhatsApp Bot",
+  "description": "A simple nodejs WhatsApp Bot by Dave",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -13,12 +13,12 @@
     "install:panel": "npm install --legacy-peer-deps",
     "install:force": "npm install --force",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "docker:build": "docker build -t docker run -e SESSION_ID=$SESSION_ID June-md"
+    "docker:build": "docker build -t docker run -e SESSION_ID=$SESSION_ID dave-md"
   },
   "keywords": [
     "whatsapp-bot"
   ],
-  "author": "supreme",
+  "author": "dave",
   "license": "ISC",
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
