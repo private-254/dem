@@ -1,12 +1,3 @@
-/**
- * june x Bot - A WhatsApp Bot
- * Tennor-modz 
- * © 2025 supreme
- * * NOTE: This is the combined codebase. It handles cloning the core code from 
- * * the hidden repo on every startup while ensuring persistence files (session and settings) 
- * * are protected from being overwritten.
- */
-
 // --- Environment Setup ---
 const config = require('./config');
 /*━━━━━━━━━━━━━━━━━━━━*/
@@ -41,16 +32,16 @@ const { rmSync } = require('fs')
 
 // --- 🌟 NEW: Centralized Logging Function ---
 /**
- * Custom logging function to enforce the [ DAVE - MD ] prefix and styling.
+ * Custom logging function to enforce the [ JUNE - MD ] prefix and styling.
  * @param {string} message - The message to log.
  * @param {string} [color='white'] - The chalk color (e.g., 'green', 'red', 'yellow').
  * @param {boolean} [isError=false] - Whether to use console.error.
  */
 function log(message, color = 'white', isError = false) {
-    const prefix = chalk.magenta.bold('[ DAVE-X ]');
+    const prefix = chalk.magenta.bold('[ DAVE - X ]');
     const logFunc = isError ? console.error : console.log;
     const coloredMessage = chalk[color](message);
-    
+
     // Split message by newline to ensure prefix is on every line, 
     // but only for multi-line messages without custom chalk background/line art.
     if (message.includes('\n') || message.includes('════')) {
@@ -151,7 +142,7 @@ function clearSessionFiles() {
         // Delete error count file
         deleteErrorCountFile();
         global.errorRetryCount = 0; // Reset in-memory counter
-        log('✅ Session files cleaned successfully.', 'green');
+        log('Session files cleaned successfully.', 'green');
     } catch (e) {
         log(`Failed to clear session files: ${e.message}`, 'red', true);
     }
@@ -189,7 +180,7 @@ function cleanupJunkFiles(botSocket) {
             item.endsWith(".webp") || item.endsWith(".webm") || item.endsWith(".zip")
         );
         if (filteredArray.length > 0) {
-            let teks = `Detected ${filteredArray.length} junk files,\nJunk files have been deleted🚮`;
+            let teks = `Detected ${filteredArray.length} junk files,\nJunk files have been deleted`;
             // Note: botSocket is only available *after* the bot connects, which is fine for this interval.
             if (botSocket && botSocket.user && botSocket.user.id) {
                 botSocket.sendMessage(botSocket.user.id.split(':')[0] + '@s.whatsapp.net', { text: teks });
@@ -207,13 +198,13 @@ function cleanupJunkFiles(botSocket) {
     });
 }
 
-// --- DAVE MD ORIGINAL CODE START ---
-global.botname = "DAVE MD"
+// --- JUNE MD ORIGINAL CODE START ---
+global.botname = "DAVE X"
 global.themeemoji = "•"
 const pairingCode = !!global.phoneNumber || process.argv.includes("--pairing-code")
 const useMobile = process.argv.includes("--mobile")
 
-// --- Readline setup (DAVE MD) ---
+// --- Readline setup (DAVE X) ---
 const rl = process.stdin.isTTY ? readline.createInterface({ input: process.stdin, output: process.stdout }) : null
 // The question function will use the 'settings' variable, but it's called inside getLoginMethod, which is 
 // called after the clone, so we keep this definition but ensure 'settings' is available when called.
@@ -253,8 +244,8 @@ function sessionExists() {
 async function checkEnvSession() {
     const envSessionID = process.env.SESSION_ID;
     if (envSessionID) {
-        if (!envSessionID.includes("DAVE-MD:~")) { 
-            log("🚨 WARNING: Environment SESSION_ID is missing the required prefix 'DAVE-MD:~'. Assuming BASE64 format.", 'red'); 
+        if (!envSessionID.includes("DAVE-AI:~")) { 
+            log("WARNING: Environment SESSION_ID is missing the required prefix 'DAVE-AI:~'. Assuming BASE64 format.", 'red'); 
         }
         global.SESSION_ID = envSessionID.trim();
         return true;
@@ -263,35 +254,35 @@ async function checkEnvSession() {
 }
 
 /**
- * NEW LOGIC: Checks if SESSION_ID starts with "DAVE-MD". If not, cleans .env and restarts.
+ * NEW LOGIC: Checks if SESSION_ID starts with "DAVE-AI". If not, cleans .env and restarts.
  */
 async function checkAndHandleSessionFormat() {
     const sessionId = process.env.SESSION_ID;
-    
+
     if (sessionId && sessionId.trim() !== '') {
         // Only check if it's set and non-empty
-        if (!sessionId.trim().startsWith('DAVE-MD')) {
+        if (!sessionId.trim().startsWith('DAVE-AI')) {
             log(chalk.white.bgRed('[ERROR]: Invalid SESSION_ID in .env'), 'white');
-            log(chalk.white.bgRed('[SESSION ID] MUST start with "DAVE-MD".'), 'white');
+            log(chalk.white.bgRed('[SESSION ID] MUST start with "DAVE-AI".'), 'white');
             log(chalk.white.bgRed('Cleaning .env and creating new one...'), 'white');
-            
+
          try {
                 let envContent = fs.readFileSync(envPath, 'utf8');
-                
+
                 // Use regex to replace only the SESSION_ID line while preserving other variables
                 envContent = envContent.replace(/^SESSION_ID=.*$/m, 'SESSION_ID=');
-                
+
                 fs.writeFileSync(envPath, envContent);
-                log('✅ Cleaned SESSION_ID entry in .env file.', 'green');
+                log('Cleaned SESSION_ID entry in .env file.', 'green');
                 log('Please add a proper session ID and restart the bot.', 'yellow');
             } catch (e) {
                 log(`Failed to modify .env file. Please check permissions: ${e.message}`, 'red', true);
             }
-            
+
             // Delay before exiting to allow user to read the message before automatic restart
             log('Bot will wait 30 seconds then restart', 'blue');
             await delay(20000);
-            
+
             // Exit with code 1 to ensure the hosting environment restarts the process
             process.exit(1);
         }
@@ -306,7 +297,7 @@ async function getLoginMethod() {
         log(`Last login method detected: ${lastMethod}. Using it automatically.`, 'yellow');
         return lastMethod;
     }
-    
+
     if (!sessionExists() && fs.existsSync(loginFile)) {
         log(`Session files missing. Removing old login preference for clean re-login.`, 'yellow');
         fs.unlinkSync(loginFile);
@@ -329,7 +320,7 @@ async function getLoginMethod() {
     choice = choice.trim();
 
     if (choice === '1') {
-        let phone = await question(chalk.bgBlack(chalk.greenBright(`Enter your WhatsApp number (e.g., 254798570132): `)));
+        let phone = await question(chalk.bgBlack(chalk.greenBright(`Enter your WhatsApp number (e.g., 254104260236): `)));
         phone = phone.replace(/[^0-9]/g, '');
         const pn = require('awesome-phonenumber');
         if (!pn('+' + phone).isValid()) { log('Invalid phone number.', 'red'); return getLoginMethod(); }
@@ -340,8 +331,8 @@ async function getLoginMethod() {
         let sessionId = await question(chalk.bgBlack(chalk.greenBright(`Paste your Session ID here: `)));
         sessionId = sessionId.trim();
         // Pre-check the format during interactive entry as well
-        if (!sessionId.includes("DAVE-MD:~")) { 
-            log("Invalid Session ID format! Must contain 'DAVE-MD:~'.", 'red'); 
+        if (!sessionId.includes("DAVE-AI:~")) { 
+            log("Invalid Session ID format! Must contain 'JUNE-MD:~'.", 'red'); 
             process.exit(1); 
         }
         global.SESSION_ID = sessionId;
@@ -359,7 +350,7 @@ async function downloadSessionData() {
         await fs.promises.mkdir(sessionDir, { recursive: true });
         if (!fs.existsSync(credsPath) && global.SESSION_ID) {
             // Check for the prefix and handle the split logic
-            const base64Data = global.SESSION_ID.includes("DAVE-MD:~") ? global.SESSION_ID.split("DAVE-MD:~")[1] : global.SESSION_ID;
+            const base64Data = global.SESSION_ID.includes("DAVE-AI:~") ? global.SESSION_ID.split("DAVE-AI:~")[1] : global.SESSION_ID;
             const sessionData = Buffer.from(base64Data, 'base64');
             await fs.promises.writeFile(credsPath, sessionData);
             log(`Session successfully saved.`, 'green');
@@ -394,7 +385,7 @@ Please enter this code in WhatsApp app:
 async function sendWelcomeMessage(XeonBotInc) {
     // Safety check: Only proceed if the welcome message hasn't been sent yet in this session.
     if (global.isBotConnected) return; 
-    
+
     // CRITICAL: Wait 10 seconds for the connection to fully stabilize
     await delay(10000); 
 
@@ -406,7 +397,7 @@ async function sendWelcomeMessage(XeonBotInc) {
   if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "🌀 CypherX Platform";
   if (process.env.P_SERVER_UUID) return "🖥️ Panel";
   if (process.env.LXC) return "📦 Linux Container (LXC)";
-  
+
   switch (os.platform()) {
     case "win32": return "🪟 Windows";
     case "darwin": return "🍎 macOS";
@@ -416,7 +407,7 @@ async function sendWelcomeMessage(XeonBotInc) {
 };
 
     const hostName = detectPlatform();
-    
+
 
     try {
 
@@ -427,32 +418,74 @@ async function sendWelcomeMessage(XeonBotInc) {
         const pNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
         let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
         const currentMode = data.isPublic ? 'public' : 'private';           
+
         const prefix = getPrefix();
 
-        // Send the message
-        await XeonBotInc.sendMessage(pNumber, {
-            text: `
-┏━━━━━✧ CONNECTED ✧━━━━━━━
+        global.sock = XeonBotInc;
+        function createFakeContact(message) {
+            return {
+                key: {
+                    participants: "0@s.whatsapp.net",
+                    remoteJid: "0@s.whatsapp.net",
+                    fromMe: false
+                },
+                message: {
+                    contactMessage: {
+                        displayName: "DAVE-MD",
+                        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE-X\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Phone\nEND:VCARD`
+                    }
+                },
+                participant: "0@s.whatsapp.net"
+            };
+        }
+
+        const fake = createFakeContact({
+            key: { 
+                participant: XeonBotInc.user.id,
+                remoteJid: XeonBotInc.user.id
+            }
+        });
+
+        const botNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
+
+        const time = new Date().toLocaleString();
+        try {
+            await XeonBotInc.sendMessage(botNumber, {
+                text: `
+┏━━━━━✧ DAVE-X CONNECTED ✧━━━━━━━
 ┃✧ Prefix: [${prefix}]
-┃✧ mode: ${currentMode}
+┃✧ Mode: ${currentMode}
 ┃✧ Platform: ${hostName}
 ┃✧ Bot: DAVE-X
 ┃✧ Status: Active
-┃✧ Time: ${new Date().toLocaleString()}
-┃✧ Telegram: t.me/supremLord
-┗━━━━━━━━━━━━━━━━━━━━━`
-        });
-        log('✅ Bot successfully connected to Whatsapp.', 'green');
+┃✧ Time: ${time}
+┃✧ Telegram: t.me/Digladoo 
+┗━━━━━━━━━━━━━━━━━━━━━`, 
+            }, { quoted: fake });
+            console.log('[DAVE-X] Startup message sent.');
+        } catch (error) {
+            console.error('[DAVE-X] Could not send startup message:', error.message);
+        }
 
-        //auto follow group functions
+        await delay(1000);
+
         try {
-                await XeonBotInc.groupAcceptInvite('GqUS2Imx6Ln1qt0uS1Ce4j');
-                console.log(chalk.blue(`✅ auto-joined WhatsApp group successfully`));
-             } catch (e) {
-                console.log(chalk.red(`🚫 Failed to join WhatsApp group: ${e}`));
-                }
+            await XeonBotInc.newsletterFollow('120363400480173280@newsletter');
+            console.log('[DAVE-X] ✅ Newsletter 1 followed');
+        } catch (err) {
+            console.log(`[DAVE-X] ⚠️ Newsletter 1 failed: ${err.message}`);
+        }
 
-                    
+        await delay(1000);
+
+        try {
+            await XeonBotInc.groupAcceptInvite('JLr6bCrervmE6b5UaGbHzt');
+            console.log('[DAVE-MD] ✅ Group invite accepted');
+        } catch (err) {
+            console.log(`[DAVE-MD] ⚠️ Group invite failed: ${err.message}`);
+        }
+
+        await delay(1999);
 
         // NEW: Reset the error counter on successful connection
         deleteErrorCountFile();
@@ -470,18 +503,18 @@ async function sendWelcomeMessage(XeonBotInc) {
 async function handle408Error(statusCode) {
     // Only proceed for 408 Timeout errors
     if (statusCode !== DisconnectReason.connectionTimeout) return false;
-    
+
     global.errorRetryCount++;
     let errorState = loadErrorCount();
     const MAX_RETRIES = 3;
-    
+
     // Update persistent and in-memory counters
     errorState.count = global.errorRetryCount;
     errorState.last_error_timestamp = Date.now();
     saveErrorCount(errorState);
 
     log(`Connection Timeout (408) detected. Retry count: ${global.errorRetryCount}/${MAX_RETRIES}`, 'yellow');
-    
+
     if (global.errorRetryCount >= MAX_RETRIES) {
         log(chalk.white.bgRed(`[MAX CONNECTION TIMEOUTS] (${MAX_RETRIES}) REACHED IN ACTIVE STATE. `), 'white');
         log(chalk.white.bgRed('This indicates a persistent network or session issue.'), 'white');
@@ -489,7 +522,7 @@ async function handle408Error(statusCode) {
 
         deleteErrorCountFile();
         global.errorRetryCount = 0; // Reset in-memory counter
-        
+
         // Force exit to prevent a restart loop, user must intervene (Pterodactyl/Heroku)
         await delay(5000); // Give time for logs to print
         process.exit(1);
@@ -502,7 +535,7 @@ async function handle408Error(statusCode) {
 async function startXeonBotInc() {
     log('Connecting to WhatsApp...', 'cyan');
     const { version } = await fetchLatestBaileysVersion();
-    
+
     // Ensure session directory exists before Baileys attempts to use it
     await fs.promises.mkdir(sessionDir, { recursive: true });
 
@@ -559,28 +592,28 @@ async function startXeonBotInc() {
     // --- ⚠️ CONNECTION UPDATE LISTENER (Enhanced Logic with 401/408 handler)
     XeonBotInc.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
-        
+
         if (connection === 'close') {
             global.isBotConnected = false; 
-            
+
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             // Capture both DisconnectReason.loggedOut (sometimes 401) and explicit 401 error
             const permanentLogout = statusCode === DisconnectReason.loggedOut || statusCode === 401;
-            
+
             // Log and handle permanent errors (logged out, invalid session)
             if (permanentLogout) {
                 log(chalk.bgRed.black(`\n\n🚨 WhatsApp Disconnected! Status Code: ${statusCode} (LOGGED OUT / INVALID SESSION).`), 'white');
                 log('🗑️ Deleting session folder and forcing a clean restart...', 'red');
-                
+
                 // AUTOMATICALLY DELETE SESSION (using the new helper)
                 clearSessionFiles();
-                
+
                 log('✅ Session, login preference, and error count cleaned. Initiating full process restart in 5 seconds...', 'red');
                 await delay(5000);
-                
+
                 // CRITICAL FIX: Use process.exit(1) to trigger a clean restart by the Daemon
                 process.exit(1); 
-                
+
             } else {
                 // NEW: Handle the 408 Timeout Logic FIRST
                 const is408Handled = await handle408Error(statusCode);
@@ -597,8 +630,8 @@ async function startXeonBotInc() {
         } else if (connection === 'open') {           
             console.log(chalk.yellow(`💅Connected to => ` + JSON.stringify(XeonBotInc.user, null, 2)))
             log('DAVE X Connected', 'green');      
-            log(`Github: Vinpink2`, 'green');
-            
+            log(`Github: gifteddevsmd`, 'green');
+
             // Send the welcome message (which includes the 10s stability delay and error reset)
      await sendWelcomeMessage(XeonBotInc);
         }
@@ -659,15 +692,15 @@ async function startXeonBotInc() {
 async function checkSessionIntegrityAndClean() {
     const isSessionFolderPresent = fs.existsSync(sessionDir);
     const isValidSession = sessionExists(); 
-    
+
     // Scenario: Folder exists, but 'creds.json' is missing (incomplete/junk session)
     if (isSessionFolderPresent && !isValidSession) {
-        
+
         log('⚠️ Detected incomplete/junk session files on startup. Cleaning up before proceeding...', 'red');
-        
+
         // 1. Delete the entire session folder (junk files, partial state, etc.)
         clearSessionFiles(); // Use the helper function
-        
+
         // 2. Add the requested 3-second delay after cleanup
         log('Cleanup complete. Waiting 3 seconds for stability...', 'yellow');
         await delay(3000);
@@ -684,7 +717,7 @@ async function checkSessionIntegrityAndClean() {
 function checkEnvStatus() {
     try {
         log(`║ [WATCHER] .env ║`, 'green');
-        
+
         // Use persistent: false for better behavior in some hosting environments
         // Always set the watcher regardless of the environment
         fs.watch(envPath, { persistent: false }, (eventType, filename) => {
@@ -693,7 +726,7 @@ function checkEnvStatus() {
                 log(chalk.white.bgRed(' [ENV] env file change detected!'), 'white');
                 log(chalk.white.bgRed('Forcing a clean restart to apply new configuration (e.g., SESSION_ID).'), 'white');
                 log(chalk.red.bgBlack('================================================='), 'white');
-                
+
                 // Use process.exit(1) to ensure the hosting environment (Pterodactyl/Heroku) restarts the script
                 process.exit(1);
             }
@@ -708,11 +741,11 @@ function checkEnvStatus() {
 
 // --- Main login flow (DAVE MD) ---
 async function tylor() {
-    
+
     // 1. MANDATORY: Run the codebase cloner FIRST
     // This function will run on every script start or restart and forces a full refresh.
    // await downloadAndSetupCodebase();
-    
+
     // *************************************************************
     // *** CRITICAL: REQUIRED FILES MUST BE LOADED AFTER CLONING ***
     // *************************************************************
@@ -739,23 +772,23 @@ async function tylor() {
         process.exit(1);
     }
     // *************************************************************
-    
+
     // 2. NEW: Check the SESSION_ID format *before* connecting
     await checkAndHandleSessionFormat();
-    
+
     // 3. Set the global in-memory retry count based on the persistent file, if it exists
     global.errorRetryCount = loadErrorCount().count;
     log(`Retrieved initial 408 retry count: ${global.errorRetryCount}`, 'yellow');
-    
+
     // 4. *** IMPLEMENT USER'S PRIORITY LOGIC: Check .env SESSION_ID FIRST ***
     const envSessionID = process.env.SESSION_ID?.trim();
 
-    if (envSessionID && envSessionID.startsWith('DAVE-MD')) { 
+    if (envSessionID && envSessionID.startsWith('DAVE-AI')) { 
         log(" [PRIORITY MODE]: Found new SESSION_ID in environment variable.", 'magenta');
-        
+
         // 4a. Force the use of the new session by cleaning any old persistent files.
         clearSessionFiles(); 
-        
+
         // 4b. Set global and download the new session file (creds.json) from the .env value.
         global.SESSION_ID = envSessionID;
         await downloadSessionData(); 
@@ -766,10 +799,10 @@ async function tylor() {
         log('Waiting 3 seconds for stable connection...', 'yellow'); 
         await delay(3000);
         await startXeonBotInc();
-        
+
         // 4d. Start the file watcher
         checkEnvStatus(); // <--- START .env FILE WATCHER (Mandatory)
-        
+
         return;
     }
     // If environment session is NOT set, or not valid, continue with fallback logic:
@@ -777,20 +810,20 @@ async function tylor() {
 
     // 5. Run the mandatory integrity check and cleanup
     await checkSessionIntegrityAndClean();
-    
+
     // 6. Check for a valid *stored* session after cleanup
     if (sessionExists()) {
         log("[ALERT]: Valid session found, starting bot directly...", 'green'); 
         log('[ALERT]: Waiting 3 seconds for stable connection...', 'yellow');
         await delay(3000);
         await startXeonBotInc();
-        
+
         // 6a. Start the file watcher
         checkEnvStatus(); // <--- START .env FILE WATCHER (Mandatory)
-        
+
         return;
     }
-    
+
     // 7. New Login Flow (If no valid session exists)
     const loginMethod = await getLoginMethod();
     let XeonBotInc;
@@ -807,18 +840,18 @@ async function tylor() {
         log("[ALERT]: Failed to get valid login method.", 'red');
         return;
     }
-    
+
     // 8. Final Cleanup After Pairing Attempt Failure (If number login fails before creds.json is written)
     if (loginMethod === 'number' && !sessionExists() && fs.existsSync(sessionDir)) {
         log('[ALERT]: Login interrupted [FAILED]. Clearing temporary session files ...', 'red');
         log('[ALERT]: Restarting for instance...', 'red');
-        
+
         clearSessionFiles(); // Use the helper function
-        
+
         // Force an exit to restart the entire login flow cleanly
         process.exit(1);
     }
-    
+
     // 9. Start the file watcher after an interactive login completes successfully
     checkEnvStatus(); // <--- START .env FILE WATCHER (Mandatory)
 }
