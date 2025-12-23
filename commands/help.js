@@ -1,5 +1,3 @@
-
-// help.js - Enhanced version with integrated functions
 const settings = require('../settings');
 const fs = require('fs');
 const path = require('path');
@@ -7,13 +5,8 @@ const os = require('os');
 const { getMenuStyle, getMenuSettings, MENU_STYLES } = require('./menuSettings');
 const { generateWAMessageFromContent } = require('@whiskeysockets/baileys');
 const { getPrefix, handleSetPrefixCommand } = require('./setprefix');
-
 const { getOwnerName, handleSetOwnerCommand } = require('./setowner');
 
-const more = String.fromCharCode(8206);
-const readmore = more.repeat(4001);
-
-// Utility Functions
 function formatTime(seconds) {
     const days = Math.floor(seconds / (24 * 60 * 60));
     seconds = seconds % (24 * 60 * 60);
@@ -31,40 +24,36 @@ function formatTime(seconds) {
     return time.trim();
 }
 
-    // Detect host/platform
 const detectPlatform = () => {
-  if (process.env.DYNO) return "☁️ Heroku";
-  if (process.env.RENDER) return "⚡ Render";
-  if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "📱 Termux";
-  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "🌀 CypherX Platform";
-  if (process.env.P_SERVER_UUID) return "🖥️ Panel";
-  if (process.env.LXC) return "📦 Linux Container (LXC)";
+  if (process.env.DYNO) return "Heroku";
+  if (process.env.RENDER) return "Render";
+  if (process.env.PREFIX && process.env.PREFIX.includes("termux")) return "Termux";
+  if (process.env.PORTS && process.env.CYPHERX_HOST_ID) return "CypherX";
+  if (process.env.P_SERVER_UUID) return "Panel";
+  if (process.env.LXC) return "Linux Container";
   
   switch (os.platform()) {
-    case "win32": return "🪟 Windows";
-    case "darwin": return "🍎 macOS";
-    case "linux": return "🐧 Linux";
-    default: return "❓ Unknown";
+    case "win32": return "Windows";
+    case "darwin": return "macOS";
+    case "linux": return "Linux";
+    default: return "Unknown";
   }
 };
 
-    const hostName = detectPlatform();
+const hostName = detectPlatform();
 
-// Memory formatting function
 const formatMemory = (memory) => {
     return memory < 1024 * 1024 * 1024
         ? Math.round(memory / 1024 / 1024) + ' MB'
         : Math.round(memory / 1024 / 1024 / 1024) + ' GB';
 };
 
-// Progress bar function
 const progressBar = (used, total, size = 10) => {
     let percentage = Math.round((used / total) * size);
     let bar = '█'.repeat(percentage) + '░'.repeat(size - percentage);
     return `${bar} ${Math.round((used / total) * 100)}%`;
 };
 
-// Generate Menu Function
 const generateMenu = (pushname, currentMode, hostName, ping, uptimeFormatted, prefix = '.') => {
     const memoryUsage = process.memoryUsage();
     const botUsedMemory = memoryUsage.heapUsed;
@@ -74,131 +63,273 @@ const generateMenu = (pushname, currentMode, hostName, ping, uptimeFormatted, pr
     let newOwner = getOwnerName();
     const menuSettings = getMenuSettings();
     
-    let menu = `┏❐⟢ DAVE-X BOT ⟢❐\n`;
-    menu += `┃➥ *Prefix:* [${prefix2}]\n`;
-    menu += `┃➥ *Owner:* ${newOwner}\n`;
-    menu += `┃➥ *Mode:* ${currentMode}\n`;
-    menu += `┃➥ *platform:* ${hostName}\n`;
-    menu += `┃➥ *Speed:* ${ping} ms\n`;
-    
+    let menu = `┏━━━━━✧ DAVE-X MENU ✧━━━━━━━\n`;
+    menu += `┃✧ Prefix: [${prefix2}]\n`;
+    menu += `┃✧ Owner: ${newOwner}\n`;
+    menu += `┃✧ Mode: ${currentMode}\n`;
+    menu += `┃✧ Platform: ${hostName}\n`;
+    menu += `┃✧ Speed: ${ping} ms\n`;
     
     if (menuSettings.showUptime) {
-        menu += `┃➥ *Uptime:* ${uptimeFormatted}\n`;
+        menu += `┃✧ Uptime: ${uptimeFormatted}\n`;
     }
     
-    menu += `┃➥ *version:* v${settings.version}\n`;
+    menu += `┃✧ Version: v${settings.version}\n`;
     
     if (menuSettings.showMemory) {
-        menu += `┃➥ *Usage:* ${formatMemory(botUsedMemory)} of ${formatMemory(totalMemory)}\n`;
-        menu += `┃➥ *RAM:* ${progressBar(systemUsedMemory, totalMemory)}\n`;
+        menu += `┃✧ RAM: ${progressBar(systemUsedMemory, totalMemory)}\n`;
     }
     
-    menu += `┗❐\n${readmore}\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Owner Menu
-    menu += `┏❐ \`OWNER MENU\` ❐\n`;
-    menu += `┃ ${prefix2}ban\n┃ ${prefix2}restart\n┃ ${prefix2}unban\n┃ ${prefix2}promote\n┃ ${prefix2}demote\n┃ ${prefix2}mute\n┃ ${prefix2}unmute\n┃ ${prefix2}delete\n┃ ${prefix2}kick\n┃ ${prefix2}warnings\n┃ ${prefix2}antilink\n┃ ${prefix2}antibadword\n┃ ${prefix2}clear\n┃ ${prefix2}chatbot\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ OWNER MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}ban\n`;
+    menu += `┃› ${prefix2}restart\n`;
+    menu += `┃› ${prefix2}unban\n`;
+    menu += `┃› ${prefix2}promote\n`;
+    menu += `┃› ${prefix2}demote\n`;
+    menu += `┃› ${prefix2}mute\n`;
+    menu += `┃› ${prefix2}unmute\n`;
+    menu += `┃› ${prefix2}delete\n`;
+    menu += `┃› ${prefix2}kick\n`;
+    menu += `┃› ${prefix2}warnings\n`;
+    menu += `┃› ${prefix2}antilink\n`;
+    menu += `┃› ${prefix2}antibadword\n`;
+    menu += `┃› ${prefix2}clear\n`;
+    menu += `┃› ${prefix2}chatbot\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Group Menu
-    menu += `┏❐ \`GROUP MENU\` ❐\n`;
-    menu += `┃ ${prefix2}promote\n┃ ${prefix2}demote\n┃ ${prefix2}settings\n┃ ${prefix2}togroupstatus\n┃ ${prefix2} tosgroup\n┃ ${prefix2}welcome\n┃ ${prefix2}setgpp\n┃ ${prefix2}getgpp\n┃ ${prefix2}listadmin\n┃ ${prefix2}goodbye\n┃ ${prefix2}tagnoadmin\n┃ ${prefix2}tag\n┃ ${prefix2}antilink\n┃ ${prefix2}set welcome\n┃ ${prefix2}listadmin\n┃ ${prefix2}groupinfo\n┃ ${prefix2}admins\n┃ ${prefix2}warn\n┃ ${prefix2}revoke\n┃ ${prefix2}resetlink\n┃ ${prefix2}open\n┃ ${prefix2}close\n┃ ${prefix2}mention\n┃ ${prefix2}setgdesc\n┃ ${prefix2}leave\n┃ ${prefix2}left\n┃ ${prefix2}killall\n┃ ${prefix2}removeall\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ GROUP MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}promote\n`;
+    menu += `┃› ${prefix2}demote\n`;
+    menu += `┃› ${prefix2}settings\n`;
+    menu += `┃› ${prefix2}togroupstatus\n`;
+    menu += `┃› ${prefix2}tosgroup\n`;
+    menu += `┃› ${prefix2}welcome\n`;
+    menu += `┃› ${prefix2}setgpp\n`;
+    menu += `┃› ${prefix2}getgpp\n`;
+    menu += `┃› ${prefix2}listadmin\n`;
+    menu += `┃› ${prefix2}goodbye\n`;
+    menu += `┃› ${prefix2}tagnoadmin\n`;
+    menu += `┃› ${prefix2}tag\n`;
+    menu += `┃› ${prefix2}antilink\n`;
+    menu += `┃› ${prefix2}set welcome\n`;
+    menu += `┃› ${prefix2}groupinfo\n`;
+    menu += `┃› ${prefix2}admins\n`;
+    menu += `┃› ${prefix2}warn\n`;
+    menu += `┃› ${prefix2}revoke\n`;
+    menu += `┃› ${prefix2}resetlink\n`;
+    menu += `┃› ${prefix2}open\n`;
+    menu += `┃› ${prefix2}close\n`;
+    menu += `┃› ${prefix2}mention\n`;
+    menu += `┃› ${prefix2}setgdesc\n`;
+    menu += `┃› ${prefix2}leave\n`;
+    menu += `┃› ${prefix2}left\n`;
+    menu += `┃› ${prefix2}killall\n`;
+    menu += `┃› ${prefix2}removeall\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // AI Menu
-    menu += `┏❐ \`AI MENU\` ❐\n`;
-    menu += `┃ ${prefix2}Ai\n┃ ${prefix2}gpt\n┃ ${prefix2}gemini\n┃ ${prefix2}imagine\n┃ ${prefix2}flux\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ AI MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}Ai\n`;
+    menu += `┃› ${prefix2}gpt\n`;
+    menu += `┃› ${prefix2}gemini\n`;
+    menu += `┃› ${prefix2}imagine\n`;
+    menu += `┃› ${prefix2}flux\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Setting Menu
-    menu += `┏❐ \`SETTING MENU\` ❐\n`;
-    menu += `┃ ${prefix2}mode\n┃ ${prefix2}autostatus\n┃ ${prefix2}pmblock\n┃ ${prefix2}setmention\n┃ ${prefix2}autoread\n┃ ${prefix2}clearsession\n┃ ${prefix2}antidelete\n┃ ${prefix2}cleartmp\n┃ ${prefix2}autoreact\n┃ ${prefix2}getpp\n┃ ${prefix2}setpp\n┃ ${prefix2}sudo\n┃ ${prefix2}autotyping\n┃ ${prefix2}setmenu\n┃ ${prefix2}menuconfig reset\n┃ ${prefix2}setmenu toggle\n┃ ${prefix2}setprefix\n┃ ${prefix2}setprefix reset\n`;
-    menu += `┗❐\n${readmore}\n`;
+    menu += `┏━━━━━✧ SETTINGS MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}mode\n`;
+    menu += `┃› ${prefix2}autostatus\n`;
+    menu += `┃› ${prefix2}pmblock\n`;
+    menu += `┃› ${prefix2}setmention\n`;
+    menu += `┃› ${prefix2}autoread\n`;
+    menu += `┃› ${prefix2}clearsession\n`;
+    menu += `┃› ${prefix2}antidelete\n`;
+    menu += `┃› ${prefix2}cleartmp\n`;
+    menu += `┃› ${prefix2}autoreact\n`;
+    menu += `┃› ${prefix2}getpp\n`;
+    menu += `┃› ${prefix2}setpp\n`;
+    menu += `┃› ${prefix2}sudo\n`;
+    menu += `┃› ${prefix2}autotyping\n`;
+    menu += `┃› ${prefix2}setmenu\n`;
+    menu += `┃› ${prefix2}menuconfig reset\n`;
+    menu += `┃› ${prefix2}setmenu toggle\n`;
+    menu += `┃› ${prefix2}setprefix\n`;
+    menu += `┃› ${prefix2}setprefix reset\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Main Menu
-    menu += `┏❐ \`MAIN MENU\` ❐\n`;
-    menu += `┃ ${prefix2}yts\n┃ ${prefix2}url\n┃ ${prefix2}tourl\n┃ ${prefix2}block\n┃ ${prefix2}listblock\n┃ ${prefix2}blocklist\n┃ ${prefix2}tagall\n┃ ${prefix2}yts\n┃ ${prefix2}play\n┃ ${prefix2}spotify\n┃ ${prefix2}trt\n┃ ${prefix2}runtime\n┃ ${prefix2}ping\n┃ ${prefix2}apk\n┃ ${prefix2}vv\n┃ ${prefix2}video\n┃ ${prefix2}song\n┃ ${prefix2}ssweb\n┃ ${prefix2}instagram\n┃ ${prefix2}facebook\n┃ ${prefix2}tiktok\n┃ ${prefix2}ytmp4\n┃ ${prefix2}shazam\n┃ ${prefix2}find\n┃ ${prefix2}send\n┃ ${prefix2}get\n┃ ${prefix2}send\n┃ ${prefix2}tomp3\n┃ ${prefix2}toaudio\n┃ ${prefix2}ytsearch\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ MAIN MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}yts\n`;
+    menu += `┃› ${prefix2}url\n`;
+    menu += `┃› ${prefix2}tourl\n`;
+    menu += `┃› ${prefix2}block\n`;
+    menu += `┃› ${prefix2}listblock\n`;
+    menu += `┃› ${prefix2}blocklist\n`;
+    menu += `┃› ${prefix2}tagall\n`;
+    menu += `┃› ${prefix2}play\n`;
+    menu += `┃› ${prefix2}spotify\n`;
+    menu += `┃› ${prefix2}trt\n`;
+    menu += `┃› ${prefix2}runtime\n`;
+    menu += `┃› ${prefix2}ping\n`;
+    menu += `┃› ${prefix2}apk\n`;
+    menu += `┃› ${prefix2}vv\n`;
+    menu += `┃› ${prefix2}video\n`;
+    menu += `┃› ${prefix2}song\n`;
+    menu += `┃› ${prefix2}ssweb\n`;
+    menu += `┃› ${prefix2}instagram\n`;
+    menu += `┃› ${prefix2}facebook\n`;
+    menu += `┃› ${prefix2}tiktok\n`;
+    menu += `┃› ${prefix2}ytmp4\n`;
+    menu += `┃› ${prefix2}shazam\n`;
+    menu += `┃› ${prefix2}find\n`;
+    menu += `┃› ${prefix2}send\n`;
+    menu += `┃› ${prefix2}get\n`;
+    menu += `┃› ${prefix2}tomp3\n`;
+    menu += `┃› ${prefix2}toaudio\n`;
+    menu += `┃› ${prefix2}ytsearch\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Stick Menu
-    menu += `┏❐ \`STICK MENU\` ❐\n`;
-    menu += `┃ ${prefix2}blur\n┃ ${prefix2}timage\n┃ ${prefix2}sticker\n┃ ${prefix2}tgsticker\n┃ ${prefix2}meme\n┃ ${prefix2}take\n┃ ${prefix2}emojimix\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ STICKER MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}blur\n`;
+    menu += `┃› ${prefix2}timage\n`;
+    menu += `┃› ${prefix2}sticker\n`;
+    menu += `┃› ${prefix2}tgsticker\n`;
+    menu += `┃› ${prefix2}meme\n`;
+    menu += `┃› ${prefix2}take\n`;
+    menu += `┃› ${prefix2}emojimix\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Game Menu
-    menu += `┏❐ \`GAME MENU\` ❐\n`;
-    menu += `┃ ${prefix2}tictactoe\n┃ ${prefix2}hangman\n┃ ${prefix2}guess\n┃ ${prefix2}trivia\n┃ ${prefix2}answer\n┃ ${prefix2}truth\n┃ ${prefix2}dare\n┃ ${prefix2}8ball\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ GAME MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}tictactoe\n`;
+    menu += `┃› ${prefix2}hangman\n`;
+    menu += `┃› ${prefix2}guess\n`;
+    menu += `┃› ${prefix2}trivia\n`;
+    menu += `┃› ${prefix2}answer\n`;
+    menu += `┃› ${prefix2}truth\n`;
+    menu += `┃› ${prefix2}dare\n`;
+    menu += `┃› ${prefix2}8ball\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // GitHub Menu
-    menu += `┏❐ \`GITHUB CMD\` ❐\n`;
-    menu += `┃ ${prefix2}git\n┃ ${prefix2}github\n┃ ${prefix2}sc\n┃ ${prefix2}script\n┃ ${prefix2}repo\n`;
-    menu += `┗❐\n${readmore}\n`;
+    menu += `┏━━━━━✧ GITHUB CMD ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}git\n`;
+    menu += `┃› ${prefix2}github\n`;
+    menu += `┃› ${prefix2}sc\n`;
+    menu += `┃› ${prefix2}script\n`;
+    menu += `┃› ${prefix2}repo\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Maker Menu
-    menu += `┏❐ \`MAKER MENU\`❐\n`;
-    menu += `┃ ${prefix2}compliment\n┃ ${prefix2}insult\n┃ ${prefix2}flirt\n┃ ${prefix2}shayari\n┃ ${prefix2}goodnight\n┃ ${prefix2}roseday\n┃ ${prefix2}character\n┃ ${prefix2}wasted\n┃ ${prefix2}ship\n┃ ${prefix2}simp\n┃ ${prefix2}stupid\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ MAKER MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}compliment\n`;
+    menu += `┃› ${prefix2}insult\n`;
+    menu += `┃› ${prefix2}flirt\n`;
+    menu += `┃› ${prefix2}shayari\n`;
+    menu += `┃› ${prefix2}goodnight\n`;
+    menu += `┃› ${prefix2}roseday\n`;
+    menu += `┃› ${prefix2}character\n`;
+    menu += `┃› ${prefix2}wasted\n`;
+    menu += `┃› ${prefix2}ship\n`;
+    menu += `┃› ${prefix2}simp\n`;
+    menu += `┃› ${prefix2}stupid\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Anime Menu
-    menu += `┏❐ \`ANIME MENU\` ❐\n`;
-    menu += `┃ ${prefix2}neko\n┃ ${prefix2}waifu\n┃ ${prefix2}loli\n┃ ${prefix2}nom\n┃ ${prefix2}poke\n┃ ${prefix2}cry\n┃ ${prefix2}kiss\n┃ ${prefix2}pat\n┃ ${prefix2}hug\n┃ ${prefix2}wink\n┃ ${prefix2}facepalm\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ ANIME MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}neko\n`;
+    menu += `┃› ${prefix2}waifu\n`;
+    menu += `┃› ${prefix2}loli\n`;
+    menu += `┃› ${prefix2}nom\n`;
+    menu += `┃› ${prefix2}poke\n`;
+    menu += `┃› ${prefix2}cry\n`;
+    menu += `┃› ${prefix2}kiss\n`;
+    menu += `┃› ${prefix2}pat\n`;
+    menu += `┃› ${prefix2}hug\n`;
+    menu += `┃› ${prefix2}wink\n`;
+    menu += `┃› ${prefix2}facepalm\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Text Maker Menu
-    menu += `┏❐ \`TEXT MAKER MENU\` ❐\n`;
-    menu += `┃ ${prefix2}metallic\n┃ ${prefix2}ice\n┃ ${prefix2}snow\n┃ ${prefix2}impressive\n┃ ${prefix2}matrix\n┃ ${prefix2}light\n┃ ${prefix2}neon\n┃ ${prefix2}devil\n┃ ${prefix2}purple\n┃ ${prefix2}thunder\n┃ ${prefix2}leaves\n┃ ${prefix2}1917\n┃ ${prefix2}arena\n┃ ${prefix2}hacker\n┃ ${prefix2}sand\n┃ ${prefix2}blackpink\n┃ ${prefix2}glitch\n┃ ${prefix2}fire\n`;
-    menu += `┗❐\n\n`;
+    menu += `┏━━━━━✧ TEXT MAKER MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}metallic\n`;
+    menu += `┃› ${prefix2}ice\n`;
+    menu += `┃› ${prefix2}snow\n`;
+    menu += `┃› ${prefix2}impressive\n`;
+    menu += `┃› ${prefix2}matrix\n`;
+    menu += `┃› ${prefix2}light\n`;
+    menu += `┃› ${prefix2}neon\n`;
+    menu += `┃› ${prefix2}devil\n`;
+    menu += `┃› ${prefix2}purple\n`;
+    menu += `┃› ${prefix2}thunder\n`;
+    menu += `┃› ${prefix2}leaves\n`;
+    menu += `┃› ${prefix2}1917\n`;
+    menu += `┃› ${prefix2}arena\n`;
+    menu += `┃› ${prefix2}hacker\n`;
+    menu += `┃› ${prefix2}sand\n`;
+    menu += `┃› ${prefix2}blackpink\n`;
+    menu += `┃› ${prefix2}glitch\n`;
+    menu += `┃› ${prefix2}fire\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    // Image Edit Menu
-    menu += `┏❐ \`IMG EDIT\` ❐\n`;
-    menu += `┃ ${prefix2}heart\n┃ ${prefix2}horny\n┃ ${prefix2}circle\n┃ ${prefix2}lgbt\n┃ ${prefix2}lolice\n┃ ${prefix2}stupid\n┃ ${prefix2}namecard\n┃ ${prefix2}tweet\n┃ ${prefix2}ytcomment\n┃ ${prefix2}comrade\n┃ ${prefix2}gay\n┃ ${prefix2}glass\n┃ ${prefix2}jail\n┃ ${prefix2}passed\n┃ ${prefix2}triggered\n`;
-    menu += `┗❐\n`;
+    menu += `┏━━━━━✧ IMAGE EDIT MENU ✧━━━━━━━\n`;
+    menu += `┃› ${prefix2}heart\n`;
+    menu += `┃› ${prefix2}horny\n`;
+    menu += `┃› ${prefix2}circle\n`;
+    menu += `┃› ${prefix2}lgbt\n`;
+    menu += `┃› ${prefix2}lolice\n`;
+    menu += `┃› ${prefix2}stupid\n`;
+    menu += `┃› ${prefix2}namecard\n`;
+    menu += `┃› ${prefix2}tweet\n`;
+    menu += `┃› ${prefix2}ytcomment\n`;
+    menu += `┃› ${prefix2}comrade\n`;
+    menu += `┃› ${prefix2}gay\n`;
+    menu += `┃› ${prefix2}glass\n`;
+    menu += `┃› ${prefix2}jail\n`;
+    menu += `┃› ${prefix2}passed\n`;
+    menu += `┃› ${prefix2}triggered\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+    menu += `┏━━━━━✧ 🎄 MERRY CHRISTMAS ✧━━━━━━━\n`;
+    menu += `┃✧ Developer: DAVE\n`;
+    menu += `┃✧ Bot: DAVE-X\n`;
+    menu += `┃✧ Version: v${settings.version}\n`;
+    menu += `┗━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
     return menu;
 };
 
-// Helper function to safely load thumbnail
 async function loadThumbnail(thumbnailPath) {
     try {
         if (fs.existsSync(thumbnailPath)) {
             return fs.readFileSync(thumbnailPath);
         } else {
             console.log(`Thumbnail not found: ${thumbnailPath}, using fallback`);
-            // Create a simple 1x1 pixel buffer as fallback
             return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
         }
     } catch (error) {
         console.error('Error loading thumbnail:', error);
-        // Return fallback buffer
         return Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
     }
 }
 
-// Create fake contact for enhanced replies
 function createFakeContact(message) {
     return {
         key: {
             participants: "0@s.whatsapp.net",
-            remoteJid: "status@broadcast",
-            fromMe: false,
-            id: "DAVE-X-MENU"
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
         },
         message: {
             contactMessage: {
-                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DAVE X\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
+                displayName: "DaveX Menu",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:DaveX Bot\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Bot\nEND:VCARD`
             }
         },
         participant: "0@s.whatsapp.net"
     };
 }
 
-// YOUR EXACT MENU STYLE FUNCTION WITH FIXED tylorkids AND fkontak FOR ALL STYLES
 async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thumbnailBuffer, pushname) {
     const fkontak = createFakeContact(message);
     const botname = "DAVE-X BOT";
     const ownername = pushname;
-    const tylorkids = thumbnailBuffer; // Fixed: using thumbnails from assets
+    const tylorkids = thumbnailBuffer;
     const plink = "https://github.com/gifteddevsmd";
 
     if (menustyle === '1') {
@@ -287,28 +418,25 @@ async function sendMenuWithStyle(sock, chatId, message, menulist, menustyle, thu
             },
         }, {});
     } else {
-        // Default fallback
         await sock.sendMessage(chatId, { 
             text: menulist 
         }, { quoted: fkontak });
     }
 }
 
-// Main help command function
 async function helpCommand(sock, chatId, message) {
-    const pushname = message.pushName || "Unknown User"; 
+    const pushname = message.pushName || "User"; 
     const menuStyle = getMenuStyle();
 
-    console.log('Current menu style:', menuStyle);
+    console.log('Menu style:', menuStyle);
 
     let data = JSON.parse(fs.readFileSync('./data/messageCount.json'));
     
-    // Create fake contact for enhanced reply
     const fkontak = createFakeContact(message);
     
     const start = Date.now();
     await sock.sendMessage(chatId, { 
-        text: '_Wait loading menu..._' 
+        text: 'Loading DaveX menu...' 
     }, { quoted: fkontak });
     const end = Date.now();
     const ping = Math.round((end - start) / 2);
@@ -320,7 +448,6 @@ async function helpCommand(sock, chatId, message) {
     
     const menulist = generateMenu(pushname, currentMode, hostName, ping, uptimeFormatted);
 
-    // Random thumbnail selection from local files
     const thumbnailFiles = [
         'menu1.jpg',
         'menu2.jpg', 
@@ -331,32 +458,27 @@ async function helpCommand(sock, chatId, message) {
     const randomThumbFile = thumbnailFiles[Math.floor(Math.random() * thumbnailFiles.length)];
     const thumbnailPath = path.join(__dirname, '../assets', randomThumbFile);
 
-    // Send reaction
     await sock.sendMessage(chatId, {
         react: { text: '📔', key: message.key }
     });
 
     try {
-        // Load thumbnail using helper function
         const thumbnailBuffer = await loadThumbnail(thumbnailPath);
 
-        // Send menu using YOUR EXACT menu style function
         await sendMenuWithStyle(sock, chatId, message, menulist, menuStyle, thumbnailBuffer, pushname);
 
-        // Success reaction
         await sock.sendMessage(chatId, {
             react: { text: '✅', key: message.key }
         });
 
     } catch (error) {
-        console.error('Error in help command:', error);
-        // Fallback to simple text
+        console.error('Menu error:', error);
         try {
             await sock.sendMessage(chatId, { 
                 text: menulist 
             }, { quoted: fkontak });
         } catch (fallbackError) {
-            console.error('Even fallback failed:', fallbackError);
+            console.error('Fallback error:', fallbackError);
         }
     }
 }
