@@ -2,7 +2,7 @@
 // Reacts with 👑 even if someone already reacted with the same emoji.
 
 const OWNER_NUMBERS = [
-  "+254794898005",
+  "+254104260236",
   "136129676312603"
 ];
 
