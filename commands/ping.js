@@ -1,13 +1,29 @@
-/*by supreme*/
-
 const os = require('os');
-const settings = require('../settings.js');
+
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "Davex Speed Test",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Speed;;;\nFN:Davex Speed Test\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Speed Test Bot\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
 
 async function pingCommand(sock, chatId, message) {
   try {
+    const fakeContact = createFakeContact(message);
+    
     const start = Date.now();
     const sentMsg = await sock.sendMessage(chatId, {
-      text: '*🔹pong!...*'}, { quoted: message }
+      text: '*🔹 Measuring Speed...*'}, { quoted: fakeContact }
     );
 
     const ping = Date.now() - start;
@@ -15,16 +31,18 @@ async function pingCommand(sock, chatId, message) {
     // Generate highly accurate and detailed 3-decimal ping
     const detailedPing = generatePrecisePing(ping);
     
-    const response = `*🔸 June-X Speed: ${detailedPing} ms*`;
+    const response = `*Davex Speed: ${detailedPing} ms*\n\n🎄 *Merry Christmas!* 🎄`;
 
     await sock.sendMessage(chatId, {
       text: response,
-      edit: sentMsg.key // Edit the original message
+      edit: sentMsg.key, // Edit the original message
+      quoted: fakeContact
     });   
     
   } catch (error) {
     console.error('Ping error:', error);
-    await sock.sendMessage(chatId, { text: 'Failed to measure speed.' });
+    const fakeContact = createFakeContact(message);
+    await sock.sendMessage(chatId, { text: 'Failed to measure speed.', quoted: fakeContact });
   }
 }
 
