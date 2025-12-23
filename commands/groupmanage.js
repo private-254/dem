@@ -2,66 +2,91 @@ const fs = require('fs');
 const path = require('path');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "DaveX Group",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Group;;;\nFN:DaveX Group\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Group Bot\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
+
 async function ensureGroupAndAdmin(sock, chatId, senderId) {
     const isGroup = chatId.endsWith('@g.us');
     if (!isGroup) {
-        await sock.sendMessage(chatId, { text: 'This command can only be used in groups.' });
         return { ok: false };
     }
-    // Check admin status of sender and bot
     const isAdmin = require('../lib/isAdmin');
     const adminStatus = await isAdmin(sock, chatId, senderId);
     if (!adminStatus.isBotAdmin) {
-        await sock.sendMessage(chatId, { text: 'Please make the bot an admin first.' });
         return { ok: false };
     }
     if (!adminStatus.isSenderAdmin) {
-        await sock.sendMessage(chatId, { text: 'Only group admins can use this command.' });
         return { ok: false };
     }
     return { ok: true };
 }
 
 async function setGroupDescription(sock, chatId, senderId, text, message) {
+    const fakeContact = createFakeContact(message);
     const check = await ensureGroupAndAdmin(sock, chatId, senderId);
-    if (!check.ok) return;
+    if (!check.ok) {
+        await sock.sendMessage(chatId, { text: 'Group admins only' }, { quoted: fakeContact });
+        return;
+    }
     const desc = (text || '').trim();
     if (!desc) {
-        await sock.sendMessage(chatId, { text: 'Usage: .setgdesc <description>' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Usage: .setgdesc <text>' }, { quoted: fakeContact });
         return;
     }
     try {
         await sock.groupUpdateDescription(chatId, desc);
-        await sock.sendMessage(chatId, { text: '✅ Group description updated.' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Description updated' }, { quoted: fakeContact });
     } catch (e) {
-        await sock.sendMessage(chatId, { text: '❌ Failed to update group description.' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Failed to update' }, { quoted: fakeContact });
     }
 }
 
 async function setGroupName(sock, chatId, senderId, text, message) {
+    const fakeContact = createFakeContact(message);
     const check = await ensureGroupAndAdmin(sock, chatId, senderId);
-    if (!check.ok) return;
+    if (!check.ok) {
+        await sock.sendMessage(chatId, { text: 'Group admins only' }, { quoted: fakeContact });
+        return;
+    }
     const name = (text || '').trim();
     if (!name) {
-        await sock.sendMessage(chatId, { text: 'Usage: .setgname <new name>' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Usage: .setgname <name>' }, { quoted: fakeContact });
         return;
     }
     try {
         await sock.groupUpdateSubject(chatId, name);
-        await sock.sendMessage(chatId, { text: '✅ Group name updated.' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Group name updated' }, { quoted: fakeContact });
     } catch (e) {
-        await sock.sendMessage(chatId, { text: '❌ Failed to update group name.' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Failed to update' }, { quoted: fakeContact });
     }
 }
 
 async function setGroupPhoto(sock, chatId, senderId, message) {
+    const fakeContact = createFakeContact(message);
     const check = await ensureGroupAndAdmin(sock, chatId, senderId);
-    if (!check.ok) return;
+    if (!check.ok) {
+        await sock.sendMessage(chatId, { text: 'Group admins only' }, { quoted: fakeContact });
+        return;
+    }
 
     const quoted = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
     const imageMessage = quoted?.imageMessage || quoted?.stickerMessage;
     if (!imageMessage) {
-        await sock.sendMessage(chatId, { text: 'Reply to an image/sticker with .setgpp' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Reply to image/sticker' }, { quoted: fakeContact });
         return;
     }
     try {
@@ -77,9 +102,9 @@ async function setGroupPhoto(sock, chatId, senderId, message) {
 
         await sock.updateProfilePicture(chatId, { url: imgPath });
         try { fs.unlinkSync(imgPath); } catch (_) {}
-        await sock.sendMessage(chatId, { text: '✅ Group profile photo updated.' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Group photo updated' }, { quoted: fakeContact });
     } catch (e) {
-        await sock.sendMessage(chatId, { text: '❌ Failed to update group profile photo.' }, { quoted: message });
+        await sock.sendMessage(chatId, { text: 'Failed to update photo' }, { quoted: fakeContact });
     }
 }
 
@@ -88,5 +113,3 @@ module.exports = {
     setGroupName,
     setGroupPhoto
 };
-
-
