@@ -1,28 +1,27 @@
 const axios = require('axios');
 
-/**
- * AI Command Handler
- * @param {object} sock - WhatsApp socket
- * @param {string} chatId - Chat ID
- * @param {object} message - Message object
- */
 async function aiCommand(sock, chatId, message) {
     try {
-        // Extract text from message
-        const text = extractMessageText(message);
+        const text = message.message?.conversation || 
+                    message.message?.extendedTextMessage?.text ||
+                    message.text;
         
         if (!text) {
             return await sendPromptMessage(sock, chatId, message);
         }
 
-        // Parse command and query
-        const { command, query } = parseCommand(text);
+        const parts = text.split(' ');
+        const command = parts[0].toLowerCase();
+        const query = parts.slice(1).join(' ').trim();
         
         if (!query) {
             return await sendEmptyQueryMessage(sock, chatId, message);
         }
 
-        // Process AI request
+        await sock.sendMessage(chatId, {
+            react: { text: '⚡', key: message.key }
+        });
+
         await processAIRequest(sock, chatId, message, query);
         
     } catch (error) {
@@ -31,111 +30,155 @@ async function aiCommand(sock, chatId, message) {
     }
 }
 
-/**
- * Extract text from message object
- */
-function extractMessageText(message) {
-    return message.message?.conversation || 
-           message.message?.extendedTextMessage?.text ||
-           message.text;
+function createFakeContact() {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "DAVE AI",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;AI Assistant;;;\nFN:DAVE AI\nitem1.TEL;waid=${sock.user?.id?.split(':')[0] || '0000000000'}:${sock.user?.id?.split(':')[0] || '0000000000'}\nitem1.X-ABLabel:AI Assistant\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
 }
 
-/**
- * Parse command and query from text
- */
-function parseCommand(text) {
-    const parts = text.split(' ');
-    const command = parts[0].toLowerCase();
-    const query = parts.slice(1).join(' ').trim();
-    
-    return { command, query };
-}
-
-/**
- * Send initial prompt message
- */
 async function sendPromptMessage(sock, chatId, message) {
-    const promptText = "Please provide a question after !gpt\n\n" +
-                      "Example: !gpt What is quantum computing?";
+    const fakeContact = createFakeContact();
     
-    return await sock.sendMessage(chatId, { text: promptText }, { quoted: message });
-}
-
-/**
- * Send empty query message
- */
-async function sendEmptyQueryMessage(sock, chatId, message) {
+    const promptText = `🧠 *DAVE AI Assistant*\n\n` +
+                      `I'm ready to help! Just ask me anything after the command.\n\n` +
+                      `📌 *Example:*\n` +
+                      `!gpt Explain quantum computing in simple terms\n` +
+                      `!ai How to make chocolate chip cookies?\n\n` +
+                      `✨ *Powered by DeepSeek AI*`;
+    
     return await sock.sendMessage(chatId, { 
-        text: "❌ Please provide a query.\nExample: !gpt What is quantum computing?" 
-    }, { quoted: message });
-}
-
-/**
- * Send error message
- */
-async function sendErrorMessage(sock, chatId, message) {
-    return await sock.sendMessage(chatId, {
-        text: "❌ An error occurred. Please try again later.",
-        contextInfo: {
-            mentionedJid: [message.key.participant || message.key.remoteJid],
-            quotedMessage: message.message
-        }
-    }, { quoted: message });
-}
-
-/**
- * Process AI request
- */
-async function processAIRequest(sock, chatId, message, query) {
-    // Show processing indicator
-    await sock.sendMessage(chatId, {
-        react: { text: '🤖', key: message.key }
+        text: promptText 
+    }, { 
+        quoted: fakeContact 
     });
-
-    try {
-        await handleAIAPIRequest(sock, chatId, message, query);
-    } catch (error) {
-        console.error('API Processing Error:', error);
-        await sendAPIErrorMessage(sock, chatId, message, error);
-    }
 }
 
-/**
- * Handle AI API request
- */
-async function handleAIAPIRequest(sock, chatId, message, query) {
-    const apiUrl = `https://api.zenzxz.my.id/api/ai/chatai?query=${encodeURIComponent(query)}&model=deepseek-v3`;
+async function sendEmptyQueryMessage(sock, chatId, message) {
+    const fakeContact = createFakeContact();
     
-    const response = await axios.get(apiUrl);
-    const data = response.data;
-    
-    // Extract answer from response
-    const replyText = data?.data?.answer || "⚠️ No response from AI.";
-    
-    if (replyText !== "⚠️ No response from AI.") {
-        await sock.sendMessage(chatId, {
-            text: replyText
-        }, { quoted: message });
-    } else {
-        throw new Error('No valid response from AI API');
-    }
+    return await sock.sendMessage(chatId, { 
+        text: `📝 *Query Required*\n\n` +
+              `Please provide your question after the command.\n\n` +
+              `💡 *Try something like:*\n` +
+              `• !gpt What is artificial intelligence?\n` +
+              `• !ai Best programming language for beginners\n` +
+              `• !ask How to meditate properly?`
+    }, { 
+        quoted: fakeContact 
+    });
 }
 
-/**
- * Send API error message
- */
-async function sendAPIErrorMessage(sock, chatId, message, error) {
-    const errorMessage = error.response?.status === 429 
-        ? "❌ Rate limit exceeded. Please try again later." 
-        : "❌ Failed to reach AI API.";
+async function sendErrorMessage(sock, chatId, message) {
+    const fakeContact = createFakeContact();
     
-    await sock.sendMessage(chatId, {
-        text: errorMessage,
+    return await sock.sendMessage(chatId, {
+        text: `⚠️ *Temporary Issue*\n\n` +
+              `DAVE AI is experiencing high traffic right now.\n` +
+              `Please try again in a few moments.\n\n` +
+              `🔄 *Quick fixes:*\n` +
+              `• Check your internet connection\n` +
+              `• Try a shorter question\n` +
+              `• Use simpler language`,
         contextInfo: {
-            mentionedJid: [message.key.participant || message.key.remoteJid],
-            quotedMessage: message.message
+            mentionedJid: [message.key.participant || message.key.remoteJid]
         }
-    }, { quoted: message });
+    }, { 
+        quoted: fakeContact 
+    });
+}
+
+async function processAIRequest(sock, chatId, message, query) {
+    const fakeContact = createFakeContact();
+    
+    try {
+        const apiUrl = `https://api.zenzxz.my.id/api/ai/chatai?query=${encodeURIComponent(query)}&model=deepseek-v3`;
+        
+        const response = await axios.get(apiUrl, { timeout: 30000 });
+        const data = response.data;
+        
+        const replyText = data?.data?.answer || "No response received from AI.";
+        
+        if (replyText !== "No response from AI bitch." && replyText.length > 0) {
+            await sock.sendMessage(chatId, {
+                text: `🤖 *DAVE AI Response*\n\n` +
+                      `${replyText}\n\n` +
+                      `━━━━━━━━━━━━━━━━━━\n` +
+                      `💭 *Question:* ${query.substring(0, 50)}${query.length > 50 ? '...' : ''}\n` +
+                      `✨ *Model:* DeepSeek v3\n` +
+                      `⚡ *Powered by DAVE-MD*`
+            }, { 
+                quoted: fakeContact 
+            });
+            
+            await sock.sendMessage(chatId, {
+                react: { text: '✅', key: message.key }
+            });
+        } else {
+            await sock.sendMessage(chatId, {
+                text: `🤔 *No Clear Answer*\n\n` +
+                      `The AI couldn't provide a clear response to that question.\n\n` +
+                      `🔍 *Suggestions:*\n` +
+                      `• Rephrase your question\n` +
+                      `• Ask about a different topic\n` +
+                      `• Be more specific`
+            }, { 
+                quoted: fakeContact 
+            });
+        }
+    } catch (error) {
+        console.error('API Error:', error);
+        
+        if (error.response?.status === 429) {
+            await sock.sendMessage(chatId, {
+                text: `🚫 *Rate Limit Exceeded*\n\n` +
+                      `You've made too many requests recently.\n\n` +
+                      `⏰ *Please wait:* 5-10 minutes\n` +
+                      `📊 *Limit:* 15 requests per hour\n\n` +
+                      `✨ *Premium users get higher limits*`,
+                contextInfo: {
+                    mentionedJid: [message.key.participant || message.key.remoteJid]
+                }
+            }, { 
+                quoted: fakeContact 
+            });
+        } else if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+            await sock.sendMessage(chatId, {
+                text: `⏳ *Request Timeout*\n\n` +
+                      `The AI took too long to respond.\n\n` +
+                      `⚡ *Try:*\n` +
+                      `• Shorter questions\n` +
+                      `• Less complex topics\n` +
+                      `• Try again in 30 seconds`
+            }, { 
+                quoted: fakeContact 
+            });
+        } else {
+            await sock.sendMessage(chatId, {
+                text: `🔧 *Service Unavailable*\n\n` +
+                      `DAVE AI is currently undergoing maintenance.\n\n` +
+                      `🛠️ *Status:* Partial outage\n` +
+                      `⏰ *ETA:* 15-30 minutes\n\n` +
+                      `📢 Check @DAVE_Status for updates`
+            }, { 
+                quoted: fakeContact 
+            });
+        }
+        
+        await sock.sendMessage(chatId, {
+            react: { text: '❌', key: message.key }
+        });
+    }
 }
 
 module.exports = aiCommand;
