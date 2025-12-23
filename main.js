@@ -272,7 +272,7 @@ const handleDevReact = require('./commands/devReact');
 /*━━━━━━━━━━━━━━━━━━━━*/
 global.packname = settings?.packname || "DAVE MD";
 global.author = settings?.author || "Vinpink2";
-global.channelLink = "https://whatsapp.com/channel/0029Va90zAnIHphOuO8Msp3A";
+global.channelLink = "https://whatsapp.com/channel/0029VbApvFQ2Jl84lhONkc3k";
 global.ytchanel = "";
 
 // Channel info for message context
@@ -281,8 +281,8 @@ const channelInfo = {
         forwardingScore: 1,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: '120363417542294659@newsletter',
-            newsletterName: 'June Official',
+            newsletterJid: '120363400480173280@newsletter',
+            newsletterName: 'Dave Tech',
             serverMessageId: -1
         }
     }
