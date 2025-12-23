@@ -6,6 +6,23 @@ const { UploadFileUgu } = require('../lib/uploader');
 
 const DEBUG = true;
 
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "Davex Song Identifier",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Music;;;\nFN:Davex Song Identifier\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Music Bot\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
+
 function debugLog(message, data = null) {
     if (DEBUG) {
         console.log(`[SHAZAM] ${message}`, data ? JSON.stringify(data, null, 2) : '');
@@ -115,9 +132,7 @@ async function shazamCommand(sock, chatId, message) {
     try {
         debugLog('Shazam command started', { chatId, messageId: message.key.id });
 
-        await sock.sendMessage(chatId, {
-            react: { text: '🎵', key: message.key }
-        });
+        const fakeContact = createFakeContact(message);
 
         const media = await getAllMediaBuffers(message);
 
@@ -125,7 +140,7 @@ async function shazamCommand(sock, chatId, message) {
             debugLog('No media found - sending instructions');
             await sock.sendMessage(chatId, {
                 text: 'Send or reply to an audio/voice note, video, or image to identify the song.\n\nSupported media:\n• Audio/Voice notes\n• Videos with audio.'
-            }, { quoted: message });
+            }, { quoted: fakeContact });
             return;
         }
 
@@ -170,7 +185,7 @@ async function shazamCommand(sock, chatId, message) {
 
         if (!mediaUrl) {
             debugLog('No media URL obtained from upload');
-            await sock.sendMessage(chatId, { text: 'Failed to upload media - no URL returned.' }, { quoted: message });
+            await sock.sendMessage(chatId, { text: 'Failed to upload media - no URL returned.' }, { quoted: fakeContact });
             return;
         }
 
@@ -189,15 +204,16 @@ async function shazamCommand(sock, chatId, message) {
             const song = response.data?.result || response.data;
 
             if (song && (song.title || song.artists)) {
-                resultText = `🎶 *SONG IDENTIFIED ⬇️*\n\n` +
-                             `📝 *Title:* ${song.title || 'Unknown'}\n` +
-                             `🎤 *Artist:* ${song.artists || 'Unknown'}\n` +
-                             `💿 *Album:* ${song.album || 'N/A'}\n` +
-                             `📟 *Release:* ${song.release_date || 'N/A'}\n\n` +
-                             `📊 *Media Type:* ${media.type.charAt(0).toUpperCase() + media.type.slice(1)}`;
+                resultText = `SONG IDENTIFIED\n\n` +
+                             `Title: ${song.title || 'Unknown'}\n` +
+                             `Artist: ${song.artists || 'Unknown'}\n` +
+                             `Album: ${song.album || 'N/A'}\n` +
+                             `Release: ${song.release_date || 'N/A'}\n\n` +
+                             `Media Type: ${media.type.charAt(0).toUpperCase() + media.type.slice(1)}\n\n` +
+                             `🎄 Merry Christmas!`;
                 debugLog('Song identified successfully');
             } else {
-                resultText = `❌ Sorry, could not identify the song from this ${media.type}.`;
+                resultText = `Sorry, could not identify the song from this ${media.type}.\n\n🎄 Merry Christmas!`;
                 debugLog('No song identified from Shazam API');
             }
         } catch (apiError) {
@@ -209,24 +225,25 @@ async function shazamCommand(sock, chatId, message) {
             });
 
             if (apiError.code === 'ECONNREFUSED') {
-                resultText = `❌ Shazam service is currently unavailable. Please try again later.`;
+                resultText = `Shazam service is currently unavailable. Please try again later.\n\n🎄 Merry Christmas!`;
             } else if (apiError.response?.status === 404) {
-                resultText = `❌ Song not found. Try with a clearer audio sample.`;
+                resultText = `Song not found. Try with a clearer audio sample.\n\n🎄 Merry Christmas!`;
             } else {
-                resultText = `❌ Failed to recognize the song from this ${media.type}.`;
+                resultText = `Failed to recognize the song from this ${media.type}.\n\n🎄 Merry Christmas!`;
             }
         }
 
         debugLog('Sending result to user...');
-        await sock.sendMessage(chatId, { text: resultText }, { quoted: message });
+        await sock.sendMessage(chatId, { text: resultText }, { quoted: fakeContact });
 
     } catch (error) {
         console.error('[SHAZAM] General error:', error.message);
         debugLog('General error details:', { stack: error.stack });
 
+        const fakeContact = createFakeContact(message);
         await sock.sendMessage(chatId, {
-            text: `❌ Failed to process media for recognition: ${error.message}`
-        }, { quoted: message });
+            text: `Failed to process media for recognition: ${error.message}\n\n🎄 Merry Christmas!`
+        }, { quoted: fakeContact });
     } finally {
         if (tempPath && fs.existsSync(tempPath)) {
             try {
