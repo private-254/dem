@@ -3,7 +3,6 @@ const path = require('path');
 
 const dataFilePath = path.join(__dirname, '..', 'data', 'messageCount.json');
 
-// Ensure data directory exists
 function ensureDataDirectory() {
     const dataDir = path.dirname(dataFilePath);
     if (!fs.existsSync(dataDir)) {
@@ -16,7 +15,6 @@ function loadMessageCounts() {
         ensureDataDirectory();
         if (fs.existsSync(dataFilePath)) {
             const data = fs.readFileSync(dataFilePath, 'utf8');
-            // Handle empty file case
             if (!data.trim()) {
                 return {};
             }
@@ -58,10 +56,29 @@ function incrementMessageCount(groupId, userId) {
     }
 }
 
-function topMembers(sock, chatId, isGroup, count = 5) {
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "Davex Stats",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Stats;;;\nFN:Davex Statistics\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Stats Bot\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
+
+async function topMembers(sock, chatId, isGroup, message, count = 5) {
+    const fakeContact = createFakeContact(message);
+    
     try {
         if (!isGroup) {
-            sock.sendMessage(chatId, { text: 'This command is only available in group chats.' });
+            sock.sendMessage(chatId, { text: 'Group context required' }, { quoted: fakeContact });
             return;
         }
 
@@ -73,40 +90,41 @@ function topMembers(sock, chatId, isGroup, count = 5) {
             .slice(0, count);
 
         if (sortedMembers.length === 0) {
-            sock.sendMessage(chatId, { text: 'No message activity recorded yet.' });
+            sock.sendMessage(chatId, { text: 'No interaction data available' }, { quoted: fakeContact });
             return;
         }
 
-        let message = `🏆 Top ${sortedMembers.length} Members Based on Message Count:\n\n`;
+        let textContent = `PARTICIPANT ACTIVITY LEADERS\n\n`;
         const mentions = [];
-        
+
         sortedMembers.forEach(([userId, messageCount], index) => {
-            const rankIcons = ['🥇', '🥈', '🥉', '🔹', '🔸'];
-            const rankIcon = rankIcons[index] || '🔹';
+            const rankMarkers = ['A', 'B', 'C', 'D', 'E'];
+            const rankMarker = rankMarkers[index] || (index + 1);
             const username = userId.split('@')[0];
-            
-            message += `${index + 1}. ${rankIcon} @${username} - ${messageCount} message${messageCount !== 1 ? 's' : ''}\n`;
+
+            textContent += `${rankMarker}. ${username} - ${messageCount} interactions\n`;
             mentions.push(userId);
         });
 
         const totalMessages = Object.values(groupCounts).reduce((sum, count) => sum + count, 0);
-        message += `\n📊 Total group messages: ${totalMessages}`;
+        textContent += `\nTotal group interactions: ${totalMessages}`;
 
         sock.sendMessage(chatId, { 
-            text: message, 
+            text: textContent, 
             mentions: mentions 
-        });
+        }, { quoted: fakeContact });
     } catch (error) {
         console.error('Error in topMembers command:', error);
-        sock.sendMessage(chatId, { text: 'An error occurred while fetching top members.' });
+        sock.sendMessage(chatId, { text: 'Leaderboard retrieval error' }, { quoted: fakeContact });
     }
 }
 
-// New function to get user's message count
-function getUserRank(sock, chatId, isGroup, userId) {
+async function getUserRank(sock, chatId, isGroup, userId, message) {
+    const fakeContact = createFakeContact(message);
+    
     try {
         if (!isGroup) {
-            sock.sendMessage(chatId, { text: 'This command is only available in group chats.' });
+            sock.sendMessage(chatId, { text: 'Group context required' }, { quoted: fakeContact });
             return;
         }
 
@@ -114,7 +132,7 @@ function getUserRank(sock, chatId, isGroup, userId) {
         const groupCounts = messageCounts[chatId] || {};
 
         if (!groupCounts[userId]) {
-            sock.sendMessage(chatId, { text: 'No messages recorded for this user yet.' });
+            sock.sendMessage(chatId, { text: 'No interaction history for user' }, { quoted: fakeContact });
             return;
         }
 
@@ -125,19 +143,18 @@ function getUserRank(sock, chatId, isGroup, userId) {
         const userMessageCount = groupCounts[userId];
         const totalMembers = sortedMembers.length;
 
-        const message = `📊 Your Message Stats:\n\n` +
-                       `🏅 Rank: ${userRank}/${totalMembers}\n` +
-                       `💬 Messages: ${userMessageCount}\n` +
-                       `📈 Top ${Math.round((userRank / totalMembers) * 100)}% of active members`;
+        const textContent = `USER INTERACTION METRICS\n\n` +
+                       `Position: ${userRank} of ${totalMembers}\n` +
+                       `Interaction count: ${userMessageCount}\n` +
+                       `Percentile: ${Math.round((userRank / totalMembers) * 100)}%`;
 
-        sock.sendMessage(chatId, { text: message, mentions: [userId] });
+        sock.sendMessage(chatId, { text: textContent, mentions: [userId] }, { quoted: fakeContact });
     } catch (error) {
         console.error('Error in getUserRank command:', error);
-        sock.sendMessage(chatId, { text: 'An error occurred while fetching user rank.' });
+        sock.sendMessage(chatId, { text: 'User metric retrieval error' }, { quoted: fakeContact });
     }
 }
 
-// New function to reset message counts (admin only)
 function resetMessageCounts(groupId) {
     try {
         const messageCounts = loadMessageCounts();
@@ -153,11 +170,12 @@ function resetMessageCounts(groupId) {
     }
 }
 
-// New function to get group statistics
-function getGroupStats(sock, chatId, isGroup) {
+async function getGroupStats(sock, chatId, isGroup, message) {
+    const fakeContact = createFakeContact(message);
+    
     try {
         if (!isGroup) {
-            sock.sendMessage(chatId, { text: 'This command is only available in group chats.' });
+            sock.sendMessage(chatId, { text: 'Group context required' }, { quoted: fakeContact });
             return;
         }
 
@@ -166,20 +184,20 @@ function getGroupStats(sock, chatId, isGroup) {
 
         const totalMessages = Object.values(groupCounts).reduce((sum, count) => sum + count, 0);
         const activeMembers = Object.keys(groupCounts).length;
-        
+
         const sortedCounts = Object.values(groupCounts).sort((a, b) => b - a);
         const averageMessages = activeMembers > 0 ? Math.round(totalMessages / activeMembers) : 0;
-        
-        let message = `📊 Group Message Statistics:\n\n` +
-                     `👥 Active Members: ${activeMembers}\n` +
-                     `💬 Total Messages: ${totalMessages}\n` +
-                     `📈 Average per Member: ${averageMessages}\n` +
-                     `🔥 Most Active: ${sortedCounts[0] || 0} messages`;
 
-        sock.sendMessage(chatId, { text: message });
+        let textContent = `GROUP INTERACTION STATISTICS\n\n` +
+                     `Active participants: ${activeMembers}\n` +
+                     `Total interactions: ${totalMessages}\n` +
+                     `Average per participant: ${averageMessages}\n` +
+                     `Maximum individual: ${sortedCounts[0] || 0}`;
+
+        sock.sendMessage(chatId, { text: textContent }, { quoted: fakeContact });
     } catch (error) {
         console.error('Error in getGroupStats command:', error);
-        sock.sendMessage(chatId, { text: 'An error occurred while fetching group statistics.' });
+        sock.sendMessage(chatId, { text: 'Statistical data retrieval error' }, { quoted: fakeContact });
     }
 }
 
@@ -188,5 +206,6 @@ module.exports = {
     topMembers, 
     getUserRank, 
     resetMessageCounts,
-    getGroupStats 
+    getGroupStats,
+    createFakeContact 
 };
