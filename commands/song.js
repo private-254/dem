@@ -1,11 +1,27 @@
 const yts = require('yt-search');
 const axios = require('axios');
-const fetch = require('node-fetch'); // to fetch thumbnail image
 
+function createFakeContact(message) {
+    return {
+        key: {
+            participants: "0@s.whatsapp.net",
+            remoteJid: "0@s.whatsapp.net",
+            fromMe: false
+        },
+        message: {
+            contactMessage: {
+                displayName: "Davex Music",
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Music;;;\nFN:Davex Audio Download\nitem1.TEL;waid=${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}:${message.key.participant?.split('@')[0] || message.key.remoteJid.split('@')[0]}\nitem1.X-ABLabel:Music Bot\nEND:VCARD`
+            }
+        },
+        participant: "0@s.whatsapp.net"
+    };
+}
 
 async function songCommand(sock, chatId, message) {
+    const fakeContact = createFakeContact(message);
+    
     try {
-        // Initial reaction 🎵
         await sock.sendMessage(chatId, {
             react: { text: "🎵", key: message.key }
         });
@@ -15,62 +31,56 @@ async function songCommand(sock, chatId, message) {
 
         if (!searchQuery) {
             return await sock.sendMessage(chatId, { 
-                text: "What song do you want to download?" 
-            }, { quoted: message });
+                text: "Specify track to download" 
+            }, { quoted: fakeContact });
         }
 
-        // Search for the song
         const { videos } = await yts(searchQuery);
         if (!videos || videos.length === 0) {
-            return await sock.sendMessage(chatId, { text: "No songs found!" });
+            return await sock.sendMessage(chatId, { 
+                text: "Track search returned zero results" 
+            }, { quoted: fakeContact });
         }
 
-        // Get the first video result
         const video = videos[0];
         const urlYt = video.url;
 
-        // Fetch audio data from API
         const response = await axios.get(`https://api.privatezia.biz.id/api/downloader/ytmp3?url=${urlYt}`);
         const apiData = response.data;
 
         if (!apiData || !apiData.status || !apiData.result || !apiData.result.downloadUrl) {
             return await sock.sendMessage(chatId, { 
-                text: "Failed to fetch audio from the API. Please try again later." 
-            }, { quoted: message });
+                text: "Audio retrieval unsuccessful" 
+            }, { quoted: fakeContact });
         }
 
         const audioUrl = apiData.result.downloadUrl;
         const title = apiData.result.title;
         const Thumb = apiData.result.thumbnail;
 
-        // Fetch thumbnail image and convert to buffer
-        let thumbBuffer = null;
-        try {
-            const thumbResponse = await fetch(video.thumbnail);
-            thumbBuffer = Buffer.from(await thumbResponse.arrayBuffer());
-        } catch (err) {
-            console.error("Thumbnail fetch failed:", err);
-        }
+        await sock.sendMessage(chatId, { 
+            text: `Now playing: ${title}` 
+        }, { quoted: fakeContact });
 
-        // Send status message
-        await sock.sendMessage(chatId, { text: `_🎶 Playing song:_\n_*${title}*_` });
-
-        // Send the audio with thumbnail
         await sock.sendMessage(chatId, {
             audio: { url: audioUrl },
             mimetype: "audio/mpeg",
             fileName: `${title}.mp3`,
-            Thumbnail: Thumb // attach thumbnail here
-        }, { quoted: message });
+            Thumbnail: Thumb
+        }, { quoted: fakeContact });
 
-
-        // Success reaction 
-        await sock.sendMessage(chatId, { react: { text: '🎺', key: message.key } });
+        await sock.sendMessage(chatId, { 
+            react: { text: '🎺', key: message.key } 
+        });
 
     } catch (error) {
         console.error('Error in songCommand:', error);
-        await sock.sendMessage(chatId, { text: "Download failed. Please try again later." });
-        await sock.sendMessage(chatId, { react: { text: '❌', key: message.key } });
+        await sock.sendMessage(chatId, { 
+            text: "Audio download procedure failed" 
+        }, { quoted: fakeContact });
+        await sock.sendMessage(chatId, { 
+            react: { text: '❌', key: message.key } 
+        });
     }
 }
 
