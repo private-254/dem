@@ -1,4 +1,4 @@
-
+// commands/menuSettings.js
 const fs = require('fs');
 const path = require('path');
 
@@ -278,6 +278,7 @@ async function handleMenuStyleCommand(sock, chatId, message, args) {
     }
 }
 
+// Only export what's needed externally
 module.exports = {
     getMenuStyle,
     setMenuStyle,
@@ -287,6 +288,5 @@ module.exports = {
     toggleSetting,
     MENU_STYLES,
     DEFAULT_MENU_STYLE,
-    handleMenuStyleCommand,
-    createFakeContact
+    handleMenuStyleCommand
 };
