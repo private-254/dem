@@ -30,7 +30,7 @@ async function autoreadCommand(sock, chatId, message) {
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: '',
-                        newsletterName: 'June_X_Official',
+                        newsletterName: 'Dave Tech',
                         serverMessageId: -1
                     }
                 }
@@ -51,7 +51,7 @@ async function autoreadCommand(sock, chatId, message) {
             // Show usage when no arguments provided
         const usageText = `*📖 AUTO-READ STATUS 📖*
 
-• 👨‍🔧 Current Mode: ${config.mode}
+• Current Mode: ${config.mode}
 
 • *COMMANDS:*
 • autoread - usage guide
@@ -59,7 +59,7 @@ async function autoreadCommand(sock, chatId, message) {
 • autoread all - Enable for all chats and groups
 • autoread chat - Enable for chats only
 • autoread group - Enable for groups only
-• autoread off - Disable auto-read
+• autoread off - Disable autoread
 `;
 
             await sock.sendMessage(chatId, {
@@ -103,7 +103,7 @@ async function autoreadCommand(sock, chatId, message) {
             case 'status':
                 // Show current status
                 await sock.sendMessage(chatId, {
-                    text: `📊 *AutoRead Status*\n\nCurrent Mode: *${config.mode}*`,
+                    text: `*AutoRead Status*\n\nCurrent Mode: *${config.mode}*`,
                     contextInfo: {
                         forwardingScore: 1,
                         isForwarded: true,
@@ -207,7 +207,7 @@ function isBotMentionedInMessage(message, botNumber) {
             return true;
         }
 
-        const botNames = [global.botname?.toLowerCase(), 'bot', 'June', 'June-X Bot'];
+        const botNames = [global.botname?.toLowerCase(), 'bot', 'Dave Md', 'Dave X'];
         const words = textContent.toLowerCase().split(/\s+/);
         if (botNames.some(name => words.includes(name))) {
             return true;
