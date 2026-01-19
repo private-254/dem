@@ -87,7 +87,7 @@ async function downloadSessionData() {
         return console.log(color(`Session id not found at SESSION_ID!\nCreds.json not found at session folder!\n\nWait to enter your number`, 'red'));
       }
 
-      const base64Data = global.SESSION_ID.split("davetech~")[1];
+      const base64Data = global.SESSION_ID.split("DAVE-AI:~")[1];
       
       const sessionData = Buffer.from(base64Data, 'base64');
       
@@ -133,7 +133,7 @@ const {  state, saveCreds } =await useMultiFileAuthState(`./session`)
    // source code https://github.com/WhiskeySockets/Baileys/blob/master/Example/example.ts#L61
         if (global.connect && !davetech.authState.creds.registered) {
         try {
-			const custom = "TRASHBOT"; // must
+			const custom = "DAVEBOTS"; // must
             const phoneNumber = await question(chalk.cyan(`\n[ ᯤ ] davetech (--||--) Enter Your Number:\n`));
             const code = await davetech.requestPairingCode(phoneNumber.trim());
             console.log(chalk.green(`\n[ ᯤ ] davetech (--||--) Pairing Code:\n`), code);
