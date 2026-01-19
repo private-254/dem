@@ -50,6 +50,22 @@ if (global.db) setInterval(async () => {
 
 
 
+function detectHost() {
+    const env = process.env;
+    if (env.RENDER || env.RENDER_EXTERNAL_URL) return 'Render';
+    if (env.DYNO || env.HEROKU_APP_DIR || env.HEROKU_SLUG_COMMIT) return 'Heroku';
+    if (env.PORTS || env.CYPHERX_HOST_ID) return "CypherXHost";
+    if (env.VERCEL || env.VERCEL_ENV || env.VERCEL_URL) return 'Vercel';
+    if (env.RAILWAY_ENVIRONMENT || env.RAILWAY_PROJECT_ID) return 'Railway';
+    if (env.REPL_ID || env.REPL_SLUG) return 'Replit';
+    const hostname = os.hostname().toLowerCase();
+    if (!env.CLOUD_PROVIDER && !env.DYNO && !env.VERCEL && !env.RENDER) {
+        if (hostname.includes('vps') || hostname.includes('server')) return 'VPS';
+        return 'Panel';
+    }
+    return 'Dave Host';
+}
+
 //------------------------------------------------------
 let phoneNumber = "254104260236"
 const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code")
@@ -182,28 +198,16 @@ try{
 			console.log(color(` `,'magenta'))
             console.log(color(`Connected to => ` + JSON.stringify(davetech.user, null, 2), 'green'))
 			await delay(1999)
-			davetech.sendMessage(davetech.user.id, {
-image: {
-url: 'https://url.bwmxmd.online/Adams.jin9796u.jpg'
-}, 
-caption: ` [ ༑📚𝑪𝒓𝒆𝒂𝒕𝒆𝒅 𝒃𝒚 davetech ⿻ ༑]]
-┏─•⛩️ ${global.botname} ⛩️•─⬣[⿻
-
-👋 Hii, I Am ${global.botname}
- [⿻] 🌌 Version      : ${global.botversion}
- [⿻] 👤 Owner  	     : ${global.owner}
- [⿻] 📚 Library      : Baileys MD
- [⿻] 📱 Status       : Online
- [⿻] 📝 Session     :  ${global.session}
- 
- [⿻] 🌎 Base By    : davetechdevs
-
-┗─•${global.botname}•─⬣[⿻
-[[ ༑📚𝑪𝒓𝒆𝒂𝒕𝒆 𝑩𝒚 davetech༢⿻ ༑]]`
-})
-
-
-			
+			await davetech.sendMessage(DaveAi.user.id, {
+            text: ` 
+┏━━━━━✧ DAVE-MD CONNECTED ✧━━━━━━━
+┃✧ Prefix: [${global.settings.xprefix}]
+┃✧ Mode: ${currentMode}
+┃✧ Platform: ${hostName}
+┃✧ Status: online
+┃✧ Time: ${new Date().toLocaleString()}
+┗━━━━━━━━━━━━━━━━━━━`
+        });
 
             console.log(color('>davetech Bot is Connected< [ ! ]','red'))
 		}
