@@ -18,7 +18,6 @@ const PhoneNumber = require('awesome-phonenumber')
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('./library/lib/exif')
 const { smsg, isUrl, generateMessageTag, getBuffer, getSizeMedia, fetch, await, sleep, reSize } = require('./library/lib/function')
 const { default: davetechConnect, getAggregateVotesInPollMessage, delay, PHONENUMBER_MCC, makeCacheableSignalKeyStore, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, generateForwardMessageContent, prepareWAMessageMedia, generateWAMessageFromContent, generateMessageID, downloadContentFromMessage, makeInMemoryStore, jidDecode, proto } = require("@davetech/baileys")
-const channelId = "120363257205745956@newsletter";
 const createToxxicStore = require('./library/database/basestore');
 const store = createToxxicStore('./store', {
   logger: pino().child({ level: 'silent', stream: 'store' }) });
@@ -49,22 +48,6 @@ if (global.db) setInterval(async () => {
 }, 30 * 1000)
 
 
-
-function detectHost() {
-    const env = process.env;
-    if (env.RENDER || env.RENDER_EXTERNAL_URL) return 'Render';
-    if (env.DYNO || env.HEROKU_APP_DIR || env.HEROKU_SLUG_COMMIT) return 'Heroku';
-    if (env.PORTS || env.CYPHERX_HOST_ID) return "CypherXHost";
-    if (env.VERCEL || env.VERCEL_ENV || env.VERCEL_URL) return 'Vercel';
-    if (env.RAILWAY_ENVIRONMENT || env.RAILWAY_PROJECT_ID) return 'Railway';
-    if (env.REPL_ID || env.REPL_SLUG) return 'Replit';
-    const hostname = os.hostname().toLowerCase();
-    if (!env.CLOUD_PROVIDER && !env.DYNO && !env.VERCEL && !env.RENDER) {
-        if (hostname.includes('vps') || hostname.includes('server')) return 'VPS';
-        return 'Panel';
-    }
-    return 'Dave Host';
-}
 
 //------------------------------------------------------
 let phoneNumber = "254104260236"
@@ -198,16 +181,19 @@ try{
 			console.log(color(` `,'magenta'))
             console.log(color(`Connected to => ` + JSON.stringify(davetech.user, null, 2), 'green'))
 			await delay(1999)
-			await davetech.sendMessage(DaveAi.user.id, {
-            text: ` 
-┏━━━━━✧ DAVE-MD CONNECTED ✧━━━━━━━
-┃✧ Prefix: [${global.settings.xprefix}]
-┃✧ Mode: ${currentMode}
-┃✧ Platform: ${hostName}
-┃✧ Status: online
-┃✧ Time: ${new Date().toLocaleString()}
-┗━━━━━━━━━━━━━━━━━━━`
-        });
+			davetech.sendMessage(davetech.user.id, {
+caption: `┌───── •✧• ─────┐
+    ${global.botname}
+├───────────────┤
+• Version  : ${global.botversion}
+• Owner    : ${global.owner}
+• Session  : ${global.session}
+• Base By  : davetechdevs
+└───── •✧• ─────┘`
+})
+
+
+			
 
             console.log(color('>davetech Bot is Connected< [ ! ]','red'))
 		}
@@ -280,7 +266,7 @@ davetech.ev.on('group-participants.update', async (anu) => {
             if (mek.key.id.startsWith('Xeon') && mek.key.id.length === 16) return
             if (mek.key.id.startsWith('BAE5')) return
             m = smsg(davetech, mek, store)
-            require("./davetechhandler")(davetech, m, chatUpdate, store)
+            require("./davehandler")(davetech, m, chatUpdate, store)
         } catch (err) {
             console.log(err)
         }
@@ -474,7 +460,7 @@ function cleanupOldMessages() {
 
     fs.writeFileSync(storeFile, JSON.stringify(storedMessages, null, 2));
 
-    console.log("[TRASH-BOT] 🧹 Cleaning up:");
+    console.log("[DAVE-BOT] 🧹 Cleaning up:");
     console.log(`- Total messages processed: ${totalMessages}`);
     console.log(`- Old messages removed: ${oldMessages}`);
     console.log(`- Remaining messages: ${keptMessages}`);
